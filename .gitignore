@@ -1,0 +1,10 @@
+.godot/
+build/
+*.tmp
+*.log
+__pycache__/
+*.pyc
+desktop.ini
+Thumbs.db
+
+*.backup-*

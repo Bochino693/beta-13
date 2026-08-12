@@ -1,0 +1,24 @@
+LAZER BEASTS: ELEMENTAL ARENA — V4
+==================================
+
+1. Abra o Godot 4.6.
+2. Clique em Importar.
+3. Escolha C:\Users\LAZER GAMES\Documents\beta-13\project.godot.
+4. Aguarde a importação inicial dos assets HD.
+5. Pressione F6 ou F5.
+
+O projeto é vertical: 720 x 1280, renderer GL Compatibility.
+
+CONTROLES
+---------
+1 = iniciar                     5 = inserir ficha
+J1 = W A S D / Espaço / Q / E
+J2 = Setas / Enter / N / M
+TAB ou ombro = próximo filtro
+F10 = modo livre/fichas
+F11 = áudio
+F12 = tela cheia
+
+O pacote contém 30 Beasts HD, 30 spritesheets com idle/ataque/dano/vitória,
+80 golpes animados, 30 cartas, CPU, guia de poderes e combate 5 contra 5.
+Não há downloads durante o jogo nem fallback de criatura em baixa definição.

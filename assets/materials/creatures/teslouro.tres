@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://assets/materials/creature_fx.gdshader" id="1_fx"]
+
+[resource]
+shader = ExtResource("1_fx")
+shader_parameter/hit_flash = 0.0
+shader_parameter/aura_strength = 0.0
+shader_parameter/aura_color = Color(1.000000, 0.823529, 0.149020, 0.920000)
+shader_parameter/pulse_speed = 1.150

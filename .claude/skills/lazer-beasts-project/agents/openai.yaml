@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazer Beasts Project"
+  short_description: "Evoluir o arcade 2.5D sem quebrar sua visão"
+  default_prompt: "Use $lazer-beasts-project para evoluir o jogo mantendo o retrato 2.5D, o balanceamento e os contratos de assets."
