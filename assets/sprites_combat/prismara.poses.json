@@ -1,0 +1,237 @@
+{
+ "id": "prismara",
+ "atlas": "res://assets/sprites_combat/prismara.png",
+ "tamanho": [
+  1420,
+  1108
+ ],
+ "linhas": 4,
+ "colunas": 4,
+ "deteccao": "parcial",
+ "poses": [
+  {
+   "nome": "repouso_a",
+   "indice": 0,
+   "rect": [
+    89,
+    4,
+    161,
+    276
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "repouso_b",
+   "indice": 1,
+   "rect": [
+    355,
+    14,
+    315,
+    266
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "carga",
+   "indice": 2,
+   "rect": [
+    719,
+    3,
+    260,
+    277
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "ataque",
+   "indice": 3,
+   "rect": [
+    1014,
+    73,
+    394,
+    201
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "dano",
+   "indice": 4,
+   "rect": [
+    27,
+    304,
+    278,
+    246
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "esquiva",
+   "indice": 5,
+   "rect": [
+    324,
+    358,
+    367,
+    186
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "vitoria",
+   "indice": 6,
+   "rect": [
+    711,
+    274,
+    287,
+    275
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "ko",
+   "indice": 7,
+   "rect": [
+    1005,
+    432,
+    399,
+    113
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "repouso_a_costas",
+   "indice": 8,
+   "rect": [
+    70,
+    554,
+    159,
+    280
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "repouso_b_costas",
+   "indice": 9,
+   "rect": [
+    343,
+    553,
+    324,
+    255
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "carga_costas",
+   "indice": 10,
+   "rect": [
+    743,
+    557,
+    223,
+    277
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "ataque_costas",
+   "indice": 11,
+   "rect": [
+    1015,
+    596,
+    393,
+    212
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "dano_costas",
+   "indice": 12,
+   "rect": [
+    64,
+    828,
+    238,
+    242
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "esquiva_costas",
+   "indice": 13,
+   "rect": [
+    309,
+    837,
+    371,
+    228
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "vitoria_costas",
+   "indice": 14,
+   "rect": [
+    701,
+    828,
+    287,
+    244
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "nome": "ko_costas",
+   "indice": 15,
+   "rect": [
+    999,
+    959,
+    389,
+    116
+   ],
+   "ancora": [
+    0.5,
+    1.0
+   ]
+  }
+ ]
+}

@@ -21,6 +21,8 @@ BATALHA = RAIZ / "scripts" / "scenes" / "battle.gd"
 SPRITE = RAIZ / "scripts" / "components" / "cinematic_beast_sprite_3d.gd"
 ESTADIO = RAIZ / "scripts" / "components" / "battle_stadium_3d.gd"
 ESCUDO = RAIZ / "scripts" / "components" / "battle_shield_dome_3d.gd"
+FUNDO_ARENA = RAIZ / "assets" / "battle" / "arena" / "lazer_coliseum_backplate.png"
+FONTE_CORPO = RAIZ / "assets" / "battle" / "fonts" / "URWGothic-Book.otf"
 
 AUTOLOADS = {
     "CreatureDB": RAIZ / "scripts" / "autoload" / "creature_db.gd",
@@ -42,14 +44,15 @@ def secao(titulo):
 
 
 def checar_arquivos():
-    for caminho in (BATALHA, SPRITE, ESTADIO, ESCUDO):
+    for caminho in (BATALHA, SPRITE, ESTADIO, ESCUDO, FUNDO_ARENA, FONTE_CORPO):
         if not caminho.exists():
             erros.append("arquivo ausente: %s" % caminho.relative_to(RAIZ))
         else:
-            ok.append("%s presente (%d linhas)" % (
-                caminho.relative_to(RAIZ),
-                len(caminho.read_text(encoding="utf-8").splitlines()),
-            ))
+            if caminho.suffix in {".gd", ".py", ".md"}:
+                detalhe = "%d linhas" % len(caminho.read_text(encoding="utf-8").splitlines())
+            else:
+                detalhe = "%d bytes" % caminho.stat().st_size
+            ok.append("%s presente (%s)" % (caminho.relative_to(RAIZ), detalhe))
 
 
 def checar_autoloads(texto):

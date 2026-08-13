@@ -34,6 +34,8 @@ def main() -> None:
         errors.append("O viewport-base precisa permanecer em 720×1280.")
     if 'renderer/rendering_method="gl_compatibility"' not in project_text:
         errors.append("O renderer GL Compatibility não está configurado.")
+    if "theme/default_font_multichannel_signed_distance_field=true" in project_text:
+        errors.append("MSDF global precisa ficar desativado para preservar acentos em texto pequeno.")
 
     for creature in creatures:
         creature_id = creature["id"]

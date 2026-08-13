@@ -26,15 +26,15 @@ const POSE_VITORIA := 6
 const POSE_KO := 7
 
 const PERFIS: Dictionary = {
-	"ave": {"idle": 0.42, "flutua": 0.055, "ataque": 0.95, "esquiva": 1.10},
-	"dragao": {"idle": 0.68, "flutua": 0.030, "ataque": 0.86, "esquiva": 0.88},
-	"felpudo": {"idle": 0.82, "flutua": 0.010, "ataque": 0.78, "esquiva": 0.80},
-	"reptil": {"idle": 0.88, "flutua": 0.004, "ataque": 0.82, "esquiva": 0.74},
-	"planta": {"idle": 1.00, "flutua": 0.008, "ataque": 0.70, "esquiva": 0.62},
-	"mineral": {"idle": 1.15, "flutua": 0.002, "ataque": 0.64, "esquiva": 0.55},
-	"aquatico": {"idle": 0.62, "flutua": 0.070, "ataque": 0.88, "esquiva": 0.96},
-	"espectro": {"idle": 0.48, "flutua": 0.085, "ataque": 1.00, "esquiva": 1.12},
-	"padrao": {"idle": 0.75, "flutua": 0.018, "ataque": 0.80, "esquiva": 0.80},
+	"ave": {"idle": 0.42, "flutua": 0.075, "ataque": 0.95, "esquiva": 1.10, "ritmo": 3.6, "respira": 0.024, "balanco": 2.5},
+	"dragao": {"idle": 0.68, "flutua": 0.036, "ataque": 0.86, "esquiva": 0.88, "ritmo": 2.2, "respira": 0.032, "balanco": 1.6},
+	"felpudo": {"idle": 0.82, "flutua": 0.014, "ataque": 0.78, "esquiva": 0.80, "ritmo": 1.7, "respira": 0.042, "balanco": 1.2},
+	"reptil": {"idle": 0.88, "flutua": 0.007, "ataque": 0.82, "esquiva": 0.74, "ritmo": 1.45, "respira": 0.027, "balanco": 0.8},
+	"planta": {"idle": 1.00, "flutua": 0.012, "ataque": 0.70, "esquiva": 0.62, "ritmo": 1.15, "respira": 0.038, "balanco": 1.8},
+	"mineral": {"idle": 1.15, "flutua": 0.004, "ataque": 0.64, "esquiva": 0.55, "ritmo": 0.85, "respira": 0.014, "balanco": 0.35},
+	"aquatico": {"idle": 0.62, "flutua": 0.086, "ataque": 0.88, "esquiva": 0.96, "ritmo": 2.0, "respira": 0.032, "balanco": 2.0},
+	"espectro": {"idle": 0.48, "flutua": 0.105, "ataque": 1.00, "esquiva": 1.12, "ritmo": 2.7, "respira": 0.048, "balanco": 2.8},
+	"padrao": {"idle": 0.75, "flutua": 0.022, "ataque": 0.80, "esquiva": 0.80, "ritmo": 1.7, "respira": 0.030, "balanco": 1.1},
 }
 
 const FAMILIA_POR_ID: Dictionary = {
@@ -55,8 +55,10 @@ var _sprite_reserva: AnimatedSprite3D
 var _quadros: SpriteFrames
 var _perfil: Dictionary = PERFIS["padrao"]
 var _tween_ativo: Tween
+var _tween_crossfade: Tween
 var _origem := Vector3.ZERO
 var _escala_base := Vector3.ONE
+var _altura_mundo := 2.0
 var _cor_elemento := Color("6ef8ff")
 var _de_costas := false
 var _ocupado := false
@@ -64,6 +66,13 @@ var _tempo := 0.0
 var _tempo_idle := 0.0
 var _pose_idle := POSE_REPOUSO_A
 var _offset_vista := 0
+var _sombra: MeshInstance3D
+var _anel_interno: MeshInstance3D
+var _anel_externo: MeshInstance3D
+var _material_anel_interno: StandardMaterial3D
+var _material_anel_externo: StandardMaterial3D
+var _luz_presenca: OmniLight3D
+var _impulso_presenca := 1.0
 
 
 func _ready() -> void:
@@ -95,6 +104,7 @@ func configurar(
 		return false
 
 	_de_costas = de_costas
+	_altura_mundo = altura_mundo
 	_offset_vista = 0 if de_costas else QUADROS_POR_VISTA
 	_cor_elemento = cor_elemento
 	_perfil = PERFIS.get(familia, PERFIS["padrao"]) as Dictionary
@@ -114,6 +124,7 @@ func configurar(
 	_sprite_reserva.pixel_size = pixel_size
 	_sprite_ativo.position.y = altura_mundo * 0.5
 	_sprite_reserva.position.y = altura_mundo * 0.5
+	_criar_presenca_3d(altura_mundo)
 	_origem = position
 	_escala_base = scale
 	_tempo_idle = randf_range(0.05, float(_perfil["idle"]))
@@ -163,15 +174,99 @@ func _process(delta: float) -> void:
 		return
 	if not _ocupado:
 		var flutuacao := float(_perfil["flutua"])
-		var deslocamento := sin(_tempo * 1.65) * flutuacao
+		var ritmo := float(_perfil["ritmo"])
+		var respira := float(_perfil["respira"])
+		var balanco := float(_perfil["balanco"])
+		var pulso := sin(_tempo * ritmo)
+		var deslocamento := pulso * flutuacao
 		var atual := _sprite_ativo.position.y - _altura_visual()
 		_sprite_ativo.position.y += (deslocamento - atual) * minf(1.0, delta * 4.0)
 		_sprite_reserva.position.y = _sprite_ativo.position.y
+		var escala_x := 1.0 - pulso * respira * 0.52
+		var escala_y := 1.0 + pulso * respira
+		var escala_viva := Vector3(escala_x, escala_y, 1.0)
+		_sprite_ativo.scale = _sprite_ativo.scale.lerp(escala_viva, minf(1.0, delta * 5.5))
+		_sprite_reserva.scale = _sprite_ativo.scale
+		_sprite_ativo.rotation_degrees.z = sin(_tempo * ritmo * 0.58) * balanco
+		_sprite_reserva.rotation_degrees.z = _sprite_ativo.rotation_degrees.z
 		_tempo_idle -= delta
 		if _tempo_idle <= 0.0:
 			_pose_idle = POSE_REPOUSO_B if _pose_idle == POSE_REPOUSO_A else POSE_REPOUSO_A
 			_crossfade(_pose_idle, 0.18)
 			_tempo_idle = float(_perfil["idle"])
+	_atualizar_presenca()
+
+
+func _criar_presenca_3d(altura: float) -> void:
+	_sombra = MeshInstance3D.new()
+	var malha_sombra := PlaneMesh.new()
+	malha_sombra.size = Vector2(altura * 0.72, altura * 0.25)
+	_sombra.mesh = malha_sombra
+	_sombra.position = Vector3(0.0, 0.018, 0.0)
+	var material_sombra := StandardMaterial3D.new()
+	material_sombra.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material_sombra.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material_sombra.albedo_color = Color(0.0, 0.0, 0.0, 0.38)
+	material_sombra.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_DISABLED
+	_sombra.material_override = material_sombra
+	add_child(_sombra)
+
+	_anel_externo = _criar_anel(altura * 0.40, altura * 0.018, 0.16)
+	_material_anel_externo = _anel_externo.material_override as StandardMaterial3D
+	_anel_externo.position.y = 0.026
+	add_child(_anel_externo)
+	_anel_interno = _criar_anel(altura * 0.28, altura * 0.010, 0.30)
+	_material_anel_interno = _anel_interno.material_override as StandardMaterial3D
+	_anel_interno.position.y = 0.032
+	add_child(_anel_interno)
+
+	_luz_presenca = OmniLight3D.new()
+	_luz_presenca.omni_range = maxf(2.0, altura * 1.6)
+	_luz_presenca.light_color = _cor_elemento
+	_luz_presenca.light_energy = 0.42
+	_luz_presenca.shadow_enabled = false
+	_luz_presenca.position.y = altura * 0.52
+	add_child(_luz_presenca)
+
+
+func _criar_anel(raio: float, espessura: float, alpha: float) -> MeshInstance3D:
+	var instancia := MeshInstance3D.new()
+	var toro := TorusMesh.new()
+	toro.inner_radius = maxf(0.03, raio - espessura)
+	toro.outer_radius = raio
+	toro.rings = 32
+	toro.ring_segments = 6
+	instancia.mesh = toro
+	var material := StandardMaterial3D.new()
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color(_cor_elemento.r, _cor_elemento.g, _cor_elemento.b, alpha)
+	material.emission_enabled = true
+	material.emission = _cor_elemento
+	material.emission_energy_multiplier = 1.4
+	instancia.material_override = material
+	return instancia
+
+
+func _atualizar_presenca() -> void:
+	if _anel_externo == null:
+		return
+	var pulso := 0.5 + sin(_tempo * 2.2) * 0.5
+	_impulso_presenca = move_toward(_impulso_presenca, 1.0, get_process_delta_time() * 4.2)
+	_anel_externo.rotation.y = _tempo * 0.34
+	_anel_interno.rotation.y = -_tempo * 0.58
+	_material_anel_externo.emission_energy_multiplier = (0.65 + pulso * 1.25) * _impulso_presenca
+	_material_anel_interno.emission_energy_multiplier = (0.95 + pulso * 1.65) * _impulso_presenca
+	_luz_presenca.light_energy = (0.28 + pulso * 0.22) * _impulso_presenca
+	var alpha_sombra := 0.34 - absf(sin(_tempo * float(_perfil["ritmo"]))) * 0.08
+	var material_sombra := _sombra.material_override as StandardMaterial3D
+	material_sombra.albedo_color.a = alpha_sombra
+
+
+func _definir_intensidade_presenca(valor: float) -> void:
+	if _material_anel_externo == null:
+		return
+	_impulso_presenca = maxf(1.0, valor)
 
 
 func _altura_visual() -> float:
@@ -203,11 +298,13 @@ func _crossfade(pose: int, duracao: float = 0.12) -> void:
 	_sprite_reserva.scale = _sprite_ativo.scale
 	var anterior := _sprite_ativo
 	var proximo := _sprite_reserva
-	var tween := create_tween()
-	tween.set_parallel(true).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(anterior, "modulate:a", 0.0, duracao)
-	tween.tween_property(proximo, "modulate:a", 1.0, duracao)
-	tween.chain().tween_callback(_concluir_crossfade.bind(anterior, proximo))
+	if _tween_crossfade != null and _tween_crossfade.is_valid():
+		_tween_crossfade.kill()
+	_tween_crossfade = create_tween()
+	_tween_crossfade.set_parallel(true).set_trans(Tween.TRANS_SINE)
+	_tween_crossfade.tween_property(anterior, "modulate:a", 0.0, duracao)
+	_tween_crossfade.tween_property(proximo, "modulate:a", 1.0, duracao)
+	_tween_crossfade.chain().tween_callback(_concluir_crossfade.bind(anterior, proximo))
 
 
 func _concluir_crossfade(anterior: AnimatedSprite3D, proximo: AnimatedSprite3D) -> void:
@@ -241,6 +338,11 @@ func repousar() -> void:
 	rotation = Vector3.ZERO
 	scale = _escala_base
 	_sprite_ativo.modulate = Color.WHITE
+	_sprite_ativo.scale = Vector3.ONE
+	_sprite_reserva.scale = Vector3.ONE
+	_sprite_ativo.rotation_degrees.z = 0.0
+	_sprite_reserva.rotation_degrees.z = 0.0
+	_definir_intensidade_presenca(1.0)
 	_crossfade(POSE_REPOUSO_A, 0.16)
 
 
@@ -258,6 +360,7 @@ func entrar(duracao: float = 0.70) -> void:
 
 func carregar(duracao: float = 0.85) -> void:
 	_ocupado = true
+	_definir_intensidade_presenca(4.6)
 	_crossfade(POSE_CARGA, 0.14)
 	var tween := _novo_tween()
 	tween.tween_property(self, "scale", Vector3(1.08, 0.88, 1.08), duracao * 0.58)
@@ -293,12 +396,15 @@ func atacar(duracao: float = 0.62) -> void:
 
 
 func _emitir_impacto() -> void:
-	_criar_rastro()
+	for atraso in range(3):
+		_criar_rastro(float(atraso) * 0.045)
+	_definir_intensidade_presenca(5.8)
 	animacao_terminou.emit("impacto")
 
 
 func levar_dano(cor: Color = Color(1.0, 0.35, 0.35), duracao: float = 0.42) -> void:
 	_ocupado = true
+	_definir_intensidade_presenca(3.2)
 	_crossfade(POSE_DANO, 0.055)
 	var inicio := position
 	var tween := _novo_tween()
@@ -357,7 +463,7 @@ func tombar(duracao: float = 0.95) -> void:
 	tween.tween_callback(_finalizar_estado.bind("tombar", false))
 
 
-func _criar_rastro() -> void:
+func _criar_rastro(atraso: float = 0.0) -> void:
 	if _sprite_ativo == null:
 		return
 	var fantasma := AnimatedSprite3D.new()
@@ -369,9 +475,12 @@ func _criar_rastro() -> void:
 	fantasma.no_depth_test = true
 	fantasma.pixel_size = _sprite_ativo.pixel_size
 	fantasma.position = _sprite_ativo.position
+	fantasma.position.z += atraso * (-2.2 if _de_costas else 2.2)
 	fantasma.modulate = Color(_cor_elemento.r, _cor_elemento.g, _cor_elemento.b, 0.34)
 	add_child(fantasma)
 	var tween := create_tween()
+	if atraso > 0.0:
+		tween.tween_interval(atraso)
 	tween.set_parallel(true)
 	tween.tween_property(fantasma, "modulate:a", 0.0, 0.24)
 	tween.tween_property(fantasma, "scale", Vector3(1.14, 1.14, 1.14), 0.24)
@@ -382,4 +491,5 @@ func _finalizar_estado(nome: String, voltar_ao_idle: bool = true) -> void:
 	if voltar_ao_idle:
 		_crossfade(POSE_REPOUSO_A, 0.16)
 	_ocupado = false
+	_definir_intensidade_presenca(1.0)
 	animacao_terminou.emit(nome)

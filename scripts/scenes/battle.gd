@@ -13,16 +13,16 @@ const MARGEM := 24.0
 const LARGURA := 720.0
 const ALTURA := 1280.0
 
-const Y_TOPO := 20.0        # placar + turno
+const Y_TOPO := 18.0        # placar + turno
 const H_TOPO := 48.0
-const Y_HUD_INIMIGO := 78.0
-const H_HUD := 120.0
-const Y_ARENA := 208.0
-const H_ARENA := 478.0
-const Y_HUD_ALIADO := 696.0
-const Y_MENSAGEM := 826.0
-const H_MENSAGEM := 60.0
-const Y_ACOES := 896.0
+const Y_HUD_INIMIGO := 76.0
+const H_HUD := 98.0
+const Y_ARENA := 184.0
+const H_ARENA := 576.0
+const Y_HUD_ALIADO := 770.0
+const Y_MENSAGEM := 878.0
+const H_MENSAGEM := 54.0
+const Y_ACOES := 942.0
 
 const COR_P1 := Color("6ef8ff")
 const COR_P2 := Color("ff55c6")
@@ -39,6 +39,9 @@ var _action_cursor := 0
 # --- 3D --------------------------------------------------------------------
 var _viewport: SubViewport
 var _camera: Camera3D
+var _camera_home_position := Vector3.ZERO
+var _camera_home_rotation := Vector3.ZERO
+var _camera_home_fov := 50.0
 var _rigs: Array[CinematicBeastSprite3D] = [null, null]
 var _fx: Array[Sprite3D] = [null, null]
 var _escudos: Array[BattleShieldDome3D] = [null, null]
@@ -61,12 +64,16 @@ var _mensagem: Label
 var _botoes: Array[Button] = []
 var _camada_numeros: Control
 var _fonte_batalha: Font
+var _fonte_corpo: Font
 
 
 func _ready() -> void:
 	var caminho_fonte := "res://assets/battle/fonts/URWGothic-Demi.otf"
 	if ResourceLoader.exists(caminho_fonte):
 		_fonte_batalha = load(caminho_fonte) as Font
+	var caminho_corpo := "res://assets/battle/fonts/URWGothic-Book.otf"
+	if ResourceLoader.exists(caminho_corpo):
+		_fonte_corpo = load(caminho_corpo) as Font
 	_teams[0] = GameState.runtime_team(0)
 	_teams[1] = GameState.runtime_team(1)
 	if _teams[0].is_empty() or _teams[1].is_empty():
@@ -131,12 +138,14 @@ func _montar_arena_3d() -> void:
 
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
-	_camera.fov = 44.0
-	_camera.position = Vector3(0.0, 2.18, 5.45)
-	_camera.rotation_degrees = Vector3(-9.2, 0.0, 0.0)
+	_camera.fov = _camera_home_fov
+	_camera.position = Vector3(0.0, 3.25, 7.65)
 	_camera.near = 0.05
 	_camera.far = 90.0
 	_viewport.add_child(_camera)
+	_camera.look_at(Vector3(0.0, 1.12, -2.15), Vector3.UP)
+	_camera_home_position = _camera.position
+	_camera_home_rotation = _camera.rotation
 	_camera.make_current()
 
 	# Camada 2D para numeros de dano, alinhada exatamente sobre a faixa.
@@ -165,11 +174,11 @@ func _trocar_rig(jogador: int) -> void:
 
 	var rig := CinematicBeastSprite3D.new()
 	_viewport.add_child(rig)
-	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 1.30) \
-		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.90)
+	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 0.30) \
+		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.35)
 	var configurado: bool = rig.configurar(
 		id_beast,
-		3.00 if de_costas else 2.35,
+		2.12 if de_costas else 2.62,
 		familia,
 		de_costas,
 		cor
@@ -182,8 +191,8 @@ func _trocar_rig(jogador: int) -> void:
 	_rigs[jogador] = rig
 
 	var escudo := BattleShieldDome3D.new()
-	escudo.position = rig.position + Vector3(0.0, 1.25 if de_costas else 1.0, 0.0)
-	escudo.scale = Vector3(1.15, 1.15, 1.15) if de_costas else Vector3(0.88, 0.88, 0.88)
+	escudo.position = rig.position + Vector3(0.0, 0.96 if de_costas else 1.17, 0.0)
+	escudo.scale = Vector3(0.88, 0.88, 0.88) if de_costas else Vector3(1.02, 1.02, 1.02)
 	escudo.visible = false
 	_viewport.add_child(escudo)
 	_escudos[jogador] = escudo
@@ -195,16 +204,17 @@ func _trocar_rig(jogador: int) -> void:
 	sprite.transparent = true
 	sprite.no_depth_test = true
 	sprite.render_priority = 8
-	sprite.pixel_size = 0.0090 if de_costas else 0.0048
-	sprite.position = rig.position + Vector3(0.0, 1.25 if not de_costas else 1.45, 0.30)
+	sprite.pixel_size = 0.0065 if de_costas else 0.0056
+	sprite.position = rig.position + Vector3(0.0, 1.30 if not de_costas else 1.05, 0.30)
 	sprite.visible = false
 	_viewport.add_child(sprite)
 	_fx[jogador] = sprite
 
 
 func _x_da_faixa(jogador: int, faixa: int) -> float:
-	var centro := -0.55 if jogador == 0 else 0.40
-	var passo := 0.74 if jogador == 0 else 0.58
+	# Diagonal de leitura: aliado embaixo/esquerda, rival em cima/direita.
+	var centro := -1.32 if jogador == 0 else 1.18
+	var passo := 0.56 if jogador == 0 else 0.48
 	return centro + float(clampi(faixa, -1, 1)) * passo
 
 
@@ -288,10 +298,19 @@ func _tocar_fx_do_golpe(
 	_viewport.add_child(projetil)
 	var destino: Vector3 = _rigs[alvo_jogador].position + Vector3(0.0, 1.20, 0.22)
 	var pesado: bool = str(golpe.get("role", "")) == "pesado"
-	var duracao_viagem := 0.36 if pesado else 0.24
+	var duracao_viagem := 0.42 if pesado else 0.28
+	var inicio: Vector3 = projetil.position
+	var curva_lateral := -0.34 if atacante_jogador == 0 else 0.34
 	var viagem := create_tween()
-	viagem.set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
-	viagem.tween_property(projetil, "position", destino, duracao_viagem)
+	viagem.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	viagem.tween_method(
+		_posicionar_projetil_curvo.bind(
+			projetil, inicio, destino, 0.62 if pesado else 0.38, curva_lateral
+		),
+		0.0,
+		1.0,
+		duracao_viagem
+	)
 	viagem.parallel().tween_property(projetil, "scale", Vector3.ONE, duracao_viagem)
 	viagem.parallel().tween_method(
 		_definir_quadro_fx.bind(projetil, quadros),
@@ -319,6 +338,24 @@ func _tocar_fx_do_golpe(
 	t.tween_callback(_esconder_fx.bind(sprite))
 
 
+func _posicionar_projetil_curvo(
+	progresso: float,
+	projetil: Sprite3D,
+	inicio: Vector3,
+	destino: Vector3,
+	altura: float,
+	desvio: float
+) -> void:
+	if not is_instance_valid(projetil):
+		return
+	var posicao := inicio.lerp(destino, progresso)
+	var arco := sin(progresso * PI)
+	posicao.y += arco * altura
+	posicao.x += arco * desvio
+	projetil.position = posicao
+	projetil.rotation.z = progresso * TAU * 0.72
+
+
 func _definir_quadro_fx(valor: float, sprite: Sprite3D, quadros: int) -> void:
 	if is_instance_valid(sprite):
 		sprite.frame = clampi(int(valor), 0, quadros - 1)
@@ -334,10 +371,15 @@ func _sacudir_camera(forca: float) -> void:
 		return
 	var t := create_tween()
 	t.set_trans(Tween.TRANS_SINE)
-	for i in 6:
-		var d := forca * (1.0 - float(i) / 6.0) * 3.0
-		t.tween_property(_camera, "rotation_degrees:z", randf_range(-d, d), 0.045)
-	t.tween_property(_camera, "rotation_degrees:z", 0.0, 0.10)
+	for indice in 6:
+		var d := forca * (1.0 - float(indice) / 6.0) * 3.0
+		t.tween_property(
+			_camera,
+			"rotation:z",
+			_camera_home_rotation.z + deg_to_rad(randf_range(-d, d)),
+			0.045
+		)
+	t.tween_property(_camera, "rotation", _camera_home_rotation, 0.10)
 
 
 func _empurrar_camera() -> void:
@@ -345,8 +387,12 @@ func _empurrar_camera() -> void:
 		return
 	var t := create_tween()
 	t.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	t.tween_property(_camera, "fov", 34.0, 0.45)
-	t.tween_property(_camera, "fov", 44.0, 0.45)
+	t.set_parallel(true)
+	t.tween_property(_camera, "fov", 38.0, 0.32)
+	t.tween_property(_camera, "position", _camera_home_position + Vector3(0.22, 0.16, -0.72), 0.32)
+	t.chain().set_parallel(true)
+	t.tween_property(_camera, "fov", _camera_home_fov, 0.42)
+	t.tween_property(_camera, "position", _camera_home_position, 0.42)
 
 
 ## Converte a posicao 3D da Beast em coordenada de tela dentro da faixa.
@@ -354,7 +400,8 @@ func _tela_da_beast(jogador: int) -> Vector2:
 	var rig = _rigs[jogador]
 	if rig == null or not is_instance_valid(rig) or _camera == null:
 		return Vector2(LARGURA * 0.5, H_ARENA * 0.5)
-	var ponto: Vector2 = _camera.unproject_position(rig.global_position + Vector3(0.0, 1.3, 0.0))
+	var altura := 1.06 if jogador == 0 else 1.38
+	var ponto: Vector2 = _camera.unproject_position(rig.global_position + Vector3(0.0, altura, 0.0))
 	return ponto
 
 
@@ -392,7 +439,7 @@ func _montar_hud() -> void:
 
 	var margem_msg := _margem(8)
 	painel_msg.add_child(margem_msg)
-	_mensagem = _rotulo("PREPARE-SE!", 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	_mensagem = _rotulo("PREPARE-SE!", 22, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
 	_mensagem.add_theme_color_override("font_outline_color", Color("090d20"))
 	_mensagem.add_theme_constant_override("outline_size", 5)
 	_mensagem.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -411,7 +458,7 @@ func _montar_hud() -> void:
 	var grade := GridContainer.new()
 	grade.columns = 2
 	grade.add_theme_constant_override("h_separation", 10)
-	grade.add_theme_constant_override("v_separation", 8)
+	grade.add_theme_constant_override("v_separation", 6)
 	margem.add_child(grade)
 
 	for indice in ACTION_COUNT:
@@ -422,7 +469,7 @@ func _montar_hud() -> void:
 			cor = Color("59e98b")
 
 		var botao := Button.new()
-		botao.custom_minimum_size = Vector2(0, 78)
+		botao.custom_minimum_size = Vector2(0, 67)
 		botao.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		botao.focus_mode = Control.FOCUS_NONE
 		botao.clip_text = false
@@ -430,12 +477,12 @@ func _montar_hud() -> void:
 		botao.expand_icon = true
 		botao.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		botao.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		botao.add_theme_font_size_override("font_size", 18)
+		botao.add_theme_font_size_override("font_size", 17)
 		if _fonte_batalha != null:
 			botao.add_theme_font_override("font", _fonte_batalha)
 		botao.add_theme_color_override("font_color", Color.WHITE)
 		botao.add_theme_color_override("font_disabled_color", Color(0.45, 0.48, 0.60))
-		botao.add_theme_constant_override("icon_max_width", 52)
+		botao.add_theme_constant_override("icon_max_width", 46)
 		botao.add_theme_constant_override("h_separation", 10)
 		botao.add_theme_stylebox_override("normal", _estilo_botao(cor, 0.12))
 		botao.add_theme_stylebox_override("hover", _estilo_botao(cor, 0.24))
@@ -446,79 +493,71 @@ func _montar_hud() -> void:
 		_botoes.append(botao)
 
 
-func _montar_bloco_vida(jogador: int, y: float, cor: Color) -> void:
+func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 	var painel := _painel(Color(0.03, 0.05, 0.15, 0.90), Color(cor.r, cor.g, cor.b, 0.55))
 	painel.position = Vector2(MARGEM, y)
 	painel.size = Vector2(LARGURA - MARGEM * 2.0, H_HUD)
 	add_child(painel)
 
-	var margem := _margem(14)
+	var margem := _margem(9)
 	painel.add_child(margem)
 
 	var coluna := VBoxContainer.new()
-	coluna.add_theme_constant_override("separation", 6)
+	coluna.add_theme_constant_override("separation", 3)
 	margem.add_child(coluna)
 
-	# Linha 1: quem e + tipo
+	# Linha 1: nome dominante + selo de elemento.
 	var linha1 := HBoxContainer.new()
 	linha1.add_theme_constant_override("separation", 10)
 	coluna.add_child(linha1)
 
-	var titulo := "JOGADOR %d" % (jogador + 1)
-	if not GameState.is_human_player(jogador):
-		titulo = "CPU TÁTICA"
-	var quem := _rotulo(titulo, 14, cor)
-	quem.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	linha1.add_child(quem)
+	var nome := _rotulo("", 25, Color.WHITE)
+	nome.add_theme_color_override("font_outline_color", Color("080c1d"))
+	nome.add_theme_constant_override("outline_size", 4)
+	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha1.add_child(nome)
+	_nome_labels.append(nome)
 
-	var tipo := _rotulo("", 14, Color.BLACK, HORIZONTAL_ALIGNMENT_CENTER)
-	tipo.custom_minimum_size = Vector2(132, 24)
+	var tipo := _rotulo("", 13, Color.BLACK, HORIZONTAL_ALIGNMENT_CENTER)
+	tipo.custom_minimum_size = Vector2(116, 22)
 	tipo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	linha1.add_child(tipo)
 	_tipo_labels.append(tipo)
 
-	# Linha 2: nome + peso
+	# Linha 2: barra larga + valor legivel.
 	var linha2 := HBoxContainer.new()
 	linha2.add_theme_constant_override("separation", 10)
 	coluna.add_child(linha2)
 
-	var nome := _rotulo("", 28, Color.WHITE)
-	nome.add_theme_color_override("font_outline_color", Color("080c1d"))
-	nome.add_theme_constant_override("outline_size", 4)
-	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	linha2.add_child(nome)
-	_nome_labels.append(nome)
-
-	var peso := _rotulo("", 13, Color("ffdf73"), HORIZONTAL_ALIGNMENT_RIGHT)
-	peso.custom_minimum_size = Vector2(300, 0)
-	peso.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	linha2.add_child(peso)
-	_peso_labels.append(peso)
-
-	# Linha 3: barra + numero
-	var linha3 := HBoxContainer.new()
-	linha3.add_theme_constant_override("separation", 12)
-	coluna.add_child(linha3)
-
 	var barra := ProgressBar.new()
 	barra.show_percentage = false
-	barra.custom_minimum_size = Vector2(0, 22)
+	barra.custom_minimum_size = Vector2(0, 20)
 	barra.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	barra.add_theme_stylebox_override("background", _estilo_barra(Color(0.06, 0.07, 0.13)))
-	linha3.add_child(barra)
+	linha2.add_child(barra)
 	_hp_bars.append(barra)
 
 	var hp := _rotulo("", 14, Color.WHITE, HORIZONTAL_ALIGNMENT_RIGHT)
-	hp.custom_minimum_size = Vector2(150, 0)
+	hp.custom_minimum_size = Vector2(124, 0)
 	hp.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	linha3.add_child(hp)
+	linha2.add_child(hp)
 	_hp_labels.append(hp)
 
-	# Linha 4: reservas
+	# Linha 3: reservas + classe de peso.
+	var linha3 := HBoxContainer.new()
+	linha3.add_theme_constant_override("separation", 8)
+	coluna.add_child(linha3)
 	var reservas := HBoxContainer.new()
-	reservas.add_theme_constant_override("separation", 9)
-	coluna.add_child(reservas)
+	reservas.add_theme_constant_override("separation", 7)
+	reservas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha3.add_child(reservas)
 	_reservas.append(reservas)
+
+	var peso := _rotulo("", 12, Color("ffdf73"), HORIZONTAL_ALIGNMENT_RIGHT)
+	peso.custom_minimum_size = Vector2(360, 0)
+	peso.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	linha3.add_child(peso)
+	_peso_labels.append(peso)
 
 
 func _rotulo(
@@ -532,8 +571,9 @@ func _rotulo(
 	l.horizontal_alignment = alinhamento
 	l.add_theme_font_size_override("font_size", tamanho)
 	l.add_theme_color_override("font_color", cor)
-	if _fonte_batalha != null:
-		l.add_theme_font_override("font", _fonte_batalha)
+	var fonte := _fonte_batalha if tamanho >= 20 else _fonte_corpo
+	if fonte != null:
+		l.add_theme_font_override("font", fonte)
 	return l
 
 
@@ -690,7 +730,9 @@ func _atacar(indice_golpe: int) -> void:
 
 	# Efeito e dano acontecem exatamente no impacto, nunca antes.
 	await _tocar_fx_do_golpe(alvo_jogador, golpe, _turn)
-	rig_alvo.levar_dano(CreatureDB.color_for_type(str(golpe["element"])))
+	var cor_impacto := CreatureDB.color_for_type(str(golpe["element"]))
+	rig_alvo.levar_dano(cor_impacto)
+	_estadio.impacto(cor_impacto, 1.0 if pesado else 0.55)
 	_sacudir_camera(0.42 if pesado else 0.20)
 
 	defensor["hp"] = maxi(0, int(defensor["hp"]) - dano)

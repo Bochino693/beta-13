@@ -1,6 +1,6 @@
 # Layout retrato 720×1280 — grade de faixas
 
-## O bug atual
+## O bug corrigido
 
 `scripts/scenes/battle.gd` posiciona tudo com números absolutos soltos:
 
@@ -15,7 +15,7 @@ O avatar do jogador termina em **875** e o balão de mensagem começa em **865**
 São **10 px de sobreposição**, e é por isso que "está tudo por cima de tudo".
 Há mais casos: `versus` em y=475 cai dentro do avatar do inimigo (196–551).
 
-A causa não é o valor errado. É o método: posição absoluta em `Control` solto,
+A causa não era apenas um valor errado. Era o método: posição absoluta em `Control` solto,
 sem container e sem âncora. Qualquer troca de fonte ou de texto reabre o
 problema.
 
@@ -26,28 +26,27 @@ de uma faixa e não pode cruzar a fronteira. Faixas são declaradas como constan
 no topo do script, nunca digitadas soltas no meio do código.
 
 ```gdscript
-const LARGURA_BASE    := 720.0
-const ALTURA_BASE     := 1280.0
-const MARGEM_LATERAL  := 24.0
-
-const FAIXA_TOPO      := 24.0    # HUD do oponente
-const FAIXA_ARENA     := 300.0   # área 3D visível
-const FAIXA_MENSAGEM  := 862.0   # balão de mensagem
-const FAIXA_ACOES     := 962.0   # painel de golpes
+const Y_TOPO          := 18.0
+const Y_HUD_INIMIGO   := 76.0
+const Y_ARENA         := 184.0
+const Y_HUD_ALIADO    := 770.0
+const Y_MENSAGEM      := 878.0
+const Y_ACOES         := 942.0
 ```
 
 ## Faixas da batalha
 
 | Faixa | Y inicial | Y final | Altura | Conteúdo |
 |---|---|---|---|---|
-| Topo | 24 | 120 | 96 | Nome + vida do oponente |
-| Arena | 120 | 750 | 630 | Palco 3D. Zero UI aqui. |
-| Aliado | 750 | 846 | 96 | Nome + vida do jogador |
-| Mensagem | 862 | 938 | 76 | Texto do turno |
-| Ações | 962 | 1256 | 294 | 5 golpes + defender/trocar |
+| Topo | 18 | 66 | 48 | Turno + placar |
+| Oponente | 76 | 174 | 98 | Nome, elemento, vida e reservas |
+| Arena | 184 | 760 | 576 | Estádio 3D, lutadores e impacto |
+| Aliado | 770 | 868 | 98 | Nome, elemento, vida e reservas |
+| Mensagem | 878 | 932 | 54 | Texto do turno |
+| Ações | 942 | 1256 | 314 | 5 golpes + defender/trocar |
 
-Sobra 16 px entre Aliado e Mensagem e 24 px entre Mensagem e Ações. Esse
-respiro é obrigatório: sem ele o retrato fica sufocado no gabinete.
+Todas as fronteiras têm 10 px de respiro. A arena cresceu sem invadir o HUD;
+os dois lutadores ocupam diagonais diferentes para nunca se esconderem.
 
 ## Regras que não se negociam
 
@@ -57,8 +56,8 @@ respiro é obrigatório: sem ele o retrato fica sufocado no gabinete.
    cresce com o conteúdo em vez de cortar texto.
 3. **Margem interna de 18 px em todo painel**, via
    `add_theme_constant_override("margin_left", 18)` nos quatro lados.
-4. **Fonte mínima 22 px** para texto lido a um braço de distância no gabinete.
-   Nome de Beast: 24. Mensagem de turno: 26. Botão de golpe: 22.
+4. **Hierarquia tipográfica explícita.** Nome de Beast: 25. Mensagem de turno:
+   22. Botão de golpe: 17 com alto contraste e contorno.
 5. **Botão de golpe: altura mínima 62 px.** É toque de dedo em pé, não mouse.
 6. **Área da arena fica livre de UI.** Se precisar mostrar dano ou nome flutuante
    sobre a Beast, use `Label3D` no espaço 3D, não `Control` por cima.
@@ -71,8 +70,8 @@ faixa de cada script de cena e falha se duas faixas se sobrepuserem. É barato e
 elimina a classe inteira de bug.
 
 ```python
-FAIXAS = [("topo",24,120),("arena",120,750),("aliado",750,846),
-          ("mensagem",862,938),("acoes",962,1256)]
+FAIXAS = [("topo",18,66),("oponente",76,174),("arena",184,760),
+          ("aliado",770,868),("mensagem",878,932),("acoes",942,1256)]
 
 for i in range(len(FAIXAS) - 1):
     nome_a, _, fim_a = FAIXAS[i]

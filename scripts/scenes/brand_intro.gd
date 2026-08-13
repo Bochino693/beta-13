@@ -2,6 +2,7 @@ extends Control
 
 var _skipped := false
 var _logo_group: Control
+var _intro_beasts: Array[CreatureAvatar] = []
 
 
 func _ready() -> void:
@@ -14,6 +15,19 @@ func _build_screen() -> void:
 	var background := PortraitBackdrop.new()
 	add_child(background)
 	background.setup("res://assets/backgrounds/opening_portal.png", Color(0.72, 0.82, 1.0), 0.46)
+
+	var intro_data := [
+		["pyrocondor", Vector2(-170, 760), Vector2(340, 390), 1.0],
+		["nimbaleia", Vector2(550, 735), Vector2(340, 410), -1.0],
+	]
+	for item in intro_data:
+		var beast := CreatureAvatar.new()
+		add_child(beast)
+		beast.position = item[1]
+		beast.size = item[2]
+		beast.modulate.a = 0.0
+		beast.setup(CreatureDB.get_creature(str(item[0])), float(item[3]))
+		_intro_beasts.append(beast)
 
 	_logo_group = Control.new()
 	_logo_group.position = Vector2(35, 285)
@@ -58,19 +72,10 @@ func _build_screen() -> void:
 	footer.size = Vector2(650, 48)
 	_logo_group.add_child(footer)
 
-	var edition := UIFactory.badge("ARCADE VERTICAL • 2.5D", Color("ffdf47"))
+	var edition := UIFactory.badge("ARENA CINEMATOGRÁFICA", Color("ffdf47"))
 	edition.position = Vector2(180, 515)
 	edition.size = Vector2(290, 42)
 	_logo_group.add_child(edition)
-
-	var skip := UIFactory.label("PRESSIONE QUALQUER BOTÃO PARA PULAR", 14, Color("c8d5ee"), HORIZONTAL_ALIGNMENT_CENTER)
-	skip.position = Vector2(80, 1195)
-	skip.size = Vector2(560, 38)
-	add_child(skip)
-	var blink := create_tween().set_loops()
-	blink.tween_property(skip, "modulate:a", 0.30, 0.7)
-	blink.tween_property(skip, "modulate:a", 1.0, 0.7)
-
 
 func _run_intro() -> void:
 	var tween := create_tween()
@@ -78,7 +83,14 @@ func _run_intro() -> void:
 	tween.tween_property(_logo_group, "modulate:a", 1.0, 0.62)
 	tween.tween_property(_logo_group, "scale", Vector2.ONE, 0.82).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_logo_group, "position:y", 315.0, 2.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if _intro_beasts.size() == 2:
+		tween.tween_property(_intro_beasts[0], "position:x", -15.0, 1.05).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+		tween.tween_property(_intro_beasts[1], "position:x", 395.0, 1.05).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+		tween.tween_property(_intro_beasts[0], "modulate:a", 0.78, 0.65)
+		tween.tween_property(_intro_beasts[1], "modulate:a", 0.78, 0.65)
 	await tween.finished
+	for beast in _intro_beasts:
+		beast.play_celebration()
 	await get_tree().create_timer(2.0).timeout
 	_finish()
 

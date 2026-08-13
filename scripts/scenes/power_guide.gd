@@ -56,7 +56,7 @@ func _build_screen() -> void:
 	_move_rows.add_theme_constant_override("separation", 10)
 	scroll.add_child(_move_rows)
 
-	var footer := UIFactory.label("◀/▶ TROCAR ELEMENTO  •  Q VOLTAR", 15, Color("e4edff"), HORIZONTAL_ALIGNMENT_CENTER)
+	var footer := UIFactory.label("ARQUIVO ELEMENTAL • 10 GOLPES POR CATEGORIA", 15, Color("e4edff"), HORIZONTAL_ALIGNMENT_CENTER)
 	footer.position = Vector2(35, 1185)
 	footer.size = Vector2(650, 40)
 	add_child(footer)

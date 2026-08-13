@@ -30,7 +30,9 @@ void fragment() {
 var _leds: Array[StandardMaterial3D] = []
 var _publico: Array[StandardMaterial3D] = []
 var _marcadores: Array = [[], []]
+var _holofotes: Array[SpotLight3D] = []
 var _tempo := 0.0
+var _pulso_impacto := 1.0
 var _cor_p1 := Color("6ef8ff")
 var _cor_p2 := Color("ff55c6")
 
@@ -42,24 +44,60 @@ func _ready() -> void:
 func configurar(cor_p1: Color, cor_p2: Color) -> void:
 	_cor_p1 = cor_p1
 	_cor_p2 = cor_p2
+	_montar_fundo_cinematografico()
 	_montar_piso()
 	_montar_arquibancadas()
 	_montar_publico()
 	_montar_luzes()
+	_montar_estrutura_aerea()
 	_montar_faixas()
+
+
+func _montar_fundo_cinematografico() -> void:
+	var caminho := "res://assets/battle/arena/lazer_coliseum_backplate.png"
+	if not ResourceLoader.exists(caminho):
+		return
+	var fundo := Sprite3D.new()
+	fundo.texture = load(caminho) as Texture2D
+	fundo.centered = true
+	fundo.shaded = false
+	fundo.transparent = false
+	fundo.no_depth_test = false
+	fundo.render_priority = -8
+	fundo.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	# A arena ocupa uma faixa horizontal; recortamos o miolo do concept vertical.
+	fundo.region_enabled = true
+	fundo.region_rect = Rect2(0.0, 205.0, 941.0, 753.0)
+	fundo.pixel_size = 0.026
+	fundo.position = Vector3(0.0, 5.45, -17.0)
+	fundo.modulate = Color(0.78, 0.84, 1.0)
+	add_child(fundo)
 
 
 func _process(delta: float) -> void:
 	_tempo += delta
+	_pulso_impacto = move_toward(_pulso_impacto, 1.0, delta * 5.0)
 	# Movimento ambiental limitado a emissao. Nada altera posicao/horizonte.
 	for indice in range(_leds.size()):
 		var material: StandardMaterial3D = _leds[indice]
 		var pulso := 1.45 + sin(_tempo * 1.35 + float(indice) * 0.72) * 0.30
+		pulso *= _pulso_impacto
 		material.emission_energy_multiplier = pulso
 	for indice in range(_publico.size()):
 		var material: StandardMaterial3D = _publico[indice]
-		var brilho := 0.72 + sin(_tempo * 1.70 + float(indice) * 0.83) * 0.20
+		var onda := sin(_tempo * 2.15 - float(indice) * 0.19)
+		var brilho := (0.72 + onda * 0.24) * _pulso_impacto
 		material.emission_energy_multiplier = brilho
+	for indice in range(_holofotes.size()):
+		var foco := _holofotes[indice]
+		var lado := -1.0 if indice == 0 else 1.0
+		var alvo := Vector3(
+			sin(_tempo * 0.48 + float(indice) * 1.7) * 2.1,
+			0.15,
+			-2.7 + cos(_tempo * 0.36 + float(indice)) * 1.5
+		)
+		foco.look_at(alvo, Vector3.UP)
+		foco.light_energy = (2.0 + sin(_tempo * 1.2 + lado) * 0.25) * _pulso_impacto
 
 
 func _montar_piso() -> void:
@@ -172,11 +210,54 @@ func _montar_luzes() -> void:
 		holofote.rotation_degrees = Vector3(-62.0, 0.0, -24.0 * lado)
 		holofote.shadow_enabled = false
 		add_child(holofote)
+		_holofotes.append(holofote)
+
+
+func _montar_estrutura_aerea() -> void:
+	# Arco superior e totens laterais dão profundidade sem uma imagem de fundo móvel.
+	var arco_mesh := TorusMesh.new()
+	arco_mesh.inner_radius = 6.65
+	arco_mesh.outer_radius = 6.78
+	arco_mesh.rings = 72
+	arco_mesh.ring_segments = 10
+	var arco := MeshInstance3D.new()
+	arco.mesh = arco_mesh
+	arco.position = Vector3(0.0, 4.85, -6.1)
+	arco.rotation_degrees.x = 78.0
+	var material_arco := _material_emissivo(_cor_p1.lerp(_cor_p2, 0.5), 0.75)
+	arco.material_override = material_arco
+	_leds.append(material_arco)
+	add_child(arco)
+
+	for lado in [-1.0, 1.0]:
+		var corpo_mesh := BoxMesh.new()
+		corpo_mesh.size = Vector3(0.34, 3.6, 0.28)
+		var totem := MeshInstance3D.new()
+		totem.mesh = corpo_mesh
+		totem.position = Vector3(lado * 5.05, 2.0, -5.7)
+		var cor := _cor_p1 if lado < 0.0 else _cor_p2
+		totem.material_override = _material_metal(Color("111a36"), cor, 0.52)
+		add_child(totem)
+
+		for faixa_led in range(5):
+			var led_mesh := BoxMesh.new()
+			led_mesh.size = Vector3(0.39, 0.08, 0.31)
+			var led := MeshInstance3D.new()
+			led.mesh = led_mesh
+			led.position = Vector3(
+				lado * 5.05,
+				0.65 + float(faixa_led) * 0.68,
+				-5.54
+			)
+			var material := _material_emissivo(cor, 1.35)
+			led.material_override = material
+			_leds.append(material)
+			add_child(led)
 
 
 func _montar_faixas() -> void:
 	for jogador in range(2):
-		var z := 1.28 if jogador == 0 else -4.88
+		var z := 0.30 if jogador == 0 else -4.35
 		var cor := _cor_p1 if jogador == 0 else _cor_p2
 		for faixa in range(-1, 2):
 			var anel_mesh := TorusMesh.new()
@@ -196,9 +277,24 @@ func _montar_faixas() -> void:
 
 
 func _x_da_faixa(jogador: int, faixa: int) -> float:
-	var centro := -0.55 if jogador == 0 else 0.40
-	var passo := 0.74 if jogador == 0 else 0.58
+	var centro := -1.32 if jogador == 0 else 1.18
+	var passo := 0.56 if jogador == 0 else 0.48
 	return centro + float(faixa) * passo
+
+
+func impacto(cor: Color, forca: float = 1.0) -> void:
+	_pulso_impacto = maxf(_pulso_impacto, 1.0 + forca * 1.8)
+	for foco in _holofotes:
+		foco.light_color = foco.light_color.lerp(cor, 0.72)
+	var tween := create_tween()
+	tween.tween_interval(0.16)
+	tween.tween_callback(_restaurar_cores_de_luz)
+
+
+func _restaurar_cores_de_luz() -> void:
+	if _holofotes.size() >= 2:
+		_holofotes[0].light_color = _cor_p1
+		_holofotes[1].light_color = _cor_p2
 
 
 func definir_faixa(jogador: int, faixa: int, ameacada: int = 99) -> void:

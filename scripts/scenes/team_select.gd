@@ -1,6 +1,6 @@
 extends Control
 
-const COLUMNS := 3
+const COLUMNS := 2
 const FILTERS := ["TODOS", "Luz", "Escuridão", "Fogo", "Choque", "Terra", "Água", "Natureza", "Vento"]
 const CATEGORY_HINTS := {
 	"TODOS":"30 Beasts HD", "Luz":"celestiais e prismáticos", "Escuridão":"demônios e espectros",
@@ -77,6 +77,7 @@ func _build_screen() -> void:
 		filter_button.custom_minimum_size = Vector2(218, 47)
 		filter_button.focus_mode = Control.FOCUS_NONE
 		filter_button.text = element_name.to_upper()
+		UIFactory.apply_font(filter_button, true)
 		filter_button.add_theme_font_size_override("font_size", 13)
 		filter_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		filter_button.pressed.connect(_set_filter.bind(element_name))
@@ -95,29 +96,30 @@ func _build_screen() -> void:
 	var grid := GridContainer.new()
 	grid.columns = COLUMNS
 	grid.custom_minimum_size = Vector2(640, 0)
-	grid.add_theme_constant_override("h_separation", 7)
-	grid.add_theme_constant_override("v_separation", 8)
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
 	_scroll.add_child(grid)
 
 	for creature_index in _catalog.size():
 		var creature: Dictionary = _catalog[creature_index]
 		var type_color := CreatureDB.color_for_type(str(creature["type"]))
 		var card := Button.new()
-		card.custom_minimum_size = Vector2(208, 96)
+		card.custom_minimum_size = Vector2(315, 116)
 		card.focus_mode = Control.FOCUS_NONE
+		UIFactory.apply_font(card, true)
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.text = "%s\n%s • %s" % [creature["name"], creature["type"], _weight_short(str(creature["weight_class"]))]
-		var icon_path := "res://assets/creatures_hd/%s.png" % creature["id"]
+		var icon_path := "res://assets/sprites_combat/%s.png" % creature["id"]
 		if ResourceLoader.exists(icon_path):
-			card.icon = load(icon_path) as Texture2D
+			card.icon = _front_icon(str(creature["id"]))
 		else:
-			push_error("Retrato HD obrigatório ausente: %s" % icon_path)
+			push_error("Atlas de combate obrigatório ausente: %s" % icon_path)
 		card.expand_icon = true
 		card.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		card.alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		card.add_theme_constant_override("icon_max_width", 68)
-		card.add_theme_constant_override("h_separation", 3)
-		card.add_theme_font_size_override("font_size", 12)
+		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		card.add_theme_constant_override("icon_max_width", 92)
+		card.add_theme_constant_override("h_separation", 9)
+		card.add_theme_font_size_override("font_size", 15)
 		card.add_theme_color_override("font_color", Color("f0f7ff"))
 		card.add_theme_stylebox_override("normal", UIFactory.style_box(Color("e7111934"), Color(type_color, 0.62), 13, 2))
 		card.add_theme_stylebox_override("hover", UIFactory.style_box(Color("f3263458"), type_color, 13, 3))
@@ -159,7 +161,7 @@ func _build_screen() -> void:
 	_preview_moves.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	preview_panel.add_child(_preview_moves)
 
-	_instruction = UIFactory.label("", 13, Color("d5e0f3"), HORIZONTAL_ALIGNMENT_CENTER)
+	_instruction = UIFactory.label("SELECIONE CINCO BEASTS PARA FORMAR O ESQUADRÃO", 13, Color("d5e0f3"), HORIZONTAL_ALIGNMENT_CENTER)
 	_instruction.position = Vector2(25, 1142)
 	_instruction.size = Vector2(670, 32)
 	add_child(_instruction)
@@ -312,9 +314,11 @@ func _update_header() -> void:
 	_phase_label.text = "%s • EQUIPE 5 × 5" % player_name
 	_phase_label.add_theme_color_override("font_color", player_color)
 	_category_hint.text = "%s • %s" % [_active_filter.to_upper(), CATEGORY_HINTS[_active_filter]]
-	var ready_key := "E" if _current_player == 0 else "M"
-	_instruction.text = "DIREÇÕES • CONFIRMAR • TAB FILTRA • %s FINALIZA • CARTA COMPATÍVEL" % ready_key
-	_ready_button.text = "CONFIRMAR EQUIPE [%s]  •  %d/5" % [ready_key, _selected_teams[_current_player].size()]
+	_instruction.text = "ESQUADRÃO %d/5 • %s" % [
+		_selected_teams[_current_player].size(),
+		"PRONTO PARA A ARENA" if _selected_teams[_current_player].size() == 5 else "ESCOLHA COM ESTRATÉGIA"
+	]
+	_ready_button.text = "CONFIRMAR EQUIPE • %d/5" % _selected_teams[_current_player].size()
 	_ready_button.disabled = _selected_teams[_current_player].size() != 5
 
 
@@ -373,3 +377,15 @@ func _update_slots() -> void:
 
 func _weight_short(weight_class: String) -> String:
 	return {"Ultra Leve":"UL", "Leve":"L", "Médio":"M", "Pesado":"P", "Colossal":"C"}.get(weight_class, "M")
+
+
+func _front_icon(creature_id: String) -> Texture2D:
+	var texture := load("res://assets/sprites_combat/%s.png" % creature_id) as Texture2D
+	if texture == null:
+		return null
+	var cell_width := texture.get_width() / 4.0
+	var cell_height := texture.get_height() / 4.0
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = Rect2(0.0, cell_height * 2.0, cell_width, cell_height)
+	return atlas

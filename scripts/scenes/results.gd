@@ -75,7 +75,7 @@ func _build_screen() -> void:
 		column.add_child(button)
 		_buttons.append(button)
 
-	var footer := UIFactory.label("▲/▼ ESCOLHER • CONFIRMAR", 13, Color("d3deef"), HORIZONTAL_ALIGNMENT_CENTER)
+	var footer := UIFactory.label("A ARENA REGISTROU ESTA BATALHA", 13, Color("d3deef"), HORIZONTAL_ALIGNMENT_CENTER)
 	footer.position = Vector2(70, 1225)
 	footer.size = Vector2(580, 30)
 	add_child(footer)

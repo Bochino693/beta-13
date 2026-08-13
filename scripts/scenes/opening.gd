@@ -72,7 +72,7 @@ func _build_screen() -> void:
 		icon.tooltip_text = element
 		type_grid.add_child(icon)
 
-	_start_button = UIFactory.button("PRESSIONE 1 OU START", Color("ff4fc8"), Vector2(620, 108))
+	_start_button = UIFactory.button("ENTRAR NA ARENA", Color("ff4fc8"), Vector2(620, 108))
 	_start_button.position = Vector2(50, 895)
 	_start_button.size = Vector2(620, 108)
 	_start_button.add_theme_font_size_override("font_size", 28)
@@ -93,11 +93,11 @@ func _build_screen() -> void:
 	add_child(_credit_label)
 	_update_credit_label()
 
-	var controls := UIFactory.label("5 = FICHA  •  2 JOYSTICKS  •  TECLADO  •  TOQUE", 14, Color("d7e2f5"), HORIZONTAL_ALIGNMENT_CENTER)
+	var controls := UIFactory.label("MONTE SUA EQUIPE • DOMINE OS ELEMENTOS • VENÇA A ARENA", 14, Color("d7e2f5"), HORIZONTAL_ALIGNMENT_CENTER)
 	controls.position = Vector2(40, 1165)
 	controls.size = Vector2(640, 34)
 	add_child(controls)
-	var edition := UIFactory.label("VERTICAL 2.5D  •  CARTAS PREPARADAS PARA LEITURA", 13, Color("ffdf47"), HORIZONTAL_ALIGNMENT_CENTER)
+	var edition := UIFactory.label("ARCADE VERTICAL • BATALHAS CINEMATOGRÁFICAS", 13, Color("ffdf47"), HORIZONTAL_ALIGNMENT_CENTER)
 	edition.position = Vector2(40, 1205)
 	edition.size = Vector2(640, 34)
 	add_child(edition)
@@ -135,9 +135,9 @@ func _try_start() -> void:
 
 func _update_credit_label() -> void:
 	if GameState.free_play:
-		_credit_label.text = "MODO LIVRE  •  SEM FICHAS"
+		_credit_label.text = "MODO LIVRE • ARENA ABERTA"
 	else:
-		_credit_label.text = "CRÉDITOS: %02d  •  PRESSIONE 5 PARA INSERIR" % GameState.credits
+		_credit_label.text = "CRÉDITOS DISPONÍVEIS: %02d" % GameState.credits
 
 
 func _type_slug(element: String) -> String:

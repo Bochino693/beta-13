@@ -1,10 +1,10 @@
 extends Control
 
 const MODES := [
-	{"id":"pvp", "title":"DUELO LOCAL", "tag":"2 JOGADORES", "description":"Cada jogador lê ou escolhe 5 Beasts. Estratégia, recarga e trocas cara a cara.", "color":Color("ff4fc8"), "icon":"⚔"},
-	{"id":"cpu", "title":"DESAFIO CPU", "tag":"1 JOGADOR", "description":"Monte sua equipe e enfrente um bot que avalia peso, recarga e vantagem elemental.", "color":Color("6ef8ff"), "icon":"◆"},
-	{"id":"training", "title":"BATALHA RÁPIDA", "tag":"TREINO", "description":"Equipes sorteadas e combate imediato para aprender os 80 golpes e oito elementos.", "color":Color("ffdf47"), "icon":"▶"},
-	{"id":"guide", "title":"GUIA DE PODERES", "tag":"ENCICLOPÉDIA", "description":"Veja os dez golpes de cada elemento, poder, recarga, função, forças e fraquezas.", "color":Color("a970ff"), "icon":"◎"}
+	{"id":"pvp", "title":"DUELO LOCAL", "tag":"2 JOGADORES", "description":"Cada jogador escolhe 5 Beasts. Estratégia, recarga e trocas cara a cara.", "color":Color("ff4fc8"), "icon":"VS"},
+	{"id":"cpu", "title":"DESAFIO CPU", "tag":"1 JOGADOR", "description":"Monte sua equipe e enfrente uma CPU que avalia peso, recarga e vantagem elemental.", "color":Color("6ef8ff"), "icon":"CPU"},
+	{"id":"training", "title":"BATALHA RÁPIDA", "tag":"TREINO", "description":"Equipes sorteadas e combate imediato para dominar os 80 golpes e oito elementos.", "color":Color("ffdf47"), "icon":"RUSH"},
+	{"id":"guide", "title":"GUIA DE PODERES", "tag":"ENCICLOPÉDIA", "description":"Conheça poder, recarga, função, forças e fraquezas de cada golpe.", "color":Color("a970ff"), "icon":"GUIA"}
 ]
 
 var _cards: Array[Button] = []
@@ -27,7 +27,7 @@ func _build_screen() -> void:
 	title.position = Vector2(40, 32)
 	title.size = Vector2(640, 58)
 	add_child(title)
-	var subtitle := UIFactory.label("ARCADE VERTICAL • SISTEMAS ATÔMICOS", 16, Color("89eefa"), HORIZONTAL_ALIGNMENT_CENTER)
+	var subtitle := UIFactory.label("ESCOLHA SEU PRÓXIMO DESAFIO", 16, Color("89eefa"), HORIZONTAL_ALIGNMENT_CENTER)
 	subtitle.position = Vector2(40, 90)
 	subtitle.size = Vector2(640, 34)
 	add_child(subtitle)
@@ -42,6 +42,7 @@ func _build_screen() -> void:
 		var mode_data: Dictionary = MODES[mode_index]
 		var card := Button.new()
 		card.custom_minimum_size = Vector2(650, 220)
+		UIFactory.apply_font(card, true)
 		card.focus_mode = Control.FOCUS_NONE
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.add_theme_stylebox_override("normal", UIFactory.style_box(Color("e30f1733"), Color(mode_data["color"], 0.62), 28, 3))
@@ -51,7 +52,7 @@ func _build_screen() -> void:
 		column.add_child(card)
 		_cards.append(card)
 
-		var icon := UIFactory.title(str(mode_data["icon"]), 58, mode_data["color"])
+		var icon := UIFactory.title(str(mode_data["icon"]), 30, mode_data["color"])
 		icon.position = Vector2(18, 35)
 		icon.size = Vector2(120, 120)
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -73,7 +74,7 @@ func _build_screen() -> void:
 		description.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(description)
 
-	var help := UIFactory.label("▲/▼ NAVEGAR  •  CONFIRMAR  •  Q VOLTAR", 15, Color("d4e0f3"), HORIZONTAL_ALIGNMENT_CENTER)
+	var help := UIFactory.label("QUATRO FORMAS DE ENTRAR NA ARENA", 15, Color("d4e0f3"), HORIZONTAL_ALIGNMENT_CENTER)
 	help.position = Vector2(45, 1182)
 	help.size = Vector2(630, 42)
 	add_child(help)

@@ -2,6 +2,7 @@ URW Gothic font attribution
 
 Files used by the battle interface:
 - URWGothic-Demi.otf
+- URWGothic-Book.otf
 
 Copyright 2015 URW Software
 Copyright 2013, 2014 (URW)++ Design & Development
