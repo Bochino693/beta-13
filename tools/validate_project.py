@@ -69,6 +69,7 @@ def main() -> None:
         resources = (
             f"assets/creatures_hd/{creature_id}.png",
             f"assets/sprites/beasts/{creature_id}.png",
+            f"assets/sprites_combat/{creature_id}.png",
             f"assets/materials/creatures/{creature_id}.tres",
             f"assets/cards/{creature_id}.png",
         )
@@ -85,6 +86,20 @@ def main() -> None:
                     sheet.verify()
             except Exception as exc:
                 errors.append(f"{creature_id}: spritesheet corrompido: {exc}.")
+        combat_sheet = ROOT / "assets" / "sprites_combat" / f"{creature_id}.png"
+        if combat_sheet.is_file():
+            try:
+                with Image.open(combat_sheet) as sheet:
+                    if sheet.mode != "RGBA":
+                        errors.append(f"{creature_id}: atlas de combate precisa ser RGBA.")
+                    if sheet.width % 4 or sheet.height % 4:
+                        errors.append(f"{creature_id}: atlas de combate nao forma grade 4x4.")
+                    if sheet.getchannel("A").getextrema()[0] != 0:
+                        errors.append(f"{creature_id}: atlas de combate nao tem alfa transparente.")
+                with Image.open(combat_sheet) as sheet:
+                    sheet.verify()
+            except Exception as exc:
+                errors.append(f"{creature_id}: atlas de combate corrompido: {exc}.")
 
     for move in moves:
         if move["element"] not in ELEMENTS:
@@ -125,10 +140,19 @@ def main() -> None:
         "backgrounds": len(list((ROOT / "assets" / "backgrounds").glob("*.png"))),
         "type_icons": len(list((ROOT / "assets" / "type_icons").glob("*.png"))),
     }
-    expected = {"scripts": 19, "scenes": 7, "cards": 30, "backgrounds": 4, "type_icons": 8}
+    expected = {"scenes": 7, "cards": 30, "backgrounds": 4, "type_icons": 8}
     for key, expected_value in expected.items():
         if counts[key] != expected_value:
             errors.append(f"Contagem de {key}: {counts[key]}; esperado {expected_value}.")
+    required_scripts = {
+        "scripts/scenes/battle.gd",
+        "scripts/components/cinematic_beast_sprite_3d.gd",
+        "scripts/components/battle_stadium_3d.gd",
+        "scripts/components/battle_shield_dome_3d.gd",
+    }
+    for relative in required_scripts:
+        if not (ROOT / relative).is_file():
+            errors.append(f"Script de batalha ausente: {relative}.")
 
     print(f"Beasts: {len(creatures)} | Golpes: {len(moves)} | Elementos: {len({c['type'] for c in creatures})}")
     print(" | ".join(f"{key}: {value}" for key, value in counts.items()))

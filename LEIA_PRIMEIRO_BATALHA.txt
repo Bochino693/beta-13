@@ -1,0 +1,39 @@
+LAZER BEASTS - BATALHA CINEMATOGRAFICA
+======================================
+
+COMO APLICAR NO SEU PROJETO REAL
+1. Extraia o ZIP inteiro.
+2. Feche o Godot.
+3. De duplo clique em APLICAR_NO_PROJETO_REAL.bat.
+4. A atualizacao entra diretamente em
+   C:\Users\LAZER GAMES\Documents\beta-13 e a batalha e aberta.
+
+O instalador preserva a pasta .git e nao substitui as outras telas.
+
+COMO ABRIR NOVAMENTE DEPOIS DA INSTALACAO
+- De duplo clique em ABRIR_BATALHA.bat dentro de Documents\beta-13.
+
+CONTROLES
+- A / D ou direcional esquerdo/direito: muda entre as 3 faixas.
+- W / S ou direcional cima/baixo: seleciona o poder.
+- Espaco ou botao A: confirma.
+
+O QUE FOI IMPLEMENTADO SOMENTE NA BATALHA
+- 30 atlas 4x4: 8 poses reais de costas + 8 poses de frente por Beast.
+- AnimatedSprite3D com crossfade e movimento interpolado.
+- Estadio 3D fixo com arquibancadas, publico, pista, LEDs e refletores.
+- Tres posicoes laterais; a esquiva reduz 28% do proximo dano.
+- Redoma 3D para a guarda, com indicador e animacao de rompimento.
+- Os 80 spritesheets de poder viajam pela arena e animam no impacto.
+- 30 rugidos individuais, som de esquiva e ambiente de estadio.
+- HUD de batalha mais nitido, com fonte, icones e botoes maiores.
+
+QUADROS DE CADA VISTA
+0 repouso | 1 movimento vivo | 2 carga | 3 ataque
+4 dano    | 5 esquiva        | 6 vitoria | 7 KO
+
+NOTA
+Os personagens sao AnimatedSprite3D dentro de uma arena 3D real. Eles nao sao
+modelos de malha 3D. Essa solucao preserva a arte 2D, cria costas verdadeiras
+e entrega movimento cinematografico sem fingir que uma imagem frontal virou
+um modelo completo.

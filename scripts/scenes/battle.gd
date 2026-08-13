@@ -1,22 +1,6 @@
 extends Control
 
-# ---------------------------------------------------------------------------
-# BATALHA 2.5D — substituicao completa de scripts/scenes/battle.gd
-#
-# Mantem 100% das regras de combate originais: dano, recarga, peso, guarda,
-# troca, KO, pontuacao, CPU e ida para o resultado. Nada de balanceamento
-# mudou.
-#
-# O que mudou e a apresentacao:
-#   - As Beasts vivem num SubViewport 3D real, com chao em perspectiva.
-#   - A Beast do jogador aparece de costas, grande, no primeiro plano.
-#   - Animacao por deformacao de malha (BeastRig3D), nao spritesheet falso.
-#   - O sprite do golpe (assets/moves_fx) toca em 3D, no momento do impacto.
-#   - Layout em faixas verticais exclusivas: nada encosta em nada.
-#
-# NAO precisa mexer em battle.tscn: a raiz continua sendo Control.
-# Requer scripts/components/beast_rig_3d.gd.
-# ---------------------------------------------------------------------------
+# Batalha retrato: regras originais, AnimatedSprite3D, estadio e HUD em faixas.
 
 const MOVE_COUNT := 5
 const GUARD_ACTION := 5
@@ -43,38 +27,6 @@ const Y_ACOES := 896.0
 const COR_P1 := Color("6ef8ff")
 const COR_P2 := Color("ff55c6")
 
-const CODIGO_CHAO := """
-shader_type spatial;
-render_mode blend_mix, cull_disabled, unshaded, depth_draw_opaque;
-
-uniform vec3 cor_base : source_color = vec3(0.03, 0.05, 0.13);
-uniform vec3 cor_grade : source_color = vec3(0.25, 0.55, 1.00);
-uniform vec3 cor_centro : source_color = vec3(0.55, 0.35, 1.00);
-uniform float tempo = 0.0;
-
-void fragment() {
-	vec2 uv = UV;
-	vec2 g = fract(uv * 14.0 + vec2(0.0, tempo * 0.05));
-	float linha = min(
-		smoothstep(0.0, 0.035, g.x) * smoothstep(0.0, 0.035, 1.0 - g.x),
-		smoothstep(0.0, 0.035, g.y) * smoothstep(0.0, 0.035, 1.0 - g.y)
-	);
-	linha = 1.0 - linha;
-
-	float dist = distance(uv, vec2(0.5, 0.5));
-	float halo = smoothstep(0.52, 0.06, dist);
-	float pulso = 0.75 + 0.25 * sin(tempo * 1.6 - dist * 9.0);
-
-	vec3 cor = cor_base;
-	cor += cor_grade * linha * 0.55 * halo;
-	cor += cor_centro * halo * halo * 0.32 * pulso;
-	cor = mix(cor, cor_base, smoothstep(0.32, 0.0, uv.y) * 0.9);
-
-	ALBEDO = cor;
-	ALPHA = 1.0;
-}
-"""
-
 # --- Estado de combate (identico ao original) ------------------------------
 var _teams: Array = [[], []]
 var _active := [0, 0]
@@ -87,10 +39,14 @@ var _action_cursor := 0
 # --- 3D --------------------------------------------------------------------
 var _viewport: SubViewport
 var _camera: Camera3D
-var _material_chao: ShaderMaterial
-var _rigs: Array = [null, null]
-var _fx: Array = [null, null]
+var _rigs: Array[CinematicBeastSprite3D] = [null, null]
+var _fx: Array[Sprite3D] = [null, null]
+var _escudos: Array[BattleShieldDome3D] = [null, null]
+var _estadio: BattleStadium3D
+var _faixas: Array[int] = [0, 0]
+var _esquiva_pronta: Array[bool] = [false, false]
 var _tempo := 0.0
+var _audio_batalha: BattleAudioDirector
 
 # --- HUD -------------------------------------------------------------------
 var _nome_labels: Array[Label] = []
@@ -104,9 +60,13 @@ var _turno_label: Label
 var _mensagem: Label
 var _botoes: Array[Button] = []
 var _camada_numeros: Control
+var _fonte_batalha: Font
 
 
 func _ready() -> void:
+	var caminho_fonte := "res://assets/battle/fonts/URWGothic-Demi.otf"
+	if ResourceLoader.exists(caminho_fonte):
+		_fonte_batalha = load(caminho_fonte) as Font
 	_teams[0] = GameState.runtime_team(0)
 	_teams[1] = GameState.runtime_team(1)
 	if _teams[0].is_empty() or _teams[1].is_empty():
@@ -123,6 +83,8 @@ func _ready() -> void:
 
 	_turn = 0 if _lutador(0)["data"]["speed"] >= _lutador(1)["data"]["speed"] else 1
 	AudioSynth.start_music("battle")
+	_audio_batalha = BattleAudioDirector.new()
+	add_child(_audio_batalha)
 	_atualizar_ui()
 	_sequencia_de_entrada()
 	set_process(true)
@@ -130,12 +92,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_tempo += delta
-	if _material_chao != null:
-		_material_chao.set_shader_parameter("tempo", _tempo)
-	if _camera != null:
-		# Respiro lento da camera. Camera parada mata a sensacao de 3D.
-		_camera.position.y = 2.00 + sin(_tempo * 0.55) * 0.030
-		_camera.position.x = sin(_tempo * 0.31) * 0.040
+	# O horizonte permanece estavel. A camera so se move durante golpes.
 
 
 # ===========================================================================
@@ -168,25 +125,15 @@ func _montar_arena_3d() -> void:
 	mundo.environment = ambiente
 	_viewport.add_child(mundo)
 
-	var shader := Shader.new()
-	shader.code = CODIGO_CHAO
-	_material_chao = ShaderMaterial.new()
-	_material_chao.shader = shader
-
-	var plano := PlaneMesh.new()
-	plano.size = Vector2(30.0, 38.0)
-	var chao := MeshInstance3D.new()
-	chao.mesh = plano
-	chao.material_override = _material_chao
-	chao.position = Vector3(0.0, 0.0, -6.0)
-	chao.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_viewport.add_child(chao)
+	_estadio = BattleStadium3D.new()
+	_viewport.add_child(_estadio)
+	_estadio.configurar(COR_P1, COR_P2)
 
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
 	_camera.fov = 44.0
-	_camera.position = Vector3(0.0, 2.00, 5.20)
-	_camera.rotation_degrees = Vector3(-8.5, 0.0, 0.0)
+	_camera.position = Vector3(0.0, 2.18, 5.45)
+	_camera.rotation_degrees = Vector3(-9.2, 0.0, 0.0)
 	_camera.near = 0.05
 	_camera.far = 90.0
 	_viewport.add_child(_camera)
@@ -207,33 +154,39 @@ func _trocar_rig(jogador: int) -> void:
 		_rigs[jogador].queue_free()
 	if _fx[jogador] != null and is_instance_valid(_fx[jogador]):
 		_fx[jogador].queue_free()
+	if _escudos[jogador] != null and is_instance_valid(_escudos[jogador]):
+		_escudos[jogador].queue_free()
 
 	var dados: Dictionary = _lutador(jogador)["data"]
-	var id_beast := str(dados.get("id", ""))
-	var de_costas := jogador == 0
+	var id_beast: String = str(dados.get("id", ""))
+	var de_costas: bool = jogador == 0
+	var cor: Color = CreatureDB.color_for_type(str(dados.get("type", "Luz")))
+	var familia: String = CinematicBeastSprite3D.familia_de(dados)
 
-	var textura := _textura_da_beast(id_beast, de_costas)
-	if textura == null:
-		push_error("Batalha: sem textura para " + id_beast)
-		return
-
-	var tem_costas := ResourceLoader.exists("res://assets/creatures_back/%s.png" % id_beast)
-	var cor := CreatureDB.color_for_type(str(dados.get("type", "Luz")))
-
-	var rig := BeastRig3D.new()
+	var rig := CinematicBeastSprite3D.new()
 	_viewport.add_child(rig)
-	rig.position = Vector3(-0.55, 0.0, 1.30) if de_costas else Vector3(0.40, 0.0, -4.90)
-	rig.configurar(
-		textura,
-		2.85 if de_costas else 2.25,
-		BeastRig3D.familia_de(dados),
-		de_costas and not tem_costas,
+	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 1.30) \
+		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.90)
+	var configurado: bool = rig.configurar(
+		id_beast,
+		3.00 if de_costas else 2.35,
+		familia,
+		de_costas,
 		cor
 	)
-	if de_costas and tem_costas:
-		rig.definir_contraluz(0.25)
+	if not configurado:
+		rig.queue_free()
+		push_error("Batalha: atlas cinematografico ausente para " + id_beast)
+		return
 	rig.entrar()
 	_rigs[jogador] = rig
+
+	var escudo := BattleShieldDome3D.new()
+	escudo.position = rig.position + Vector3(0.0, 1.25 if de_costas else 1.0, 0.0)
+	escudo.scale = Vector3(1.15, 1.15, 1.15) if de_costas else Vector3(0.88, 0.88, 0.88)
+	escudo.visible = false
+	_viewport.add_child(escudo)
+	_escudos[jogador] = escudo
 
 	# A camada de efeito fica sobre o ALVO, nao sobre o atacante.
 	var sprite := Sprite3D.new()
@@ -249,18 +202,59 @@ func _trocar_rig(jogador: int) -> void:
 	_fx[jogador] = sprite
 
 
-func _textura_da_beast(id_beast: String, de_costas: bool) -> Texture2D:
-	if de_costas:
-		var costas := "res://assets/creatures_back/%s.png" % id_beast
-		if ResourceLoader.exists(costas):
-			return load(costas) as Texture2D
-	var frente := "res://assets/creatures_hd/%s.png" % id_beast
-	if ResourceLoader.exists(frente):
-		return load(frente) as Texture2D
-	return null
+func _x_da_faixa(jogador: int, faixa: int) -> float:
+	var centro := -0.55 if jogador == 0 else 0.40
+	var passo := 0.74 if jogador == 0 else 0.58
+	return centro + float(clampi(faixa, -1, 1)) * passo
 
 
-func _tocar_fx_do_golpe(alvo_jogador: int, golpe: Dictionary) -> void:
+func _mover_faixa(jogador: int, direcao: int) -> void:
+	if _rigs[jogador] == null or not is_instance_valid(_rigs[jogador]):
+		return
+	var nova_faixa := clampi(_faixas[jogador] + signi(direcao), -1, 1)
+	if nova_faixa == _faixas[jogador]:
+		AudioSynth.ui_cancel()
+		return
+	var anterior := _faixas[jogador]
+	_faixas[jogador] = nova_faixa
+	_esquiva_pronta[jogador] = true
+	_rigs[jogador].esquivar(signi(nova_faixa - anterior))
+	if _escudos[jogador] != null:
+		var tween := create_tween()
+		tween.tween_property(_escudos[jogador], "position:x", _x_da_faixa(jogador, nova_faixa), 0.28)
+	if _fx[jogador] != null:
+		var tween_fx := create_tween()
+		tween_fx.tween_property(_fx[jogador], "position:x", _x_da_faixa(jogador, nova_faixa), 0.28)
+	_estadio.definir_faixa(jogador, nova_faixa)
+	_mensagem.text = "%s • FAIXA %s • PROXIMO DANO -28%%" % [
+		str(_lutador(jogador)["data"]["name"]),
+		["ESQUERDA", "CENTRO", "DIREITA"][nova_faixa + 1]
+	]
+	_audio_batalha.esquivar()
+	AudioSynth.ui_move()
+
+
+func _recentralizar_faixa(jogador: int) -> void:
+	if _faixas[jogador] == 0:
+		_esquiva_pronta[jogador] = false
+		return
+	var direcao := -signi(_faixas[jogador])
+	_faixas[jogador] = 0
+	_esquiva_pronta[jogador] = false
+	if _rigs[jogador] != null and is_instance_valid(_rigs[jogador]):
+		_rigs[jogador].esquivar(direcao, 0.32)
+	if _escudos[jogador] != null:
+		var tween := create_tween()
+		tween.tween_property(_escudos[jogador], "position:x", _x_da_faixa(jogador, 0), 0.26)
+	if _fx[jogador] != null:
+		var tween_fx := create_tween()
+		tween_fx.tween_property(_fx[jogador], "position:x", _x_da_faixa(jogador, 0), 0.26)
+	_estadio.definir_faixa(jogador, 0)
+
+
+func _tocar_fx_do_golpe(
+	alvo_jogador: int, golpe: Dictionary, atacante_jogador: int
+) -> void:
 	var sprite: Sprite3D = _fx[alvo_jogador]
 	if sprite == null or not is_instance_valid(sprite):
 		return
@@ -275,12 +269,44 @@ func _tocar_fx_do_golpe(alvo_jogador: int, golpe: Dictionary) -> void:
 	# A tira e horizontal e os quadros sao quadrados: quadros = largura/altura.
 	var tam := textura.get_size()
 	var quadros := maxi(1, roundi(tam.x / maxf(1.0, tam.y)))
+	var cor_fx: Color = CreatureDB.color_for_type(str(golpe.get("element", "Luz")))
+
+	# O primeiro quadro viaja do atacante ate o alvo; o golpe nao surge pronto.
+	var projetil := Sprite3D.new()
+	projetil.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	projetil.shaded = false
+	projetil.transparent = true
+	projetil.no_depth_test = true
+	projetil.render_priority = 9
+	projetil.texture = textura
+	projetil.hframes = quadros
+	projetil.frame = 0
+	projetil.modulate = cor_fx
+	projetil.pixel_size = 0.0044 if atacante_jogador == 0 else 0.0055
+	projetil.position = _rigs[atacante_jogador].position + Vector3(0.0, 1.35, 0.18)
+	projetil.scale = Vector3(0.55, 0.55, 0.55)
+	_viewport.add_child(projetil)
+	var destino: Vector3 = _rigs[alvo_jogador].position + Vector3(0.0, 1.20, 0.22)
+	var pesado: bool = str(golpe.get("role", "")) == "pesado"
+	var duracao_viagem := 0.36 if pesado else 0.24
+	var viagem := create_tween()
+	viagem.set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	viagem.tween_property(projetil, "position", destino, duracao_viagem)
+	viagem.parallel().tween_property(projetil, "scale", Vector3.ONE, duracao_viagem)
+	viagem.parallel().tween_method(
+		_definir_quadro_fx.bind(projetil, quadros),
+		0.0,
+		float(maxi(1, roundi(float(quadros) / 2.0))),
+		duracao_viagem
+	)
+	await viagem.finished
+	projetil.queue_free()
 
 	sprite.texture = textura
 	sprite.hframes = quadros
 	sprite.vframes = 1
 	sprite.frame = 0
-	sprite.modulate = CreatureDB.color_for_type(str(golpe.get("element", "Luz")))
+	sprite.modulate = cor_fx
 	sprite.visible = true
 
 	var t := create_tween()
@@ -345,11 +371,11 @@ func _montar_hud() -> void:
 	topo.size = Vector2(util, H_TOPO)
 	add_child(topo)
 
-	_turno_label = _rotulo("", 20, COR_P1)
+	_turno_label = _rotulo("", 22, COR_P1)
 	_turno_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	topo.add_child(_turno_label)
 
-	_placar = _rotulo("", 20, Color("ffdf47"), HORIZONTAL_ALIGNMENT_RIGHT)
+	_placar = _rotulo("", 22, Color("ffdf47"), HORIZONTAL_ALIGNMENT_RIGHT)
 	_placar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	topo.add_child(_placar)
 
@@ -364,9 +390,11 @@ func _montar_hud() -> void:
 	painel_msg.size = Vector2(util, H_MENSAGEM)
 	add_child(painel_msg)
 
-	var margem_msg := _margem(12)
+	var margem_msg := _margem(8)
 	painel_msg.add_child(margem_msg)
-	_mensagem = _rotulo("PREPARE-SE!", 22, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	_mensagem = _rotulo("PREPARE-SE!", 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	_mensagem.add_theme_color_override("font_outline_color", Color("090d20"))
+	_mensagem.add_theme_constant_override("outline_size", 5)
 	_mensagem.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_mensagem.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	margem_msg.add_child(_mensagem)
@@ -377,13 +405,13 @@ func _montar_hud() -> void:
 	painel.size = Vector2(util, ALTURA - Y_ACOES - MARGEM)
 	add_child(painel)
 
-	var margem := _margem(16)
+	var margem := _margem(10)
 	painel.add_child(margem)
 
 	var grade := GridContainer.new()
 	grade.columns = 2
-	grade.add_theme_constant_override("h_separation", 16)
-	grade.add_theme_constant_override("v_separation", 13)
+	grade.add_theme_constant_override("h_separation", 10)
+	grade.add_theme_constant_override("v_separation", 8)
 	margem.add_child(grade)
 
 	for indice in ACTION_COUNT:
@@ -394,7 +422,7 @@ func _montar_hud() -> void:
 			cor = Color("59e98b")
 
 		var botao := Button.new()
-		botao.custom_minimum_size = Vector2(0, 72)
+		botao.custom_minimum_size = Vector2(0, 78)
 		botao.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		botao.focus_mode = Control.FOCUS_NONE
 		botao.clip_text = false
@@ -402,10 +430,12 @@ func _montar_hud() -> void:
 		botao.expand_icon = true
 		botao.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		botao.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		botao.add_theme_font_size_override("font_size", 17)
+		botao.add_theme_font_size_override("font_size", 18)
+		if _fonte_batalha != null:
+			botao.add_theme_font_override("font", _fonte_batalha)
 		botao.add_theme_color_override("font_color", Color.WHITE)
 		botao.add_theme_color_override("font_disabled_color", Color(0.45, 0.48, 0.60))
-		botao.add_theme_constant_override("icon_max_width", 44)
+		botao.add_theme_constant_override("icon_max_width", 52)
 		botao.add_theme_constant_override("h_separation", 10)
 		botao.add_theme_stylebox_override("normal", _estilo_botao(cor, 0.12))
 		botao.add_theme_stylebox_override("hover", _estilo_botao(cor, 0.24))
@@ -452,7 +482,9 @@ func _montar_bloco_vida(jogador: int, y: float, cor: Color) -> void:
 	linha2.add_theme_constant_override("separation", 10)
 	coluna.add_child(linha2)
 
-	var nome := _rotulo("", 26, Color.WHITE)
+	var nome := _rotulo("", 28, Color.WHITE)
+	nome.add_theme_color_override("font_outline_color", Color("080c1d"))
+	nome.add_theme_constant_override("outline_size", 4)
 	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	linha2.add_child(nome)
 	_nome_labels.append(nome)
@@ -493,13 +525,15 @@ func _rotulo(
 	texto: String,
 	tamanho: int,
 	cor: Color,
-	alinhamento: int = HORIZONTAL_ALIGNMENT_LEFT
+	alinhamento: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT
 ) -> Label:
 	var l := Label.new()
 	l.text = texto
 	l.horizontal_alignment = alinhamento
 	l.add_theme_font_size_override("font_size", tamanho)
 	l.add_theme_color_override("font_color", cor)
+	if _fonte_batalha != null:
+		l.add_theme_font_override("font", _fonte_batalha)
 	return l
 
 
@@ -552,6 +586,7 @@ func _sequencia_de_entrada() -> void:
 	_mensagem.text = "AS BEASTS ENTRAM NA ARENA"
 	await get_tree().create_timer(0.85).timeout
 	_rigs[_turn].comemorar()
+	_audio_batalha.rugir(str(_lutador(_turn)["data"]["id"]))
 	_mensagem.text = "COMEÇA %s • MAIOR VELOCIDADE" % _lutador(_turn)["data"]["name"]
 	_busy = false
 	_atualizar_ui()
@@ -563,13 +598,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var prefixo := "p1_" if _turn == 0 else "p2_"
 	if event.is_action_pressed(prefixo + "left"):
-		_mover_cursor(-1)
+		_mover_faixa(_turn, -1)
 	elif event.is_action_pressed(prefixo + "right"):
-		_mover_cursor(1)
+		_mover_faixa(_turn, 1)
 	elif event.is_action_pressed(prefixo + "up"):
-		_mover_cursor(-2)
+		_mover_cursor(-1)
 	elif event.is_action_pressed(prefixo + "down"):
-		_mover_cursor(2)
+		_mover_cursor(1)
 	elif event.is_action_pressed(prefixo + "confirm"):
 		_escolher_acao(_action_cursor)
 
@@ -628,9 +663,15 @@ func _atacar(indice_golpe: int) -> void:
 		str(golpe["element"]), str(defensor["data"]["type"])
 	)
 	var dano := maxi(5, MoveDB.damage_preview(atacante, defensor, golpe) + randi_range(-2, 2))
+	var esquivou := _esquiva_pronta[alvo_jogador]
+	if esquivou:
+		dano = maxi(4, roundi(dano * 0.72))
+		_esquiva_pronta[alvo_jogador] = false
 	if bool(defensor["guard"]):
 		dano = maxi(4, roundi(dano * 0.48))
 		defensor["guard"] = false
+		if _escudos[alvo_jogador] != null:
+			_escudos[alvo_jogador].romper()
 	MoveDB.set_cooldown(atacante, golpe)
 
 	var pesado := str(golpe.get("role", "")) == "pesado"
@@ -648,7 +689,7 @@ func _atacar(indice_golpe: int) -> void:
 	await rig_atacante.animacao_terminou  # sinal "impacto"
 
 	# Efeito e dano acontecem exatamente no impacto, nunca antes.
-	_tocar_fx_do_golpe(alvo_jogador, golpe)
+	await _tocar_fx_do_golpe(alvo_jogador, golpe, _turn)
 	rig_alvo.levar_dano(CreatureDB.color_for_type(str(golpe["element"])))
 	_sacudir_camera(0.42 if pesado else 0.20)
 
@@ -659,7 +700,11 @@ func _atacar(indice_golpe: int) -> void:
 	_numero_de_dano(
 		alvo_jogador,
 		CreatureDB.color_for_type(str(golpe["element"])),
-		"%d • %s" % [dano, CreatureDB.effectiveness_text(multiplicador)]
+		"%d • %s%s" % [
+			dano,
+			CreatureDB.effectiveness_text(multiplicador),
+			" • ESQUIVA -28%" if esquivou else ""
+		]
 	)
 
 	if pesado:
@@ -668,6 +713,8 @@ func _atacar(indice_golpe: int) -> void:
 		AudioSynth.hit(clampf(float(dano) / 45.0, 0.7, 1.25))
 
 	await get_tree().create_timer(0.55).timeout
+	if esquivou:
+		_recentralizar_faixa(alvo_jogador)
 	_atualizar_ui()
 
 	if int(defensor["hp"]) <= 0:
@@ -683,6 +730,8 @@ func _defender() -> void:
 	AudioSynth.guard()
 	_rigs[_turn].definir_cor_elemento(Color("59d7ff"))
 	_rigs[_turn].comemorar(0.5)
+	if _escudos[_turn] != null:
+		_escudos[_turn].ativar(Color("59d7ff"))
 	await get_tree().create_timer(0.55).timeout
 	_rigs[_turn].definir_cor_elemento(
 		CreatureDB.color_for_type(str(lutador["data"]["type"]))
@@ -737,8 +786,10 @@ func _encerrar(vencedor: int) -> void:
 	}
 	_mensagem.text = "%s VENCEU A BATALHA!" % _titulo_do_jogador(vencedor)
 	AudioSynth.stop_music()
+	_audio_batalha.parar()
 	AudioSynth.victory()
 	_rigs[vencedor].comemorar(1.2)
+	_audio_batalha.rugir(str(_lutador(vencedor)["data"]["id"]))
 	await get_tree().create_timer(1.60).timeout
 	Transition.go_to(GameState.RESULTS_SCENE, "RESULTADO DA ARENA")
 

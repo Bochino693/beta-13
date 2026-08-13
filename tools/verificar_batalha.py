@@ -18,7 +18,9 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 BATALHA = RAIZ / "scripts" / "scenes" / "battle.gd"
-RIG = RAIZ / "scripts" / "components" / "beast_rig_3d.gd"
+SPRITE = RAIZ / "scripts" / "components" / "cinematic_beast_sprite_3d.gd"
+ESTADIO = RAIZ / "scripts" / "components" / "battle_stadium_3d.gd"
+ESCUDO = RAIZ / "scripts" / "components" / "battle_shield_dome_3d.gd"
 
 AUTOLOADS = {
     "CreatureDB": RAIZ / "scripts" / "autoload" / "creature_db.gd",
@@ -40,7 +42,7 @@ def secao(titulo):
 
 
 def checar_arquivos():
-    for caminho in (BATALHA, RIG):
+    for caminho in (BATALHA, SPRITE, ESTADIO, ESCUDO):
         if not caminho.exists():
             erros.append("arquivo ausente: %s" % caminho.relative_to(RAIZ))
         else:
@@ -71,21 +73,21 @@ def checar_autoloads(texto):
 
 
 def checar_metodos_do_rig(texto):
-    if not RIG.exists():
+    if not SPRITE.exists():
         return
-    fonte = RIG.read_text(encoding="utf-8")
+    fonte = SPRITE.read_text(encoding="utf-8")
     definidos = set(re.findall(r"^(?:static\s+)?func\s+([a-zA-Z_0-9]+)", fonte, re.M))
     nativos = {"queue_free", "new", "add_child", "position", "global_position"}
 
     chamados = set(re.findall(r"rig[a-z_]*\.([a-z_0-9]+)\(", texto))
     chamados |= set(re.findall(r"_rigs\[[^\]]+\]\.([a-z_0-9]+)\(", texto))
-    chamados |= set(re.findall(r"BeastRig3D\.([a-z_0-9]+)\(", texto))
+    chamados |= set(re.findall(r"CinematicBeastSprite3D\.([a-z_0-9]+)\(", texto))
 
     for membro in sorted(chamados):
         if membro in definidos or membro in nativos:
-            ok.append("BeastRig3D.%s" % membro)
+            ok.append("Rig cinematografico.%s" % membro)
         else:
-            erros.append("BeastRig3D.%s nao existe" % membro)
+            erros.append("Rig cinematografico.%s nao existe" % membro)
 
 
 def checar_criaturas():
@@ -97,8 +99,9 @@ def checar_criaturas():
     criaturas = json.loads(caminho.read_text(encoding="utf-8"))["creatures"]
     print("  criaturas no catalogo: %d" % len(criaturas))
 
-    fonte_rig = RIG.read_text(encoding="utf-8") if RIG.exists() else ""
-    mapeadas = set(re.findall(r'^\t"([a-z_0-9]+)":\s*"', fonte_rig, re.M))
+    fonte_rig = SPRITE.read_text(encoding="utf-8") if SPRITE.exists() else ""
+    trecho_mapa = fonte_rig.split("const FAMILIA_POR_ID", 1)[-1].split("}", 1)[0]
+    mapeadas = set(re.findall(r'"([a-z_0-9]+)"\s*:', trecho_mapa))
     familias = set(re.findall(r'^\t"([a-z]+)":\s*\{', fonte_rig, re.M))
 
     sem_retrato = []
@@ -129,10 +132,15 @@ def checar_criaturas():
         erros.append("familias usadas que nao existem em PERFIS: %s"
                      % ", ".join(sorted(invalidos)))
 
-    costas = RAIZ / "assets" / "creatures_back"
-    n_costas = len(list(costas.glob("*.png"))) if costas.exists() else 0
-    print("  artes de costas: %d de %d (opcional, o rig usa contraluz sem elas)"
-          % (n_costas, len(criaturas)))
+    atlas_dir = RAIZ / "assets" / "sprites_combat"
+    sem_atlas = [c["id"] for c in criaturas
+                 if not (atlas_dir / (c["id"] + ".png")).is_file()]
+    if sem_atlas:
+        erros.append("sem atlas de combate frente/costas: %s" % ", ".join(sem_atlas))
+    else:
+        ok.append("as %d Beasts tem atlas 4x4 frente/costas" % len(criaturas))
+    print("  atlas cinematograficos: %d de %d"
+          % (len(list(atlas_dir.glob("*.png"))), len(criaturas)))
 
     return criaturas
 
@@ -171,10 +179,29 @@ def checar_golpes():
     print("  golpes marcados como pesado: %d" % len(pesados))
 
 
+def checar_audio(criaturas):
+    audio = RAIZ / "assets" / "audio"
+    ausentes = []
+    for criatura in criaturas:
+        caminho = audio / "beasts" / (criatura["id"] + "_roar.wav")
+        if not caminho.is_file() or caminho.stat().st_size < 1000:
+            ausentes.append(criatura["id"])
+    for nome in ("dodge.wav", "stadium_ambience.wav"):
+        caminho = audio / nome
+        if not caminho.is_file() or caminho.stat().st_size < 1000:
+            ausentes.append(nome)
+    if ausentes:
+        erros.append("audio da batalha ausente: %s" % ", ".join(ausentes))
+    else:
+        ok.append("30 rugidos + esquiva + ambiente presentes")
+
+
 def checar_presenca_das_mudancas(texto):
     exigido = {
         "SubViewport": "arena 3D dentro do Control",
-        "BeastRig3D": "rig de deformacao das Beasts",
+        "CinematicBeastSprite3D": "AnimatedSprite3D frente/costas",
+        "BattleStadium3D": "estadio 3D estavel",
+        "BattleShieldDome3D": "redoma de guarda",
         "_tocar_fx_do_golpe": "sprite de golpe tocando no impacto",
         "sprite_sheet": "leitura da tira de efeito do moves.json",
         "_sacudir_camera": "tremor de camera no impacto",
@@ -182,7 +209,7 @@ def checar_presenca_das_mudancas(texto):
         "_numero_de_dano": "numero de dano flutuante",
         "Y_ARENA": "grade de faixas do retrato",
         "unproject_position": "projecao 3D->2D do numero de dano",
-        "creatures_back": "suporte a arte de costas futura",
+        "_mover_faixa": "esquiva em tres posicoes",
     }
     for marca, descricao in exigido.items():
         if marca in texto:
@@ -224,10 +251,13 @@ def main():
     checar_metodos_do_rig(texto)
 
     secao("5. Beasts")
-    checar_criaturas()
+    criaturas = checar_criaturas()
 
     secao("6. Golpes")
     checar_golpes()
+
+    secao("7. Audio")
+    checar_audio(criaturas)
 
     print()
     print("=" * 40)

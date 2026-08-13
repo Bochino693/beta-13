@@ -1,0 +1,21 @@
+URW Gothic font attribution
+
+Files used by the battle interface:
+- URWGothic-Demi.otf
+
+Copyright 2015 URW Software
+Copyright 2013, 2014 (URW)++ Design & Development
+
+License: GNU Affero General Public License version 3 with Font Exception.
+
+Font Exception:
+As a special exception, permission is granted to include these font programs
+in a Postscript or PDF file that consists of a document that contains text to
+be displayed or printed using this font, regardless of the conditions or
+license applying to the document itself.
+
+Complete license text:
+https://www.gnu.org/licenses/agpl-3.0.txt
+
+Upstream source:
+https://github.com/ArtifexSoftware/urw-base35-fonts

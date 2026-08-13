@@ -1,0 +1,34 @@
+RELATORIO DE VALIDACAO - BATALHA CINEMATOGRAFICA
+================================================
+
+Escopo: somente scenes/battle.tscn e seus componentes/recursos.
+
+RESULTADOS
+- Analisador semantico GDScript: 0 diagnosticos em 5 scripts novos/alterados.
+- Linter GDScript: sucesso, 0 problemas.
+- Verificador de batalha: 71 verificacoes, 0 avisos, 0 erros.
+- Layout 720x1280: 6 faixas, 10 px de respiro, 0 sobreposicoes.
+- Projeto: 30 Beasts, 80 golpes, 8 elementos, estrutura OK.
+- Balanceamento: 8.700 duelos simulados, equilibrio competitivo OK.
+- Artes: 30 atlas RGBA 4x4 com dimensoes divisiveis por quatro.
+- Audio: 30 rugidos + esquiva + ambiente, WAV PCM 16-bit/44,1 kHz.
+
+CONTRATO VISUAL
+- Quadros 0..7: costas do jogador.
+- Quadros 8..15: frente do oponente.
+- Em cada vista: idle A, idle B, carga, ataque, dano, esquiva, vitoria, KO.
+- Duas AnimatedSprite3D executam crossfade entre poses.
+- Tweens de posicao, escala e rotacao completam a continuidade.
+- Os 80 spritesheets de golpe viajam pela arena e animam no impacto.
+
+VALIDADORES INCLUIDOS
+- python tools/validar_layout.py
+- python tools/verificar_batalha.py
+- python tools/validate_project.py
+- python tools/simulate_balance.py
+
+OBSERVACAO HONESTA
+O ambiente de producao do pacote nao possui o executavel do Godot. Por isso,
+foram executadas validacao semantica, sintatica, estrutural, de assets, audio,
+layout e balanceamento. O teste visual final em execucao deve ser feito no
+Godot 4.6 pelo ABRIR_BATALHA.bat.
