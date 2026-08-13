@@ -150,6 +150,7 @@ func _construir_quadros(textura: Texture2D) -> SpriteFrames:
 			largura,
 			altura
 		)
+		atlas.filter_clip = true
 		recurso.add_frame(animacao, atlas)
 	return recurso
 
@@ -373,25 +374,43 @@ func carregar(duracao: float = 0.85) -> void:
 	tween.tween_callback(_finalizar_estado.bind("carregar", false))
 
 
-func atacar(duracao: float = 0.62) -> void:
+func atacar(pesado: bool = false, duracao: float = 0.62) -> void:
 	_ocupado = true
 	var multiplicador := float(_perfil["ataque"])
 	var tempo_total := duracao / maxf(0.35, multiplicador)
 	var direcao_z := -1.0 if _de_costas else 1.0
 	var inicio := position
-	_crossfade(POSE_CARGA, 0.10)
+	# Golpes leves não passam pela pose de carga. Isso dá resposta imediata e
+	# reserva a antecipação longa, aura e leitura de peso para o golpe pesado.
+	if not pesado:
+		_crossfade(POSE_ATAQUE, 0.055)
 	var tween := _novo_tween()
-	tween.tween_property(self, "position:z", inicio.z - direcao_z * 0.16, tempo_total * 0.24)
-	tween.parallel().tween_property(self, "scale", Vector3(1.08, 0.91, 1.0), tempo_total * 0.24)
-	tween.tween_callback(_crossfade.bind(POSE_ATAQUE, 0.08))
+	var antecipacao := 0.24 if pesado else 0.11
+	tween.tween_property(self, "position:z", inicio.z - direcao_z * (0.16 if pesado else 0.07), tempo_total * antecipacao)
+	tween.parallel().tween_property(
+		self,
+		"scale",
+		Vector3(1.08, 0.91, 1.0) if pesado else Vector3(1.035, 0.97, 1.0),
+		tempo_total * antecipacao
+	)
+	if pesado:
+		tween.tween_callback(_crossfade.bind(POSE_ATAQUE, 0.075))
 	tween.tween_property(
-		self, "position:z", inicio.z + direcao_z * 0.92, tempo_total * 0.20
+		self,
+		"position:z",
+		inicio.z + direcao_z * (1.02 if pesado else 0.64),
+		tempo_total * (0.20 if pesado else 0.17)
 	).set_trans(Tween.TRANS_EXPO)
-	tween.parallel().tween_property(self, "scale", Vector3(0.96, 1.08, 1.0), tempo_total * 0.20)
+	tween.parallel().tween_property(
+		self,
+		"scale",
+		Vector3(0.95, 1.10, 1.0) if pesado else Vector3(0.98, 1.055, 1.0),
+		tempo_total * (0.20 if pesado else 0.17)
+	)
 	tween.tween_callback(_emitir_impacto)
-	tween.tween_interval(tempo_total * 0.12)
-	tween.tween_property(self, "position", inicio, tempo_total * 0.36)
-	tween.parallel().tween_property(self, "scale", _escala_base, tempo_total * 0.36)
+	tween.tween_interval(tempo_total * (0.12 if pesado else 0.06))
+	tween.tween_property(self, "position", inicio, tempo_total * (0.36 if pesado else 0.30))
+	tween.parallel().tween_property(self, "scale", _escala_base, tempo_total * (0.36 if pesado else 0.30))
 	tween.tween_callback(_finalizar_estado.bind("atacar"))
 
 
@@ -419,18 +438,24 @@ func levar_dano(cor: Color = Color(1.0, 0.35, 0.35), duracao: float = 0.42) -> v
 
 func esquivar(direcao: int, duracao: float = 0.38) -> void:
 	_ocupado = true
-	_crossfade(POSE_ESQUIVA, 0.07)
+	_crossfade(POSE_ESQUIVA, 0.045)
 	var inicio_x := position.x
 	var destino_x := inicio_x + float(signi(direcao)) * 0.72
 	var velocidade := float(_perfil["esquiva"])
 	var tween := _novo_tween()
+	tween.tween_callback(_gerar_rastros_esquiva.bind(signi(direcao)))
 	tween.tween_property(
 		self, "position:x", destino_x, duracao / maxf(0.4, velocidade)
 	).set_trans(Tween.TRANS_EXPO)
 	tween.parallel().tween_property(
-		self, "rotation_degrees:z", -7.0 * float(signi(direcao)), duracao * 0.55
+		self, "rotation_degrees:z", -9.0 * float(signi(direcao)), duracao * 0.50
 	)
-	tween.tween_property(self, "rotation_degrees:z", 0.0, duracao * 0.30)
+	tween.parallel().tween_property(
+		self, "scale", Vector3(0.93, 1.04, 1.0), duracao * 0.44
+	)
+	tween.tween_callback(_crossfade.bind(POSE_REPOUSO_A, 0.075))
+	tween.tween_property(self, "rotation_degrees:z", 0.0, duracao * 0.22)
+	tween.parallel().tween_property(self, "scale", _escala_base, duracao * 0.22)
 	tween.tween_callback(_fixar_nova_origem.bind(destino_x))
 
 
@@ -485,6 +510,36 @@ func _criar_rastro(atraso: float = 0.0) -> void:
 	tween.tween_property(fantasma, "modulate:a", 0.0, 0.24)
 	tween.tween_property(fantasma, "scale", Vector3(1.14, 1.14, 1.14), 0.24)
 	tween.chain().tween_callback(fantasma.queue_free)
+
+
+func _criar_rastro_esquiva(atraso: float, direcao: int) -> void:
+	if _sprite_ativo == null:
+		return
+	var fantasma := AnimatedSprite3D.new()
+	fantasma.sprite_frames = _quadros
+	fantasma.play(_nome_pose(POSE_ESQUIVA))
+	fantasma.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	fantasma.shaded = false
+	fantasma.transparent = true
+	fantasma.no_depth_test = true
+	fantasma.render_priority = 3
+	fantasma.pixel_size = _sprite_ativo.pixel_size
+	fantasma.position = _sprite_ativo.position
+	fantasma.position.x -= float(direcao) * atraso * 5.0
+	fantasma.modulate = Color(_cor_elemento.r, _cor_elemento.g, _cor_elemento.b, 0.27)
+	add_child(fantasma)
+	var tween := create_tween()
+	if atraso > 0.0:
+		tween.tween_interval(atraso)
+	tween.set_parallel(true)
+	tween.tween_property(fantasma, "modulate:a", 0.0, 0.20)
+	tween.tween_property(fantasma, "position:x", fantasma.position.x - float(direcao) * 0.18, 0.20)
+	tween.chain().tween_callback(fantasma.queue_free)
+
+
+func _gerar_rastros_esquiva(direcao: int) -> void:
+	for atraso in range(3):
+		_criar_rastro_esquiva(float(atraso) * 0.035, direcao)
 
 
 func _finalizar_estado(nome: String, voltar_ao_idle: bool = true) -> void:

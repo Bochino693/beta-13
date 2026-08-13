@@ -14,14 +14,14 @@ CREATURES = json.loads((ROOT / "data" / "creatures.json").read_text(encoding="ut
 MOVES = {move["id"]: move for move in json.loads((ROOT / "data" / "moves.json").read_text(encoding="utf-8"))["moves"]}
 
 STRONG = {
-    "Luz": ["Escuridão", "Natureza"],
-    "Escuridão": ["Vento", "Água"],
-    "Fogo": ["Luz", "Natureza"],
-    "Choque": ["Água", "Vento"],
-    "Terra": ["Choque", "Fogo"],
-    "Água": ["Fogo", "Terra"],
-    "Natureza": ["Terra", "Água"],
-    "Vento": ["Natureza", "Luz"],
+    "Luz": ["Escuridão"],
+    "Escuridão": ["Luz"],
+    "Fogo": ["Natureza"],
+    "Água": ["Fogo"],
+    "Choque": ["Água"],
+    "Vento": ["Choque"],
+    "Terra": ["Vento"],
+    "Natureza": ["Terra"],
 }
 
 WEIGHT = {

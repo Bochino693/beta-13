@@ -6,23 +6,35 @@ extends Node3D
 
 const SEGMENTOS_ARQUIBANCADA := 18
 const PUBLICO_POR_ANEL := 32
+const VARIANTE_COLISEU := "coliseu"
+const VARIANTE_FORJA := "forja"
+const VARIANTE_CELESTE := "celeste"
+const FUNDOS: Dictionary = {
+	VARIANTE_COLISEU: "res://assets/battle/arena/lazer_coliseum_backplate.png",
+	VARIANTE_FORJA: "res://assets/battle/arena/obsidian_forge_backplate.png",
+	VARIANTE_CELESTE: "res://assets/battle/arena/sky_temple_backplate.png",
+}
 const CODIGO_PISO := """
 shader_type spatial;
 render_mode blend_mix, cull_disabled, unshaded, depth_draw_opaque;
 uniform vec3 cor_base : source_color = vec3(0.016, 0.025, 0.070);
 uniform vec3 cor_grade : source_color = vec3(0.20, 0.64, 1.00);
 uniform vec3 cor_acento : source_color = vec3(0.75, 0.22, 1.00);
+uniform vec3 cor_borda : source_color = vec3(0.05, 0.14, 0.30);
 void fragment() {
 	vec2 p = UV - vec2(0.5);
 	float raio = length(p);
-	float circulo = 1.0 - smoothstep(0.32, 0.325, abs(raio - 0.265));
-	vec2 grade_uv = fract(UV * vec2(18.0, 24.0));
+	float dentro = 1.0 - smoothstep(0.47, 0.485, raio);
+	float circulo = 1.0 - smoothstep(0.018, 0.027, abs(raio - 0.31));
+	vec2 grade_uv = fract(UV * vec2(14.0, 20.0));
 	float linha_x = 1.0 - smoothstep(0.025, 0.055, min(grade_uv.x, 1.0 - grade_uv.x));
 	float linha_y = 1.0 - smoothstep(0.025, 0.055, min(grade_uv.y, 1.0 - grade_uv.y));
-	float grade = max(linha_x, linha_y) * smoothstep(0.56, 0.08, raio);
+	float grade = max(linha_x, linha_y) * smoothstep(0.52, 0.10, raio) * 0.56;
 	float centro = smoothstep(0.52, 0.0, raio);
-	ALBEDO = cor_base + cor_grade * grade * 0.42;
-	ALBEDO += cor_acento * (circulo * 0.38 + centro * 0.11);
+	float borda = smoothstep(0.39, 0.47, raio) * dentro;
+	ALBEDO = cor_base + cor_grade * grade * 0.26;
+	ALBEDO += cor_acento * (circulo * 0.34 + centro * 0.07);
+	ALBEDO += cor_borda * borda * 0.75;
 	ALPHA = 1.0;
 }
 """
@@ -35,15 +47,26 @@ var _tempo := 0.0
 var _pulso_impacto := 1.0
 var _cor_p1 := Color("6ef8ff")
 var _cor_p2 := Color("ff55c6")
+var _variante := VARIANTE_COLISEU
 
 
 func _ready() -> void:
 	set_process(true)
 
 
-func configurar(cor_p1: Color, cor_p2: Color) -> void:
+static func variante_para_tipos(tipo_p1: String, tipo_p2: String) -> String:
+	var tipos := [tipo_p1, tipo_p2]
+	if "Fogo" in tipos or "Terra" in tipos:
+		return VARIANTE_FORJA
+	if "Vento" in tipos or "Água" in tipos:
+		return VARIANTE_CELESTE
+	return VARIANTE_COLISEU
+
+
+func configurar(cor_p1: Color, cor_p2: Color, variante: String = VARIANTE_COLISEU) -> void:
 	_cor_p1 = cor_p1
 	_cor_p2 = cor_p2
+	_variante = variante if FUNDOS.has(variante) else VARIANTE_COLISEU
 	_montar_fundo_cinematografico()
 	_montar_piso()
 	_montar_arquibancadas()
@@ -54,7 +77,7 @@ func configurar(cor_p1: Color, cor_p2: Color) -> void:
 
 
 func _montar_fundo_cinematografico() -> void:
-	var caminho := "res://assets/battle/arena/lazer_coliseum_backplate.png"
+	var caminho: String = str(FUNDOS[_variante])
 	if not ResourceLoader.exists(caminho):
 		return
 	var fundo := Sprite3D.new()
@@ -67,10 +90,11 @@ func _montar_fundo_cinematografico() -> void:
 	fundo.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	# A arena ocupa uma faixa horizontal; recortamos o miolo do concept vertical.
 	fundo.region_enabled = true
-	fundo.region_rect = Rect2(0.0, 205.0, 941.0, 753.0)
+	var recorte_y := 160.0 if _variante != VARIANTE_COLISEU else 205.0
+	fundo.region_rect = Rect2(0.0, recorte_y, 941.0, 790.0)
 	fundo.pixel_size = 0.026
 	fundo.position = Vector3(0.0, 5.45, -17.0)
-	fundo.modulate = Color(0.78, 0.84, 1.0)
+	fundo.modulate = Color(0.88, 0.90, 1.0) if _variante == VARIANTE_CELESTE else Color(0.82, 0.84, 0.92)
 	add_child(fundo)
 
 
@@ -109,6 +133,8 @@ func _montar_piso() -> void:
 	material.shader = shader
 	material.set_shader_parameter("cor_grade", Vector3(_cor_p1.r, _cor_p1.g, _cor_p1.b))
 	material.set_shader_parameter("cor_acento", Vector3(_cor_p2.r, _cor_p2.g, _cor_p2.b))
+	var cor_borda := Color("3d1209") if _variante == VARIANTE_FORJA else Color("102a57")
+	material.set_shader_parameter("cor_borda", Vector3(cor_borda.r, cor_borda.g, cor_borda.b))
 	var piso := MeshInstance3D.new()
 	piso.mesh = plano
 	piso.material_override = material
@@ -127,6 +153,20 @@ func _montar_piso() -> void:
 	base.position = Vector3(0.0, -0.09, -3.7)
 	base.material_override = _material_metal(Color("111b3c"), Color("2b61a8"), 0.35)
 	add_child(base)
+
+	# Três corredores gravados tornam as posições de esquiva imediatamente
+	# legíveis sem ocupar a interface. Eles são geometria fixa no piso.
+	for jogador in range(2):
+		var z := 0.15 if jogador == 0 else -4.65
+		var cor := _cor_p1 if jogador == 0 else _cor_p2
+		for faixa in range(-1, 2):
+			var trilho_mesh := BoxMesh.new()
+			trilho_mesh.size = Vector3(0.035, 0.012, 1.05)
+			var trilho := MeshInstance3D.new()
+			trilho.mesh = trilho_mesh
+			trilho.position = Vector3(_x_da_faixa(jogador, faixa), 0.012, z)
+			trilho.material_override = _material_emissivo(Color(cor, 0.46), 0.38)
+			add_child(trilho)
 
 
 func _montar_arquibancadas() -> void:
@@ -257,7 +297,7 @@ func _montar_estrutura_aerea() -> void:
 
 func _montar_faixas() -> void:
 	for jogador in range(2):
-		var z := 0.30 if jogador == 0 else -4.35
+		var z := 0.15 if jogador == 0 else -4.65
 		var cor := _cor_p1 if jogador == 0 else _cor_p2
 		for faixa in range(-1, 2):
 			var anel_mesh := TorusMesh.new()
@@ -277,8 +317,8 @@ func _montar_faixas() -> void:
 
 
 func _x_da_faixa(jogador: int, faixa: int) -> float:
-	var centro := -1.32 if jogador == 0 else 1.18
-	var passo := 0.56 if jogador == 0 else 0.48
+	var centro := -1.58 if jogador == 0 else 1.28
+	var passo := 0.54 if jogador == 0 else 0.47
 	return centro + float(faixa) * passo
 
 

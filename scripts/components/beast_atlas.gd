@@ -78,7 +78,7 @@ static func retangulo(id_beast: String, indice: int, textura: Texture2D) -> Rect
 	var altura := textura.get_height() / float(LINHAS)
 	return Rect2(
 		float(indice % COLUNAS) * largura,
-		float(indice / COLUNAS) * altura,
+		floorf(float(indice) / float(COLUNAS)) * altura,
 		largura,
 		altura
 	)
@@ -142,7 +142,7 @@ static func erro_da_grade(id_beast: String, textura: Texture2D) -> float:
 			continue
 		var r: Array = pose["rect"]
 		var gx := float(indice % COLUNAS) * largura
-		var gy := float(indice / COLUNAS) * altura
+		var gy := floorf(float(indice) / float(COLUNAS)) * altura
 		pior = maxf(pior, absf(float(r[0]) - gx))
 		pior = maxf(pior, absf(float(r[1]) - gy))
 		pior = maxf(pior, absf(float(r[0]) + float(r[2]) - (gx + largura)))

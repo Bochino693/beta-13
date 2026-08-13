@@ -13,16 +13,16 @@ const MARGEM := 24.0
 const LARGURA := 720.0
 const ALTURA := 1280.0
 
-const Y_TOPO := 18.0        # placar + turno
-const H_TOPO := 48.0
-const Y_HUD_INIMIGO := 76.0
-const H_HUD := 98.0
-const Y_ARENA := 184.0
-const H_ARENA := 576.0
-const Y_HUD_ALIADO := 770.0
-const Y_MENSAGEM := 878.0
-const H_MENSAGEM := 54.0
-const Y_ACOES := 942.0
+const Y_TOPO := 16.0        # placar + turno
+const H_TOPO := 42.0
+const Y_HUD_INIMIGO := 68.0
+const H_HUD := 86.0
+const Y_ARENA := 164.0
+const H_ARENA := 660.0
+const Y_HUD_ALIADO := 834.0
+const Y_MENSAGEM := 930.0
+const H_MENSAGEM := 44.0
+const Y_ACOES := 984.0
 
 const COR_P1 := Color("6ef8ff")
 const COR_P2 := Color("ff55c6")
@@ -134,16 +134,21 @@ func _montar_arena_3d() -> void:
 
 	_estadio = BattleStadium3D.new()
 	_viewport.add_child(_estadio)
-	_estadio.configurar(COR_P1, COR_P2)
+	var tipo_aliado: String = str(_teams[0][0]["data"].get("type", "Luz"))
+	var tipo_rival: String = str(_teams[1][0]["data"].get("type", "Escuridão"))
+	var variante: String = GameState.arena_id
+	if variante == "auto":
+		variante = BattleStadium3D.variante_para_tipos(tipo_aliado, tipo_rival)
+	_estadio.configurar(COR_P1, COR_P2, variante)
 
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
 	_camera.fov = _camera_home_fov
-	_camera.position = Vector3(0.0, 3.25, 7.65)
+	_camera.position = Vector3(0.0, 3.10, 7.90)
 	_camera.near = 0.05
 	_camera.far = 90.0
 	_viewport.add_child(_camera)
-	_camera.look_at(Vector3(0.0, 1.12, -2.15), Vector3.UP)
+	_camera.look_at(Vector3(0.0, 1.10, -2.35), Vector3.UP)
 	_camera_home_position = _camera.position
 	_camera_home_rotation = _camera.rotation
 	_camera.make_current()
@@ -174,11 +179,11 @@ func _trocar_rig(jogador: int) -> void:
 
 	var rig := CinematicBeastSprite3D.new()
 	_viewport.add_child(rig)
-	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 0.30) \
-		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.35)
+	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 0.15) \
+		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.65)
 	var configurado: bool = rig.configurar(
 		id_beast,
-		2.12 if de_costas else 2.62,
+		2.02 if de_costas else 2.70,
 		familia,
 		de_costas,
 		cor
@@ -213,8 +218,8 @@ func _trocar_rig(jogador: int) -> void:
 
 func _x_da_faixa(jogador: int, faixa: int) -> float:
 	# Diagonal de leitura: aliado embaixo/esquerda, rival em cima/direita.
-	var centro := -1.32 if jogador == 0 else 1.18
-	var passo := 0.56 if jogador == 0 else 0.48
+	var centro := -1.58 if jogador == 0 else 1.28
+	var passo := 0.54 if jogador == 0 else 0.47
 	return centro + float(clampi(faixa, -1, 1)) * passo
 
 
@@ -437,9 +442,9 @@ func _montar_hud() -> void:
 	painel_msg.size = Vector2(util, H_MENSAGEM)
 	add_child(painel_msg)
 
-	var margem_msg := _margem(8)
+	var margem_msg := _margem(5)
 	painel_msg.add_child(margem_msg)
-	_mensagem = _rotulo("PREPARE-SE!", 22, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
+	_mensagem = _rotulo("PREPARE-SE!", 20, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
 	_mensagem.add_theme_color_override("font_outline_color", Color("090d20"))
 	_mensagem.add_theme_constant_override("outline_size", 5)
 	_mensagem.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -452,13 +457,13 @@ func _montar_hud() -> void:
 	painel.size = Vector2(util, ALTURA - Y_ACOES - MARGEM)
 	add_child(painel)
 
-	var margem := _margem(10)
+	var margem := _margem(8)
 	painel.add_child(margem)
 
 	var grade := GridContainer.new()
 	grade.columns = 2
-	grade.add_theme_constant_override("h_separation", 10)
-	grade.add_theme_constant_override("v_separation", 6)
+	grade.add_theme_constant_override("h_separation", 8)
+	grade.add_theme_constant_override("v_separation", 5)
 	margem.add_child(grade)
 
 	for indice in ACTION_COUNT:
@@ -469,7 +474,7 @@ func _montar_hud() -> void:
 			cor = Color("59e98b")
 
 		var botao := Button.new()
-		botao.custom_minimum_size = Vector2(0, 67)
+		botao.custom_minimum_size = Vector2(0, 59)
 		botao.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		botao.focus_mode = Control.FOCUS_NONE
 		botao.clip_text = false
@@ -477,13 +482,13 @@ func _montar_hud() -> void:
 		botao.expand_icon = true
 		botao.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		botao.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		botao.add_theme_font_size_override("font_size", 17)
+		botao.add_theme_font_size_override("font_size", 15)
 		if _fonte_batalha != null:
 			botao.add_theme_font_override("font", _fonte_batalha)
 		botao.add_theme_color_override("font_color", Color.WHITE)
 		botao.add_theme_color_override("font_disabled_color", Color(0.45, 0.48, 0.60))
-		botao.add_theme_constant_override("icon_max_width", 46)
-		botao.add_theme_constant_override("h_separation", 10)
+		botao.add_theme_constant_override("icon_max_width", 40)
+		botao.add_theme_constant_override("h_separation", 8)
 		botao.add_theme_stylebox_override("normal", _estilo_botao(cor, 0.12))
 		botao.add_theme_stylebox_override("hover", _estilo_botao(cor, 0.24))
 		botao.add_theme_stylebox_override("pressed", _estilo_botao(cor, 0.34))
@@ -499,11 +504,11 @@ func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 	painel.size = Vector2(LARGURA - MARGEM * 2.0, H_HUD)
 	add_child(painel)
 
-	var margem := _margem(9)
+	var margem := _margem(7)
 	painel.add_child(margem)
 
 	var coluna := VBoxContainer.new()
-	coluna.add_theme_constant_override("separation", 3)
+	coluna.add_theme_constant_override("separation", 2)
 	margem.add_child(coluna)
 
 	# Linha 1: nome dominante + selo de elemento.
@@ -511,7 +516,7 @@ func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 	linha1.add_theme_constant_override("separation", 10)
 	coluna.add_child(linha1)
 
-	var nome := _rotulo("", 25, Color.WHITE)
+	var nome := _rotulo("", 23, Color.WHITE)
 	nome.add_theme_color_override("font_outline_color", Color("080c1d"))
 	nome.add_theme_constant_override("outline_size", 4)
 	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -519,7 +524,7 @@ func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 	_nome_labels.append(nome)
 
 	var tipo := _rotulo("", 13, Color.BLACK, HORIZONTAL_ALIGNMENT_CENTER)
-	tipo.custom_minimum_size = Vector2(116, 22)
+	tipo.custom_minimum_size = Vector2(108, 20)
 	tipo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	linha1.add_child(tipo)
 	_tipo_labels.append(tipo)
@@ -531,14 +536,14 @@ func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 
 	var barra := ProgressBar.new()
 	barra.show_percentage = false
-	barra.custom_minimum_size = Vector2(0, 20)
+	barra.custom_minimum_size = Vector2(0, 18)
 	barra.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	barra.add_theme_stylebox_override("background", _estilo_barra(Color(0.06, 0.07, 0.13)))
 	linha2.add_child(barra)
 	_hp_bars.append(barra)
 
-	var hp := _rotulo("", 14, Color.WHITE, HORIZONTAL_ALIGNMENT_RIGHT)
-	hp.custom_minimum_size = Vector2(124, 0)
+	var hp := _rotulo("", 13, Color.WHITE, HORIZONTAL_ALIGNMENT_RIGHT)
+	hp.custom_minimum_size = Vector2(112, 0)
 	hp.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	linha2.add_child(hp)
 	_hp_labels.append(hp)
@@ -548,13 +553,13 @@ func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 	linha3.add_theme_constant_override("separation", 8)
 	coluna.add_child(linha3)
 	var reservas := HBoxContainer.new()
-	reservas.add_theme_constant_override("separation", 7)
+	reservas.add_theme_constant_override("separation", 6)
 	reservas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	linha3.add_child(reservas)
 	_reservas.append(reservas)
 
 	var peso := _rotulo("", 12, Color("ffdf73"), HORIZONTAL_ALIGNMENT_RIGHT)
-	peso.custom_minimum_size = Vector2(360, 0)
+	peso.custom_minimum_size = Vector2(320, 0)
 	peso.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	linha3.add_child(peso)
 	_peso_labels.append(peso)
@@ -602,11 +607,11 @@ func _estilo_botao(cor: Color, alfa: float) -> StyleBoxFlat:
 	e.bg_color = Color(cor.r, cor.g, cor.b, alfa)
 	e.border_color = Color(cor.r, cor.g, cor.b, 0.70)
 	e.set_border_width_all(2)
-	e.set_corner_radius_all(16)
-	e.content_margin_left = 12
-	e.content_margin_right = 12
-	e.content_margin_top = 8
-	e.content_margin_bottom = 8
+	e.set_corner_radius_all(14)
+	e.content_margin_left = 10
+	e.content_margin_right = 10
+	e.content_margin_top = 5
+	e.content_margin_bottom = 5
 	return e
 
 
@@ -725,7 +730,7 @@ func _atacar(indice_golpe: int) -> void:
 		rig_atacante.carregar(0.80)
 		await rig_atacante.animacao_terminou
 
-	rig_atacante.atacar(0.78 if pesado else 0.60)
+	rig_atacante.atacar(pesado, 0.78 if pesado else 0.52)
 	await rig_atacante.animacao_terminou  # sinal "impacto"
 
 	# Efeito e dano acontecem exatamente no impacto, nunca antes.
@@ -1009,9 +1014,8 @@ func _atualizar_acoes() -> void:
 		var estado := "PRONTO"
 		if recarga > 0.001:
 			estado = "RECARGA %d" % MoveDB.cooldown_turns(recarga)
-		_botoes[indice].text = "%s\n%s • P%02d • %s" % [
+		_botoes[indice].text = "%s\nP%02d • %s" % [
 			str(golpe["name"]).to_upper(),
-			MoveDB.power_grade(golpe),
 			golpe["power"],
 			estado
 		]
@@ -1020,7 +1024,7 @@ func _atualizar_acoes() -> void:
 			_botoes[indice].icon = load(caminho_icone) as Texture2D
 		_botoes[indice].disabled = recarga > 0.001
 
-	_botoes[GUARD_ACTION].text = "DEFENDER\nREDUZ 52% DO DANO"
+	_botoes[GUARD_ACTION].text = "DEFENDER\nDANO -52%"
 	_botoes[SWITCH_ACTION].text = "TROCAR\nPRÓXIMA BEAST"
 	if ResourceLoader.exists("res://assets/actions/guard.svg"):
 		_botoes[GUARD_ACTION].icon = load("res://assets/actions/guard.svg") as Texture2D

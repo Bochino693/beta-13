@@ -1,237 +1,242 @@
 {
- "id": "marevante",
- "atlas": "res://assets/sprites_combat/marevante.png",
- "tamanho": [
-  1252,
-  1252
- ],
- "linhas": 4,
- "colunas": 4,
- "deteccao": "parcial",
- "poses": [
-  {
-   "nome": "repouso_a",
-   "indice": 0,
-   "rect": [
-    52,
-    35,
-    206,
-    281
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "repouso_b",
-   "indice": 1,
-   "rect": [
-    340,
-    40,
-    236,
-    276
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "carga",
-   "indice": 2,
-   "rect": [
-    635,
-    28,
-    263,
-    288
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "ataque",
-   "indice": 3,
-   "rect": [
-    956,
-    47,
-    237,
-    269
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "dano",
-   "indice": 4,
-   "rect": [
-    28,
-    310,
-    260,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "esquiva",
-   "indice": 5,
-   "rect": [
-    324,
-    310,
-    269,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "vitoria",
-   "indice": 6,
-   "rect": [
-    640,
-    310,
-    250,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "ko",
-   "indice": 7,
-   "rect": [
-    929,
-    310,
-    294,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "repouso_a_costas",
-   "indice": 8,
-   "rect": [
-    56,
-    623,
-    189,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "repouso_b_costas",
-   "indice": 9,
-   "rect": [
-    325,
-    623,
-    230,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "carga_costas",
-   "indice": 10,
-   "rect": [
-    612,
-    623,
-    257,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "ataque_costas",
-   "indice": 11,
-   "rect": [
-    925,
-    623,
-    298,
-    319
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "dano_costas",
-   "indice": 12,
-   "rect": [
-    25,
-    936,
-    236,
-    293
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "esquiva_costas",
-   "indice": 13,
-   "rect": [
-    319,
-    936,
-    287,
-    291
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "vitoria_costas",
-   "indice": 14,
-   "rect": [
-    648,
-    936,
-    235,
-    295
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  },
-  {
-   "nome": "ko_costas",
-   "indice": 15,
-   "rect": [
-    933,
-    936,
-    295,
-    295
-   ],
-   "ancora": [
-    0.5,
-    1.0
-   ]
-  }
- ]
+  "id": "marevante",
+  "atlas": "res://assets/sprites_combat/marevante.png",
+  "layout_version": 2,
+  "tamanho": [
+    1536,
+    1536
+  ],
+  "linhas": 4,
+  "colunas": 4,
+  "deteccao": "componentes_isolados",
+  "ordem_vistas": [
+    "costas",
+    "frente"
+  ],
+  "poses": [
+    {
+      "nome": "repouso_a_costas",
+      "indice": 0,
+      "rect": [
+        0,
+        0,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "repouso_b_costas",
+      "indice": 1,
+      "rect": [
+        384,
+        0,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "carga_costas",
+      "indice": 2,
+      "rect": [
+        768,
+        0,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "ataque_costas",
+      "indice": 3,
+      "rect": [
+        1152,
+        0,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "dano_costas",
+      "indice": 4,
+      "rect": [
+        0,
+        384,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "esquiva_costas",
+      "indice": 5,
+      "rect": [
+        384,
+        384,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "vitoria_costas",
+      "indice": 6,
+      "rect": [
+        768,
+        384,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "ko_costas",
+      "indice": 7,
+      "rect": [
+        1152,
+        384,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "repouso_a_frente",
+      "indice": 8,
+      "rect": [
+        0,
+        768,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "repouso_b_frente",
+      "indice": 9,
+      "rect": [
+        384,
+        768,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "carga_frente",
+      "indice": 10,
+      "rect": [
+        768,
+        768,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "ataque_frente",
+      "indice": 11,
+      "rect": [
+        1152,
+        768,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "dano_frente",
+      "indice": 12,
+      "rect": [
+        0,
+        1152,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "esquiva_frente",
+      "indice": 13,
+      "rect": [
+        384,
+        1152,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "vitoria_frente",
+      "indice": 14,
+      "rect": [
+        768,
+        1152,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "nome": "ko_frente",
+      "indice": 15,
+      "rect": [
+        1152,
+        1152,
+        384,
+        384
+      ],
+      "ancora": [
+        0.5,
+        1.0
+      ]
+    }
+  ]
 }

@@ -10,6 +10,7 @@ const POWER_GUIDE_SCENE := "res://scenes/power_guide.tscn"
 const SETTINGS_PATH := "user://lazer_beasts_settings.json"
 
 var mode := "pvp"
+var arena_id := "auto"
 var team_ids: Array = [[], []]
 var winner := 0
 var scores := [0, 0]
@@ -26,6 +27,7 @@ func _ready() -> void:
 
 func reset_match() -> void:
 	team_ids = [[], []]
+	arena_id = "auto"
 	winner = 0
 	scores = [0, 0]
 	battle_summary = {}

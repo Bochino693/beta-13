@@ -113,14 +113,14 @@ PRIMARY_MOVE_INDICES = [
 ]
 
 STRONG_AGAINST = {
-    "Luz": ["Escuridão", "Natureza"],
-    "Escuridão": ["Vento", "Água"],
-    "Fogo": ["Luz", "Natureza"],
-    "Choque": ["Água", "Vento"],
-    "Terra": ["Choque", "Fogo"],
-    "Água": ["Fogo", "Terra"],
-    "Natureza": ["Terra", "Água"],
-    "Vento": ["Natureza", "Luz"],
+    "Luz": ["Escuridão"],
+    "Escuridão": ["Luz"],
+    "Fogo": ["Natureza"],
+    "Água": ["Fogo"],
+    "Choque": ["Água"],
+    "Vento": ["Choque"],
+    "Terra": ["Vento"],
+    "Natureza": ["Terra"],
 }
 
 
