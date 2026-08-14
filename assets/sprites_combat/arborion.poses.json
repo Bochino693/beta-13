@@ -1,21 +1,93 @@
 {
-  "version": 3,
+  "version": 4,
   "id": "arborion",
   "atlas": "res://assets/sprites_combat/arborion.png",
   "size": [
     3072,
-    1536
+    3072
   ],
-  "rows": 4,
+  "rows": 8,
   "columns": 8,
   "cell": [
     384,
     384
   ],
-  "safe_margin": 22,
+  "safe_margin": 28,
+  "views": {
+    "back": [
+      0,
+      32
+    ],
+    "front": [
+      32,
+      64
+    ]
+  },
+  "sequences": {
+    "idle": {
+      "start": 0,
+      "end": 8,
+      "fps": 9.0,
+      "loop": true
+    },
+    "light": {
+      "start": 8,
+      "end": 12,
+      "fps": 15.0,
+      "loop": false
+    },
+    "heavy_charge": {
+      "start": 12,
+      "end": 15,
+      "fps": 9.0,
+      "loop": false
+    },
+    "heavy_release": {
+      "start": 15,
+      "end": 18,
+      "fps": 13.0,
+      "loop": false
+    },
+    "damage": {
+      "start": 18,
+      "end": 21,
+      "fps": 14.0,
+      "loop": false
+    },
+    "dodge_left": {
+      "start": 21,
+      "end": 24,
+      "fps": 16.0,
+      "loop": false
+    },
+    "dodge_right": {
+      "start": 24,
+      "end": 27,
+      "fps": 16.0,
+      "loop": false
+    },
+    "victory": {
+      "start": 27,
+      "end": 29,
+      "fps": 6.0,
+      "loop": true
+    },
+    "ko": {
+      "start": 29,
+      "end": 31,
+      "fps": 5.0,
+      "loop": false
+    },
+    "guard": {
+      "start": 31,
+      "end": 32,
+      "fps": 1.0,
+      "loop": true
+    }
+  },
   "poses": [
     {
-      "name": "back_idle_0",
+      "name": "back_frame_00",
       "index": 0,
       "rect": [
         0,
@@ -29,7 +101,7 @@
       ]
     },
     {
-      "name": "back_idle_1",
+      "name": "back_frame_01",
       "index": 1,
       "rect": [
         384,
@@ -43,7 +115,7 @@
       ]
     },
     {
-      "name": "back_idle_2",
+      "name": "back_frame_02",
       "index": 2,
       "rect": [
         768,
@@ -57,7 +129,7 @@
       ]
     },
     {
-      "name": "back_idle_3",
+      "name": "back_frame_03",
       "index": 3,
       "rect": [
         1152,
@@ -71,7 +143,7 @@
       ]
     },
     {
-      "name": "back_idle_4",
+      "name": "back_frame_04",
       "index": 4,
       "rect": [
         1536,
@@ -85,7 +157,7 @@
       ]
     },
     {
-      "name": "back_idle_5",
+      "name": "back_frame_05",
       "index": 5,
       "rect": [
         1920,
@@ -99,7 +171,7 @@
       ]
     },
     {
-      "name": "back_light_charge",
+      "name": "back_frame_06",
       "index": 6,
       "rect": [
         2304,
@@ -113,7 +185,7 @@
       ]
     },
     {
-      "name": "back_light_impact",
+      "name": "back_frame_07",
       "index": 7,
       "rect": [
         2688,
@@ -127,7 +199,7 @@
       ]
     },
     {
-      "name": "back_heavy_charge",
+      "name": "back_frame_08",
       "index": 8,
       "rect": [
         0,
@@ -141,7 +213,7 @@
       ]
     },
     {
-      "name": "back_heavy_impact",
+      "name": "back_frame_09",
       "index": 9,
       "rect": [
         384,
@@ -155,7 +227,7 @@
       ]
     },
     {
-      "name": "back_damage",
+      "name": "back_frame_10",
       "index": 10,
       "rect": [
         768,
@@ -169,7 +241,7 @@
       ]
     },
     {
-      "name": "back_dodge_left",
+      "name": "back_frame_11",
       "index": 11,
       "rect": [
         1152,
@@ -183,7 +255,7 @@
       ]
     },
     {
-      "name": "back_dodge_right",
+      "name": "back_frame_12",
       "index": 12,
       "rect": [
         1536,
@@ -197,7 +269,7 @@
       ]
     },
     {
-      "name": "back_victory",
+      "name": "back_frame_13",
       "index": 13,
       "rect": [
         1920,
@@ -211,7 +283,7 @@
       ]
     },
     {
-      "name": "back_ko",
+      "name": "back_frame_14",
       "index": 14,
       "rect": [
         2304,
@@ -225,7 +297,7 @@
       ]
     },
     {
-      "name": "back_guard",
+      "name": "back_frame_15",
       "index": 15,
       "rect": [
         2688,
@@ -239,7 +311,7 @@
       ]
     },
     {
-      "name": "front_idle_0",
+      "name": "back_frame_16",
       "index": 16,
       "rect": [
         0,
@@ -253,7 +325,7 @@
       ]
     },
     {
-      "name": "front_idle_1",
+      "name": "back_frame_17",
       "index": 17,
       "rect": [
         384,
@@ -267,7 +339,7 @@
       ]
     },
     {
-      "name": "front_idle_2",
+      "name": "back_frame_18",
       "index": 18,
       "rect": [
         768,
@@ -281,7 +353,7 @@
       ]
     },
     {
-      "name": "front_idle_3",
+      "name": "back_frame_19",
       "index": 19,
       "rect": [
         1152,
@@ -295,7 +367,7 @@
       ]
     },
     {
-      "name": "front_idle_4",
+      "name": "back_frame_20",
       "index": 20,
       "rect": [
         1536,
@@ -309,7 +381,7 @@
       ]
     },
     {
-      "name": "front_idle_5",
+      "name": "back_frame_21",
       "index": 21,
       "rect": [
         1920,
@@ -323,7 +395,7 @@
       ]
     },
     {
-      "name": "front_light_charge",
+      "name": "back_frame_22",
       "index": 22,
       "rect": [
         2304,
@@ -337,7 +409,7 @@
       ]
     },
     {
-      "name": "front_light_impact",
+      "name": "back_frame_23",
       "index": 23,
       "rect": [
         2688,
@@ -351,7 +423,7 @@
       ]
     },
     {
-      "name": "front_heavy_charge",
+      "name": "back_frame_24",
       "index": 24,
       "rect": [
         0,
@@ -365,7 +437,7 @@
       ]
     },
     {
-      "name": "front_heavy_impact",
+      "name": "back_frame_25",
       "index": 25,
       "rect": [
         384,
@@ -379,7 +451,7 @@
       ]
     },
     {
-      "name": "front_damage",
+      "name": "back_frame_26",
       "index": 26,
       "rect": [
         768,
@@ -393,7 +465,7 @@
       ]
     },
     {
-      "name": "front_dodge_left",
+      "name": "back_frame_27",
       "index": 27,
       "rect": [
         1152,
@@ -407,7 +479,7 @@
       ]
     },
     {
-      "name": "front_dodge_right",
+      "name": "back_frame_28",
       "index": 28,
       "rect": [
         1536,
@@ -421,7 +493,7 @@
       ]
     },
     {
-      "name": "front_victory",
+      "name": "back_frame_29",
       "index": 29,
       "rect": [
         1920,
@@ -435,7 +507,7 @@
       ]
     },
     {
-      "name": "front_ko",
+      "name": "back_frame_30",
       "index": 30,
       "rect": [
         2304,
@@ -449,11 +521,459 @@
       ]
     },
     {
-      "name": "front_guard",
+      "name": "back_frame_31",
       "index": 31,
       "rect": [
         2688,
         1152,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_00",
+      "index": 32,
+      "rect": [
+        0,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_01",
+      "index": 33,
+      "rect": [
+        384,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_02",
+      "index": 34,
+      "rect": [
+        768,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_03",
+      "index": 35,
+      "rect": [
+        1152,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_04",
+      "index": 36,
+      "rect": [
+        1536,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_05",
+      "index": 37,
+      "rect": [
+        1920,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_06",
+      "index": 38,
+      "rect": [
+        2304,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_07",
+      "index": 39,
+      "rect": [
+        2688,
+        1536,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_08",
+      "index": 40,
+      "rect": [
+        0,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_09",
+      "index": 41,
+      "rect": [
+        384,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_10",
+      "index": 42,
+      "rect": [
+        768,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_11",
+      "index": 43,
+      "rect": [
+        1152,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_12",
+      "index": 44,
+      "rect": [
+        1536,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_13",
+      "index": 45,
+      "rect": [
+        1920,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_14",
+      "index": 46,
+      "rect": [
+        2304,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_15",
+      "index": 47,
+      "rect": [
+        2688,
+        1920,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_16",
+      "index": 48,
+      "rect": [
+        0,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_17",
+      "index": 49,
+      "rect": [
+        384,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_18",
+      "index": 50,
+      "rect": [
+        768,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_19",
+      "index": 51,
+      "rect": [
+        1152,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_20",
+      "index": 52,
+      "rect": [
+        1536,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_21",
+      "index": 53,
+      "rect": [
+        1920,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_22",
+      "index": 54,
+      "rect": [
+        2304,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_23",
+      "index": 55,
+      "rect": [
+        2688,
+        2304,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_24",
+      "index": 56,
+      "rect": [
+        0,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_25",
+      "index": 57,
+      "rect": [
+        384,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_26",
+      "index": 58,
+      "rect": [
+        768,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_27",
+      "index": 59,
+      "rect": [
+        1152,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_28",
+      "index": 60,
+      "rect": [
+        1536,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_29",
+      "index": 61,
+      "rect": [
+        1920,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_30",
+      "index": 62,
+      "rect": [
+        2304,
+        2688,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_frame_31",
+      "index": 63,
+      "rect": [
+        2688,
+        2688,
         384,
         384
       ],

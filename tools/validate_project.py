@@ -94,24 +94,31 @@ def main() -> None:
                 with Image.open(combat_sheet) as sheet:
                     if sheet.mode != "RGBA":
                         errors.append(f"{creature_id}: atlas de combate precisa ser RGBA.")
-                    if sheet.size != (3072, 1536):
+                    if sheet.size != (3072, 3072):
                         errors.append(
-                            f"{creature_id}: atlas V3 deve medir 3072x1536; encontrado {sheet.size}."
+                            f"{creature_id}: atlas V4 deve medir 3072x3072; encontrado {sheet.size}."
                         )
                     if sheet.getchannel("A").getextrema()[0] != 0:
                         errors.append(f"{creature_id}: atlas de combate nao tem alfa transparente.")
-                    if sheet.size == (3072, 1536):
+                    if sheet.size == (3072, 3072):
                         alpha = sheet.getchannel("A")
-                        for frame in range(32):
+                        for frame in range(64):
                             x = (frame % 8) * 384
                             y = (frame // 8) * 384
-                            box = alpha.crop((x, y, x + 384, y + 384)).getbbox()
+                            cell_alpha = alpha.crop((x, y, x + 384, y + 384))
+                            box = cell_alpha.getbbox()
                             if box is None:
-                                errors.append(f"{creature_id}: quadro V3 vazio: {frame}.")
+                                errors.append(f"{creature_id}: quadro V4 vazio: {frame}.")
+                            elif box[0] < 28 or box[1] < 28 or box[2] > 356 or box[3] > 356:
+                                errors.append(
+                                    f"{creature_id}: quadro V4 {frame} viola margem segura: {box}."
+                                )
                 manifest_path = combat_sheet.with_suffix(".poses.json")
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                if manifest.get("version") != 3 or len(manifest.get("poses", [])) != 32:
-                    errors.append(f"{creature_id}: manifesto V3 precisa declarar 32 poses.")
+                if manifest.get("version") != 4 or len(manifest.get("poses", [])) != 64:
+                    errors.append(f"{creature_id}: manifesto V4 precisa declarar 64 quadros.")
+                if len(manifest.get("sequences", {})) != 10:
+                    errors.append(f"{creature_id}: manifesto V4 precisa declarar 10 sequencias.")
                 with Image.open(combat_sheet) as sheet:
                     sheet.verify()
             except Exception as exc:
