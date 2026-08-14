@@ -4,8 +4,9 @@ class_name BeastAtlas
 # ---------------------------------------------------------------------------
 # BeastAtlas — corte correto dos atlas de combate.
 #
-# Le o contrato V4 de celulas fixas. A grade 8x8 mantem 28 px transparentes
-# por celula e impede puxar pixels da pose vizinha.
+# Le o contrato V3 de celulas fixas. Os atlas antigos tinham resolucoes e
+# recortes diferentes; o V3 padroniza tudo em 8x4 e impede puxar pixels da
+# pose vizinha.
 #
 # Aqui as poses vem de assets/sprites_combat/<id>.poses.json, gerado por
 # tools/mapear_poses.py a partir da transparencia real de cada imagem.
@@ -15,13 +16,24 @@ class_name BeastAtlas
 #   func _construir_quadros(textura: Texture2D) -> SpriteFrames:
 #       return BeastAtlas.quadros_de(_id_beast, textura)
 #
-# O componente cinematografico atual monta sequencias completas diretamente;
-# esta classe permanece como utilitario de diagnostico/compatibilidade.
+# Apague o corpo antigo da funcao. O resto do arquivo continua igual: os nomes
+# de animacao "pose_00".."pose_15" sao mantidos, entao POSE_ATAQUE e companhia
+# seguem valendo.
 # ---------------------------------------------------------------------------
 
 const PASTA := "res://assets/sprites_combat/"
-const LINHAS := 8
+const LINHAS := 4
 const COLUNAS := 8
+
+# Nomes legiveis. ATENCAO a ordem do atlas do beta-13:
+#   0..7  = COSTAS (Beast do jogador)
+#   8..15 = FRENTE (oponente)
+const NOMES := [
+	"repouso_a_costas", "repouso_b_costas", "carga_costas", "ataque_costas",
+	"dano_costas", "esquiva_costas", "vitoria_costas", "ko_costas",
+	"repouso_a", "repouso_b", "carga", "ataque",
+	"dano", "esquiva", "vitoria", "ko"
+]
 
 static var _cache: Dictionary = {}
 
@@ -48,7 +60,7 @@ static func manifesto(id_beast: String) -> Dictionary:
 	return dados
 
 
-## Retangulo real de uma pose. Cai na grade 8x8 se nao houver manifesto.
+## Retangulo real de uma pose. Cai na grade 8x4 se nao houver manifesto.
 static func retangulo(id_beast: String, indice: int, textura: Texture2D) -> Rect2:
 	var dados := manifesto(id_beast)
 	var poses: Array = dados.get("poses", [])
@@ -88,6 +100,14 @@ static func quadros_de(id_beast: String, textura: Texture2D) -> SpriteFrames:
 		# filter_clip evita puxar pixel do vizinho na borda da regiao.
 		atlas.filter_clip = true
 		recurso.add_frame(animacao, atlas)
+
+		# Alias legivel: "ataque" aponta para o mesmo quadro de "pose_03".
+		if indice < NOMES.size():
+			var apelido := String(NOMES[indice])
+			recurso.add_animation(apelido)
+			recurso.set_animation_loop(apelido, false)
+			recurso.set_animation_speed(apelido, 1.0)
+			recurso.add_frame(apelido, atlas)
 
 	return recurso
 

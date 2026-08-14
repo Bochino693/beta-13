@@ -95,8 +95,8 @@ func _load_combat_sheet() -> void:
 	if creature.is_empty():
 		return
 	var creature_id := str(creature.get("id", ""))
-	# Menus usam a folha leve 4x4. Os atlas cinematograficos V4 ficam restritos
-	# a batalha para evitar carregar 30 texturas 3072x3072 na selecao de equipe.
+	# Menus usam a folha leve 4x4. Os atlas cinematograficos V3 ficam restritos
+	# a batalha para evitar carregar 30 texturas 3072x1536 na selecao de equipe.
 	var sheet_path := "res://assets/sprites/beasts/%s.png" % creature_id
 	var sheet := load(sheet_path) as Texture2D
 	if sheet == null:

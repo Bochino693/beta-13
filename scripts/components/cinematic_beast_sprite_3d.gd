@@ -1,38 +1,56 @@
 class_name CinematicBeastSprite3D
 extends Node3D
 
-## Ator 2.5D V4: atlas 8x8 com sequencias temporais no mundo 3D.
-## 0..31 = costas; 32..63 = frente.
+## Beast animada por quadros-chave dentro do mundo 3D.
+##
+## Atlas V3 8x4, celulas fixas de 384x384:
+##   0..15  = costas (jogador)
+##   16..31 = frente (oponente)
+## Em cada vista: seis idles, leve, pesado, dano, esquivas, vitoria, KO e guarda.
+## Duas AnimatedSprite3D fazem crossfade entre poses; tweens de posicao,
+## rotacao e escala completam a continuidade do movimento.
 
 signal animacao_terminou(nome: String)
 
-const ATLAS_COLUNAS := 8
-const ATLAS_LINHAS := 8
-const QUADROS_POR_VISTA := 32
-
-const SEQUENCIAS: Dictionary = {
-	"idle": {"inicio": 0, "quantidade": 8, "fps": 9.0, "loop": true},
-	"light": {"inicio": 8, "quantidade": 4, "fps": 15.0, "loop": false},
-	"heavy_charge": {"inicio": 12, "quantidade": 3, "fps": 9.0, "loop": false},
-	"heavy_release": {"inicio": 15, "quantidade": 3, "fps": 13.0, "loop": false},
-	"damage": {"inicio": 18, "quantidade": 3, "fps": 14.0, "loop": false},
-	"dodge_left": {"inicio": 21, "quantidade": 3, "fps": 16.0, "loop": false},
-	"dodge_right": {"inicio": 24, "quantidade": 3, "fps": 16.0, "loop": false},
-	"victory": {"inicio": 27, "quantidade": 2, "fps": 6.0, "loop": true},
-	"ko": {"inicio": 29, "quantidade": 2, "fps": 5.0, "loop": false},
-	"guard": {"inicio": 31, "quantidade": 1, "fps": 1.0, "loop": true},
+const CODIGO_SOMBRA := """
+shader_type spatial;
+render_mode blend_mix, cull_disabled, unshaded, depth_draw_never;
+uniform float alpha = 0.38;
+void fragment() {
+	vec2 p = (UV - vec2(0.5)) * vec2(1.0, 2.45);
+	float mascara = 1.0 - smoothstep(0.16, 0.52, length(p));
+	ALBEDO = vec3(0.004, 0.006, 0.018);
+	ALPHA = mascara * alpha;
 }
+"""
+
+const ATLAS_COLUNAS := 8
+const ATLAS_LINHAS := 4
+const QUADROS_POR_VISTA := 16
+const QUADROS_IDLE := 6
+
+const POSE_IDLE_0 := 0
+const POSE_CARGA_LEVE := 6
+const POSE_ATAQUE_LEVE := 7
+const POSE_CARGA_PESADA := 8
+const POSE_ATAQUE_PESADO := 9
+const POSE_DANO := 10
+const POSE_ESQUIVA_ESQUERDA := 11
+const POSE_ESQUIVA_DIREITA := 12
+const POSE_VITORIA := 13
+const POSE_KO := 14
+const POSE_GUARDA := 15
 
 const PERFIS: Dictionary = {
-	"ave": {"idle_speed": 1.38, "flutua": 0.090, "ritmo": 3.8, "roll": 1.25, "ataque": 1.10, "esquiva": 1.18},
-	"dragao": {"idle_speed": 0.96, "flutua": 0.042, "ritmo": 2.3, "roll": 0.72, "ataque": 1.00, "esquiva": 0.96},
-	"felpudo": {"idle_speed": 0.82, "flutua": 0.020, "ritmo": 1.8, "roll": 0.48, "ataque": 0.92, "esquiva": 0.88},
-	"reptil": {"idle_speed": 0.74, "flutua": 0.010, "ritmo": 1.5, "roll": 0.28, "ataque": 0.96, "esquiva": 0.84},
-	"planta": {"idle_speed": 0.68, "flutua": 0.014, "ritmo": 1.2, "roll": 0.62, "ataque": 0.84, "esquiva": 0.76},
-	"mineral": {"idle_speed": 0.56, "flutua": 0.006, "ritmo": 0.9, "roll": 0.15, "ataque": 0.78, "esquiva": 0.68},
-	"aquatico": {"idle_speed": 1.12, "flutua": 0.096, "ritmo": 2.2, "roll": 1.02, "ataque": 1.04, "esquiva": 1.10},
-	"espectro": {"idle_speed": 1.25, "flutua": 0.112, "ritmo": 2.8, "roll": 1.18, "ataque": 1.12, "esquiva": 1.20},
-	"padrao": {"idle_speed": 0.88, "flutua": 0.028, "ritmo": 1.8, "roll": 0.42, "ataque": 0.94, "esquiva": 0.90},
+	"ave": {"idle": 0.42, "flutua": 0.075, "ataque": 0.95, "esquiva": 1.10, "ritmo": 3.6, "respira": 0.024, "balanco": 2.5},
+	"dragao": {"idle": 0.68, "flutua": 0.036, "ataque": 0.86, "esquiva": 0.88, "ritmo": 2.2, "respira": 0.032, "balanco": 1.6},
+	"felpudo": {"idle": 0.82, "flutua": 0.014, "ataque": 0.78, "esquiva": 0.80, "ritmo": 1.7, "respira": 0.042, "balanco": 1.2},
+	"reptil": {"idle": 0.88, "flutua": 0.007, "ataque": 0.82, "esquiva": 0.74, "ritmo": 1.45, "respira": 0.027, "balanco": 0.8},
+	"planta": {"idle": 1.00, "flutua": 0.012, "ataque": 0.70, "esquiva": 0.62, "ritmo": 1.15, "respira": 0.038, "balanco": 1.8},
+	"mineral": {"idle": 1.15, "flutua": 0.004, "ataque": 0.64, "esquiva": 0.55, "ritmo": 0.85, "respira": 0.014, "balanco": 0.35},
+	"aquatico": {"idle": 0.62, "flutua": 0.086, "ataque": 0.88, "esquiva": 0.96, "ritmo": 2.0, "respira": 0.032, "balanco": 2.0},
+	"espectro": {"idle": 0.48, "flutua": 0.105, "ataque": 1.00, "esquiva": 1.12, "ritmo": 2.7, "respira": 0.048, "balanco": 2.8},
+	"padrao": {"idle": 0.75, "flutua": 0.022, "ataque": 0.80, "esquiva": 0.80, "ritmo": 1.7, "respira": 0.030, "balanco": 1.1},
 }
 
 const FAMILIA_POR_ID: Dictionary = {
@@ -48,18 +66,6 @@ const FAMILIA_POR_ID: Dictionary = {
 	"nimbaleia": "aquatico", "ciclorn": "ave", "tempestral": "dragao",
 }
 
-const CODIGO_SOMBRA := """
-shader_type spatial;
-render_mode blend_mix, cull_disabled, unshaded, depth_draw_never;
-uniform float alpha = 0.36;
-void fragment() {
-	vec2 p = (UV - vec2(0.5)) * vec2(1.0, 2.55);
-	float mask = 1.0 - smoothstep(0.15, 0.50, length(p));
-	ALBEDO = vec3(0.003, 0.005, 0.016);
-	ALPHA = mask * alpha;
-}
-"""
-
 var _sprite_ativo: AnimatedSprite3D
 var _sprite_reserva: AnimatedSprite3D
 var _quadros: SpriteFrames
@@ -73,7 +79,11 @@ var _cor_elemento := Color("6ef8ff")
 var _de_costas := false
 var _ocupado := false
 var _tempo := 0.0
+var _tempo_idle := 0.0
+var _pose_idle := POSE_IDLE_0
+var _offset_vista := 0
 var _ataque_pesado_pendente := false
+var _pose_impacto_atual := POSE_ATAQUE_LEVE
 var _sombra: MeshInstance3D
 var _material_sombra: ShaderMaterial
 var _anel_interno: MeshInstance3D
@@ -92,7 +102,8 @@ static func familia_de(dados: Dictionary) -> String:
 	var explicita: String = str(dados.get("familia_anim", ""))
 	if PERFIS.has(explicita):
 		return explicita
-	return str(FAMILIA_POR_ID.get(str(dados.get("id", "")), "padrao"))
+	var id_beast: String = str(dados.get("id", ""))
+	return str(FAMILIA_POR_ID.get(id_beast, "padrao"))
 
 
 func configurar(
@@ -107,67 +118,62 @@ func configurar(
 		push_error("CinematicBeastSprite3D: atlas ausente: " + caminho)
 		return false
 	var textura: Texture2D = load(caminho) as Texture2D
-	if textura == null or textura.get_width() != 3072 or textura.get_height() != 3072:
-		push_error("CinematicBeastSprite3D: atlas V4 invalido: " + caminho)
+	if textura == null:
+		push_error("CinematicBeastSprite3D: atlas invalido: " + caminho)
 		return false
 
 	_de_costas = de_costas
 	_altura_mundo = altura_mundo
+	_offset_vista = 0 if de_costas else QUADROS_POR_VISTA
 	_cor_elemento = cor_elemento
 	_perfil = PERFIS.get(familia, PERFIS["padrao"]) as Dictionary
-	_quadros = _construir_quadros(textura, 0 if de_costas else QUADROS_POR_VISTA)
-	_sprite_ativo = _criar_sprite()
-	_sprite_reserva = _criar_sprite()
+	_quadros = _construir_quadros(textura)
+
+	_sprite_ativo = _criar_sprite(altura_mundo, textura)
+	_sprite_reserva = _criar_sprite(altura_mundo, textura)
 	_sprite_reserva.modulate.a = 0.0
 	add_child(_sprite_ativo)
 	add_child(_sprite_reserva)
+	_definir_pose_imediata(POSE_IDLE_0)
 
+	# O centro do plano fica acima da origem, mantendo a base no piso.
 	var altura_celula := textura.get_height() / float(ATLAS_LINHAS)
 	var pixel_size := altura_mundo / maxf(1.0, altura_celula)
-	for sprite in [_sprite_ativo, _sprite_reserva]:
-		sprite.pixel_size = pixel_size
-		sprite.position.y = altura_mundo * 0.5
-	_sprite_ativo.play("idle")
-	_sprite_reserva.play("idle")
+	_sprite_ativo.pixel_size = pixel_size
+	_sprite_reserva.pixel_size = pixel_size
+	_sprite_ativo.position.y = altura_mundo * 0.5
+	_sprite_reserva.position.y = altura_mundo * 0.5
 	_criar_presenca_3d(altura_mundo)
 	_origem = position
 	_escala_base = scale
+	_tempo_idle = randf_range(0.05, float(_perfil["idle"]))
 	return true
 
 
-func _construir_quadros(textura: Texture2D, offset_vista: int) -> SpriteFrames:
+func _construir_quadros(textura: Texture2D) -> SpriteFrames:
 	var recurso := SpriteFrames.new()
 	if recurso.has_animation("default"):
 		recurso.remove_animation("default")
 	var largura := textura.get_width() / float(ATLAS_COLUNAS)
 	var altura := textura.get_height() / float(ATLAS_LINHAS)
-	for nome_variante in SEQUENCIAS.keys():
-		var nome: String = str(nome_variante)
-		var contrato: Dictionary = SEQUENCIAS[nome]
-		recurso.add_animation(nome)
-		recurso.set_animation_loop(nome, bool(contrato["loop"]))
-		var fps := float(contrato["fps"])
-		if nome == "idle":
-			fps *= float(_perfil["idle_speed"])
-		recurso.set_animation_speed(nome, fps)
-		var inicio := int(contrato["inicio"])
-		var quantidade := int(contrato["quantidade"])
-		for local_index in range(inicio, inicio + quantidade):
-			var indice: int = offset_vista + int(local_index)
-			var atlas := AtlasTexture.new()
-			atlas.atlas = textura
-			atlas.region = Rect2(
-				float(indice % ATLAS_COLUNAS) * largura,
-				floorf(float(indice) / float(ATLAS_COLUNAS)) * altura,
-				largura,
-				altura
-			)
-			atlas.filter_clip = true
-			recurso.add_frame(nome, atlas)
+	for indice in range(ATLAS_COLUNAS * ATLAS_LINHAS):
+		var animacao := "pose_%02d" % indice
+		recurso.add_animation(animacao)
+		recurso.set_animation_loop(animacao, false)
+		recurso.set_animation_speed(animacao, 1.0)
+		var atlas := AtlasTexture.new()
+		atlas.atlas = textura
+		atlas.region = Rect2(
+			float(indice % ATLAS_COLUNAS) * largura,
+			float(indice / ATLAS_COLUNAS) * altura,
+			largura,
+			altura
+		)
+		recurso.add_frame(animacao, atlas)
 	return recurso
 
 
-func _criar_sprite() -> AnimatedSprite3D:
+func _criar_sprite(_altura_mundo: float, _textura: Texture2D) -> AnimatedSprite3D:
 	var sprite := AnimatedSprite3D.new()
 	sprite.sprite_frames = _quadros
 	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -176,7 +182,7 @@ func _criar_sprite() -> AnimatedSprite3D:
 	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 	sprite.no_depth_test = false
 	sprite.render_priority = 4
-	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	sprite.modulate = Color.WHITE
 	return sprite
 
@@ -186,236 +192,49 @@ func _process(delta: float) -> void:
 	if _sprite_ativo == null:
 		return
 	if not _ocupado:
+		var flutuacao := float(_perfil["flutua"])
 		var ritmo := float(_perfil["ritmo"])
 		var pulso := sin(_tempo * ritmo)
-		var alvo_y := _altura_mundo * 0.5 + pulso * float(_perfil["flutua"])
-		_sprite_ativo.position.y = lerpf(_sprite_ativo.position.y, alvo_y, minf(1.0, delta * 5.0))
+		var deslocamento := pulso * flutuacao
+		var atual := _sprite_ativo.position.y - _altura_visual()
+		_sprite_ativo.position.y += (deslocamento - atual) * minf(1.0, delta * 4.0)
 		_sprite_reserva.position.y = _sprite_ativo.position.y
-		var respiracao := Vector3(1.0 - pulso * 0.003, 1.0 + pulso * 0.005, 1.0)
-		_sprite_ativo.scale = _sprite_ativo.scale.lerp(respiracao, minf(1.0, delta * 5.5))
+		# Os seis quadros carregam a respiracao anatomica. O plano inteiro recebe
+		# apenas um pulso minimo para nao parecer borracha ou um personagem morto.
+		var escala_x := 1.0 - pulso * 0.004
+		var escala_y := 1.0 + pulso * 0.006
+		var escala_viva := Vector3(escala_x, escala_y, 1.0)
+		_sprite_ativo.scale = _sprite_ativo.scale.lerp(escala_viva, minf(1.0, delta * 5.5))
 		_sprite_reserva.scale = _sprite_ativo.scale
-		var roll := sin(_tempo * ritmo * 0.53) * float(_perfil["roll"])
-		_sprite_ativo.rotation_degrees.z = roll
-		_sprite_reserva.rotation_degrees.z = roll
-	_atualizar_presenca(delta)
-
-
-func _trocar_animacao(nome: String, duracao: float = 0.07) -> void:
-	if _sprite_ativo == null or _sprite_reserva == null or not _quadros.has_animation(nome):
-		return
-	_sprite_reserva.play(nome)
-	_sprite_reserva.frame = 0
-	_sprite_reserva.position = _sprite_ativo.position
-	_sprite_reserva.scale = _sprite_ativo.scale
-	_sprite_reserva.rotation = _sprite_ativo.rotation
-	_sprite_reserva.modulate = _sprite_ativo.modulate
-	_sprite_reserva.modulate.a = 0.0
-	var anterior := _sprite_ativo
-	var proximo := _sprite_reserva
-	if _tween_crossfade != null and _tween_crossfade.is_valid():
-		_tween_crossfade.kill()
-	_tween_crossfade = create_tween()
-	_tween_crossfade.set_parallel(true).set_trans(Tween.TRANS_SINE)
-	_tween_crossfade.tween_property(anterior, "modulate:a", 0.0, duracao)
-	_tween_crossfade.tween_property(proximo, "modulate:a", 1.0, duracao)
-	_tween_crossfade.chain().tween_callback(_concluir_crossfade.bind(anterior, proximo))
-
-
-func _concluir_crossfade(anterior: AnimatedSprite3D, proximo: AnimatedSprite3D) -> void:
-	if not is_instance_valid(anterior) or not is_instance_valid(proximo):
-		return
-	_sprite_ativo = proximo
-	_sprite_reserva = anterior
-	_sprite_reserva.stop()
-	_sprite_reserva.modulate.a = 0.0
-
-
-func _novo_tween() -> Tween:
-	if _tween_ativo != null and _tween_ativo.is_valid():
-		_tween_ativo.kill()
-	_tween_ativo = create_tween()
-	_tween_ativo.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	return _tween_ativo
-
-
-func repousar() -> void:
-	_ocupado = false
-	_ataque_pesado_pendente = false
-	position = _origem
-	rotation = Vector3.ZERO
-	scale = _escala_base
-	for sprite in [_sprite_ativo, _sprite_reserva]:
-		sprite.modulate = Color.WHITE
-		sprite.scale = Vector3.ONE
-		sprite.rotation = Vector3.ZERO
-	_trocar_animacao("idle", 0.10)
-	_definir_intensidade_presenca(1.0)
-
-
-func entrar(duracao: float = 0.70) -> void:
-	_ocupado = true
-	_trocar_animacao("idle", 0.02)
-	scale = _escala_base * 0.62
-	_sprite_ativo.modulate.a = 0.0
-	var tween := _novo_tween()
-	tween.set_parallel(true)
-	tween.tween_property(self, "scale", _escala_base, duracao).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(_sprite_ativo, "modulate:a", 1.0, duracao * 0.68)
-	tween.chain().tween_callback(_finalizar_estado.bind("entrar", true))
-
-
-func carregar(duracao: float = 0.85) -> void:
-	_ocupado = true
-	_ataque_pesado_pendente = true
-	_trocar_animacao("heavy_charge", 0.06)
-	_definir_intensidade_presenca(4.8)
-	var tween := _novo_tween()
-	tween.tween_property(self, "scale", Vector3(1.07, 0.90, 1.05), duracao * 0.40)
-	tween.parallel().tween_property(self, "position:y", _origem.y - 0.07, duracao * 0.40)
-	tween.tween_property(self, "scale", Vector3(0.98, 1.06, 1.0), duracao * 0.34).set_trans(Tween.TRANS_BACK)
-	tween.parallel().tween_property(self, "position:y", _origem.y + 0.04, duracao * 0.34)
-	tween.tween_callback(_finalizar_estado.bind("carregar", false))
-
-
-func atacar(duracao: float = 0.62) -> void:
-	_ocupado = true
-	var pesado := _ataque_pesado_pendente
-	var total := duracao / maxf(0.45, float(_perfil["ataque"]))
-	var direcao_z := -1.0 if _de_costas else 1.0
-	var inicio := _origem
-	_trocar_animacao("heavy_release" if pesado else "light", 0.055)
-	var tween := _novo_tween()
-	tween.tween_property(self, "position:z", inicio.z - direcao_z * 0.18, total * 0.19)
-	tween.parallel().tween_property(self, "scale", Vector3(1.06, 0.92, 1.0), total * 0.19)
-	tween.tween_property(self, "position:z", inicio.z + direcao_z * (1.02 if pesado else 0.82), total * 0.22).set_trans(Tween.TRANS_EXPO)
-	tween.parallel().tween_property(self, "scale", Vector3(0.95, 1.08, 1.0), total * 0.22)
-	tween.tween_callback(_emitir_impacto.bind(pesado))
-	tween.tween_interval(total * (0.16 if pesado else 0.10))
-	tween.tween_property(self, "position", inicio, total * 0.39).set_trans(Tween.TRANS_QUAD)
-	tween.parallel().tween_property(self, "scale", _escala_base, total * 0.39)
-	tween.tween_callback(_finalizar_estado.bind("atacar", true))
-
-
-func _emitir_impacto(pesado: bool) -> void:
-	for indice in range(4 if pesado else 2):
-		_criar_rastro(float(indice) * 0.035, 0.34 if pesado else 0.24)
-	_definir_intensidade_presenca(6.2 if pesado else 4.1)
-	animacao_terminou.emit("impacto")
-
-
-func levar_dano(cor: Color = Color(1.0, 0.35, 0.35), duracao: float = 0.42) -> void:
-	_ocupado = true
-	_trocar_animacao("damage", 0.035)
-	_definir_intensidade_presenca(3.5)
-	var inicio := _origem
-	var recuo_z := 0.17 if _de_costas else -0.17
-	var tween := _novo_tween()
-	tween.tween_property(self, "position:z", inicio.z + recuo_z, duracao * 0.22).set_trans(Tween.TRANS_EXPO)
-	tween.parallel().tween_property(_sprite_ativo, "modulate", cor.lightened(0.48), duracao * 0.10)
-	for indice in range(3):
-		var sinal := -1.0 if indice % 2 == 0 else 1.0
-		tween.tween_property(self, "position:x", inicio.x + sinal * 0.10, duracao * 0.10)
-	tween.tween_property(self, "position", inicio, duracao * 0.30)
-	tween.parallel().tween_property(_sprite_ativo, "modulate", Color.WHITE, duracao * 0.24)
-	tween.tween_callback(_finalizar_estado.bind("dano", true))
-
-
-func esquivar(direcao: int, duracao: float = 0.38) -> void:
-	_ocupado = true
-	var sinal := signi(direcao)
-	_trocar_animacao("dodge_left" if sinal < 0 else "dodge_right", 0.035)
-	var inicio_x := position.x
-	var destino_x := inicio_x + float(sinal) * 0.72
-	var tempo := duracao / maxf(0.45, float(_perfil["esquiva"]))
-	_criar_rastro(0.0, 0.22)
-	_criar_rastro(0.045, 0.16)
-	var tween := _novo_tween()
-	tween.tween_property(self, "position:x", inicio_x - float(sinal) * 0.08, tempo * 0.18)
-	tween.tween_property(self, "position:x", destino_x, tempo * 0.47).set_trans(Tween.TRANS_EXPO)
-	tween.parallel().tween_property(self, "rotation_degrees:z", -5.5 * float(sinal), tempo * 0.47)
-	tween.tween_property(self, "rotation_degrees:z", 0.0, tempo * 0.24)
-	tween.tween_callback(_fixar_nova_origem.bind(destino_x))
-
-
-func _fixar_nova_origem(novo_x: float) -> void:
-	position.x = novo_x
-	_origem.x = novo_x
-	_finalizar_estado("esquiva", true)
-
-
-func comemorar(duracao: float = 1.05) -> void:
-	_ocupado = true
-	_trocar_animacao("victory", 0.09)
-	var tween := _novo_tween()
-	tween.tween_property(self, "position:y", _origem.y + 0.22, duracao * 0.28).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(self, "position:y", _origem.y, duracao * 0.24)
-	tween.tween_interval(duracao * 0.28)
-	tween.tween_callback(_finalizar_estado.bind("comemorar", true))
-
-
-func tombar(duracao: float = 0.95) -> void:
-	_ocupado = true
-	_trocar_animacao("ko", 0.10)
-	var tween := _novo_tween()
-	tween.tween_interval(duracao * 0.46)
-	tween.tween_property(_sprite_ativo, "modulate:a", 0.0, duracao * 0.42)
-	tween.parallel().tween_property(self, "position:y", _origem.y - 0.12, duracao * 0.42)
-	tween.tween_callback(_finalizar_estado.bind("tombar", false))
-
-
-func guardar(rodadas: int = 1) -> void:
-	_ocupado = true
-	_trocar_animacao("guard", 0.07)
-	_definir_intensidade_presenca(4.6)
-	var tween := _novo_tween()
-	tween.tween_property(self, "scale", _escala_base * 1.045, 0.14).set_trans(Tween.TRANS_BACK)
-	tween.tween_property(self, "scale", _escala_base, 0.18)
-	tween.tween_callback(_emitir_guarda_pronta.bind(rodadas))
-
-
-func _emitir_guarda_pronta(rodadas: int) -> void:
-	animacao_terminou.emit("guardar_%d" % rodadas)
-
-
-func encerrar_guarda() -> void:
-	_ocupado = false
-	_trocar_animacao("idle", 0.10)
-	_definir_intensidade_presenca(1.0)
-
-
-func definir_cor_elemento(cor: Color) -> void:
-	_cor_elemento = cor
-	if _luz_presenca != null:
-		_luz_presenca.light_color = cor
-	if _material_anel_interno != null:
-		_material_anel_interno.emission = cor
-	if _material_anel_externo != null:
-		_material_anel_externo.emission = cor
-
-
-func definir_contraluz(_valor: float) -> void:
-	pass
+		_sprite_ativo.rotation_degrees.z = sin(_tempo * ritmo * 0.58) * 0.35
+		_sprite_reserva.rotation_degrees.z = _sprite_ativo.rotation_degrees.z
+		_tempo_idle -= delta
+		if _tempo_idle <= 0.0:
+			_pose_idle = (_pose_idle + 1) % QUADROS_IDLE
+			_crossfade(_pose_idle, 0.12)
+			_tempo_idle = maxf(0.12, float(_perfil["idle"]) * 0.42)
+	_atualizar_presenca()
 
 
 func _criar_presenca_3d(altura: float) -> void:
 	_sombra = MeshInstance3D.new()
 	var malha_sombra := PlaneMesh.new()
-	malha_sombra.size = Vector2(altura * 0.74, altura * 0.25)
+	malha_sombra.size = Vector2(altura * 0.72, altura * 0.25)
 	_sombra.mesh = malha_sombra
 	_sombra.position = Vector3(0.0, 0.018, 0.0)
 	var shader_sombra := Shader.new()
 	shader_sombra.code = CODIGO_SOMBRA
 	_material_sombra = ShaderMaterial.new()
 	_material_sombra.shader = shader_sombra
-	_material_sombra.set_shader_parameter("alpha", 0.36)
+	_material_sombra.set_shader_parameter("alpha", 0.38)
 	_sombra.material_override = _material_sombra
 	add_child(_sombra)
 
-	_anel_externo = _criar_anel(altura * 0.40, altura * 0.018, 0.14)
+	_anel_externo = _criar_anel(altura * 0.40, altura * 0.018, 0.16)
 	_material_anel_externo = _anel_externo.material_override as StandardMaterial3D
 	_anel_externo.position.y = 0.026
 	add_child(_anel_externo)
-	_anel_interno = _criar_anel(altura * 0.28, altura * 0.010, 0.28)
+	_anel_interno = _criar_anel(altura * 0.28, altura * 0.010, 0.30)
 	_material_anel_interno = _anel_interno.material_override as StandardMaterial3D
 	_anel_interno.position.y = 0.032
 	add_child(_anel_interno)
@@ -448,58 +267,280 @@ func _criar_anel(raio: float, espessura: float, alpha: float) -> MeshInstance3D:
 	return instancia
 
 
-func _atualizar_presenca(delta: float) -> void:
+func _atualizar_presenca() -> void:
 	if _anel_externo == null:
 		return
 	var pulso := 0.5 + sin(_tempo * 2.2) * 0.5
-	_impulso_presenca = move_toward(_impulso_presenca, 1.0, delta * 4.2)
+	_impulso_presenca = move_toward(_impulso_presenca, 1.0, get_process_delta_time() * 4.2)
 	_anel_externo.rotation.y = _tempo * 0.34
 	_anel_interno.rotation.y = -_tempo * 0.58
-	_material_anel_externo.emission_energy_multiplier = (0.65 + pulso * 1.20) * _impulso_presenca
-	_material_anel_interno.emission_energy_multiplier = (0.92 + pulso * 1.58) * _impulso_presenca
-	_luz_presenca.light_energy = (0.27 + pulso * 0.21) * _impulso_presenca
+	_material_anel_externo.emission_energy_multiplier = (0.65 + pulso * 1.25) * _impulso_presenca
+	_material_anel_interno.emission_energy_multiplier = (0.95 + pulso * 1.65) * _impulso_presenca
+	_luz_presenca.light_energy = (0.28 + pulso * 0.22) * _impulso_presenca
+	var alpha_sombra := 0.34 - absf(sin(_tempo * float(_perfil["ritmo"]))) * 0.08
 	if _material_sombra != null:
-		var sombra_alpha := 0.34 - absf(sin(_tempo * float(_perfil["ritmo"]))) * 0.07
-		_material_sombra.set_shader_parameter("alpha", sombra_alpha)
+		_material_sombra.set_shader_parameter("alpha", alpha_sombra)
 
 
 func _definir_intensidade_presenca(valor: float) -> void:
+	if _material_anel_externo == null:
+		return
 	_impulso_presenca = maxf(1.0, valor)
 
 
-func _criar_rastro(atraso: float, alpha: float) -> void:
+func _altura_visual() -> float:
+	if _sprite_ativo == null or _sprite_ativo.sprite_frames == null:
+		return 1.0
+	var textura: Texture2D = _sprite_ativo.sprite_frames.get_frame_texture("pose_00", 0)
+	return textura.get_height() * _sprite_ativo.pixel_size * 0.5
+
+
+func _nome_pose(pose: int) -> String:
+	return "pose_%02d" % (_offset_vista + pose)
+
+
+func _definir_pose_imediata(pose: int) -> void:
+	var animacao := _nome_pose(pose)
+	_sprite_ativo.play(animacao)
+	_sprite_reserva.play(animacao)
+	_sprite_ativo.modulate.a = 1.0
+	_sprite_reserva.modulate.a = 0.0
+
+
+func _crossfade(pose: int, duracao: float = 0.12) -> void:
+	if _sprite_ativo == null or _sprite_reserva == null:
+		return
+	_sprite_reserva.play(_nome_pose(pose))
+	_sprite_reserva.modulate = _sprite_ativo.modulate
+	_sprite_reserva.modulate.a = 0.0
+	_sprite_reserva.position = _sprite_ativo.position
+	_sprite_reserva.scale = _sprite_ativo.scale
+	var anterior := _sprite_ativo
+	var proximo := _sprite_reserva
+	if _tween_crossfade != null and _tween_crossfade.is_valid():
+		_tween_crossfade.kill()
+	_tween_crossfade = create_tween()
+	_tween_crossfade.set_parallel(true).set_trans(Tween.TRANS_SINE)
+	_tween_crossfade.tween_property(anterior, "modulate:a", 0.0, duracao)
+	_tween_crossfade.tween_property(proximo, "modulate:a", 1.0, duracao)
+	_tween_crossfade.chain().tween_callback(_concluir_crossfade.bind(anterior, proximo))
+
+
+func _concluir_crossfade(anterior: AnimatedSprite3D, proximo: AnimatedSprite3D) -> void:
+	if not is_instance_valid(anterior) or not is_instance_valid(proximo):
+		return
+	_sprite_ativo = proximo
+	_sprite_reserva = anterior
+	_sprite_reserva.modulate.a = 0.0
+
+
+func _novo_tween() -> Tween:
+	if _tween_ativo != null and _tween_ativo.is_valid():
+		_tween_ativo.kill()
+	_tween_ativo = create_tween()
+	_tween_ativo.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	return _tween_ativo
+
+
+func definir_cor_elemento(cor: Color) -> void:
+	_cor_elemento = cor
+
+
+func definir_contraluz(_valor: float) -> void:
+	# Compatibilidade com o rig anterior. A arte de costas agora e real.
+	pass
+
+
+func repousar() -> void:
+	_ocupado = false
+	_ataque_pesado_pendente = false
+	position = _origem
+	rotation = Vector3.ZERO
+	scale = _escala_base
+	_sprite_ativo.modulate = Color.WHITE
+	_sprite_ativo.scale = Vector3.ONE
+	_sprite_reserva.scale = Vector3.ONE
+	_sprite_ativo.rotation_degrees.z = 0.0
+	_sprite_reserva.rotation_degrees.z = 0.0
+	_definir_intensidade_presenca(1.0)
+	_pose_idle = POSE_IDLE_0
+	_crossfade(POSE_IDLE_0, 0.16)
+
+
+func entrar(duracao: float = 0.70) -> void:
+	_ocupado = true
+	_definir_pose_imediata(POSE_IDLE_0)
+	scale = _escala_base * 0.68
+	_sprite_ativo.modulate.a = 0.0
+	var tween := _novo_tween()
+	tween.set_parallel(true)
+	tween.tween_property(self, "scale", _escala_base, duracao).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(_sprite_ativo, "modulate:a", 1.0, duracao * 0.72)
+	tween.chain().tween_callback(_finalizar_estado.bind("entrar"))
+
+
+func carregar(duracao: float = 0.85) -> void:
+	_ocupado = true
+	_ataque_pesado_pendente = true
+	_definir_intensidade_presenca(4.6)
+	_crossfade(POSE_CARGA_PESADA, 0.14)
+	var tween := _novo_tween()
+	tween.tween_property(self, "scale", Vector3(1.08, 0.88, 1.08), duracao * 0.58)
+	var inclinacao := -3.0 if _de_costas else 3.0
+	tween.parallel().tween_property(
+		self, "rotation_degrees:z", inclinacao, duracao * 0.58
+	)
+	tween.tween_property(self, "scale", _escala_base, duracao * 0.30).set_trans(Tween.TRANS_BACK)
+	tween.parallel().tween_property(self, "rotation_degrees:z", 0.0, duracao * 0.30)
+	tween.tween_callback(_finalizar_estado.bind("carregar", false))
+
+
+func atacar(duracao: float = 0.62) -> void:
+	_ocupado = true
+	var multiplicador := float(_perfil["ataque"])
+	var tempo_total := duracao / maxf(0.35, multiplicador)
+	var direcao_z := -1.0 if _de_costas else 1.0
+	var inicio := position
+	var pose_carga := POSE_CARGA_PESADA if _ataque_pesado_pendente else POSE_CARGA_LEVE
+	_pose_impacto_atual = (
+		POSE_ATAQUE_PESADO if _ataque_pesado_pendente else POSE_ATAQUE_LEVE
+	)
+	_crossfade(pose_carga, 0.10)
+	var tween := _novo_tween()
+	tween.tween_property(self, "position:z", inicio.z - direcao_z * 0.16, tempo_total * 0.24)
+	tween.parallel().tween_property(self, "scale", Vector3(1.08, 0.91, 1.0), tempo_total * 0.24)
+	tween.tween_callback(_crossfade.bind(_pose_impacto_atual, 0.08))
+	tween.tween_property(
+		self, "position:z", inicio.z + direcao_z * 0.92, tempo_total * 0.20
+	).set_trans(Tween.TRANS_EXPO)
+	tween.parallel().tween_property(self, "scale", Vector3(0.96, 1.08, 1.0), tempo_total * 0.20)
+	tween.tween_callback(_emitir_impacto)
+	tween.tween_interval(tempo_total * 0.12)
+	tween.tween_property(self, "position", inicio, tempo_total * 0.36)
+	tween.parallel().tween_property(self, "scale", _escala_base, tempo_total * 0.36)
+	tween.tween_callback(_finalizar_estado.bind("atacar"))
+
+
+func _emitir_impacto() -> void:
+	for atraso in range(3):
+		_criar_rastro(float(atraso) * 0.045)
+	_definir_intensidade_presenca(5.8)
+	animacao_terminou.emit("impacto")
+
+
+func levar_dano(cor: Color = Color(1.0, 0.35, 0.35), duracao: float = 0.42) -> void:
+	_ocupado = true
+	_definir_intensidade_presenca(3.2)
+	_crossfade(POSE_DANO, 0.055)
+	var inicio := position
+	var tween := _novo_tween()
+	for indice in range(5):
+		var sinal := -1.0 if indice % 2 == 0 else 1.0
+		tween.tween_property(self, "position:x", inicio.x + sinal * 0.14, duracao * 0.10)
+		tween.parallel().tween_property(_sprite_ativo, "modulate", cor.lightened(0.55), duracao * 0.08)
+	tween.tween_property(self, "position", inicio, duracao * 0.30)
+	tween.parallel().tween_property(_sprite_ativo, "modulate", Color.WHITE, duracao * 0.30)
+	tween.tween_callback(_finalizar_estado.bind("dano"))
+
+
+func esquivar(direcao: int, duracao: float = 0.38) -> void:
+	_ocupado = true
+	var pose := POSE_ESQUIVA_ESQUERDA if direcao < 0 else POSE_ESQUIVA_DIREITA
+	_crossfade(pose, 0.07)
+	var inicio_x := position.x
+	var destino_x := inicio_x + float(signi(direcao)) * 0.72
+	var velocidade := float(_perfil["esquiva"])
+	var tween := _novo_tween()
+	tween.tween_property(
+		self, "position:x", destino_x, duracao / maxf(0.4, velocidade)
+	).set_trans(Tween.TRANS_EXPO)
+	tween.parallel().tween_property(
+		self, "rotation_degrees:z", -7.0 * float(signi(direcao)), duracao * 0.55
+	)
+	tween.tween_property(self, "rotation_degrees:z", 0.0, duracao * 0.30)
+	tween.tween_callback(_fixar_nova_origem.bind(destino_x))
+
+
+func _fixar_nova_origem(novo_x: float) -> void:
+	position.x = novo_x
+	_origem.x = novo_x
+	_finalizar_estado("esquiva")
+
+
+func comemorar(duracao: float = 1.05) -> void:
+	_ocupado = true
+	_crossfade(POSE_VITORIA, 0.14)
+	var inicio_y := position.y
+	var tween := _novo_tween()
+	tween.tween_property(
+		self, "position:y", inicio_y + 0.20, duracao * 0.35
+	).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(self, "position:y", inicio_y, duracao * 0.30)
+	tween.tween_interval(duracao * 0.20)
+	tween.tween_callback(_finalizar_estado.bind("comemorar"))
+
+
+func tombar(duracao: float = 0.95) -> void:
+	_ocupado = true
+	_crossfade(POSE_KO, 0.16)
+	var tween := _novo_tween()
+	tween.tween_interval(duracao * 0.55)
+	tween.tween_property(_sprite_ativo, "modulate:a", 0.0, duracao * 0.45)
+	tween.parallel().tween_property(self, "position:y", position.y - 0.12, duracao * 0.45)
+	tween.tween_callback(_finalizar_estado.bind("tombar", false))
+
+
+func guardar(rodadas: int = 1) -> void:
+	_ocupado = true
+	_definir_intensidade_presenca(4.2)
+	_crossfade(POSE_GUARDA, 0.12)
+	var tween := _novo_tween()
+	tween.tween_property(self, "scale", _escala_base * 1.035, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "scale", _escala_base, 0.18)
+	tween.tween_callback(_emitir_guarda_pronta.bind(rodadas))
+
+
+func _emitir_guarda_pronta(rodadas: int) -> void:
+	animacao_terminou.emit("guardar_%d" % rodadas)
+
+
+func encerrar_guarda() -> void:
+	_ocupado = false
+	_crossfade(POSE_IDLE_0, 0.16)
+	_definir_intensidade_presenca(1.0)
+
+
+func _criar_rastro(atraso: float = 0.0) -> void:
 	if _sprite_ativo == null:
 		return
 	var fantasma := AnimatedSprite3D.new()
 	fantasma.sprite_frames = _quadros
-	fantasma.play(_sprite_ativo.animation)
-	fantasma.frame = _sprite_ativo.frame
+	fantasma.play(_nome_pose(_pose_impacto_atual))
 	fantasma.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	fantasma.shaded = false
 	fantasma.transparent = true
 	fantasma.no_depth_test = true
-	fantasma.render_priority = 3
 	fantasma.pixel_size = _sprite_ativo.pixel_size
 	fantasma.position = _sprite_ativo.position
-	fantasma.scale = _sprite_ativo.scale
-	fantasma.modulate = Color(_cor_elemento.r, _cor_elemento.g, _cor_elemento.b, alpha)
+	fantasma.position.z += atraso * (-2.2 if _de_costas else 2.2)
+	fantasma.modulate = Color(_cor_elemento.r, _cor_elemento.g, _cor_elemento.b, 0.34)
 	add_child(fantasma)
 	var tween := create_tween()
 	if atraso > 0.0:
 		tween.tween_interval(atraso)
 	tween.set_parallel(true)
-	tween.tween_property(fantasma, "modulate:a", 0.0, 0.22)
-	tween.tween_property(fantasma, "scale", fantasma.scale * 1.10, 0.22)
+	tween.tween_property(fantasma, "modulate:a", 0.0, 0.24)
+	tween.tween_property(fantasma, "scale", Vector3(1.14, 1.14, 1.14), 0.24)
 	tween.chain().tween_callback(fantasma.queue_free)
 
 
 func _finalizar_estado(nome: String, voltar_ao_idle: bool = true) -> void:
+	if voltar_ao_idle:
+		_pose_idle = POSE_IDLE_0
+		_crossfade(POSE_IDLE_0, 0.16)
 	if nome == "atacar":
 		_ataque_pesado_pendente = false
-	if voltar_ao_idle:
-		position = _origem
-		scale = _escala_base
-		_trocar_animacao("idle", 0.09)
 	_ocupado = false
 	_definir_intensidade_presenca(1.0)
 	animacao_terminou.emit(nome)

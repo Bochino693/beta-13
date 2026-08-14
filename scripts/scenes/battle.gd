@@ -13,16 +13,16 @@ const MARGEM := 24.0
 const LARGURA := 720.0
 const ALTURA := 1280.0
 
-const Y_TOPO := 12.0        # placar + turno
-const H_TOPO := 36.0
-const Y_HUD_INIMIGO := 58.0
-const H_HUD := 72.0
-const Y_ARENA := 140.0
-const H_ARENA := 738.0
-const Y_HUD_ALIADO := 888.0
-const Y_MENSAGEM := 970.0
+const Y_TOPO := 16.0        # placar + turno
+const H_TOPO := 42.0
+const Y_HUD_INIMIGO := 68.0
+const H_HUD := 78.0
+const Y_ARENA := 156.0
+const H_ARENA := 710.0
+const Y_HUD_ALIADO := 876.0
+const Y_MENSAGEM := 964.0
 const H_MENSAGEM := 38.0
-const Y_ACOES := 1018.0
+const Y_ACOES := 1012.0
 
 const COR_P1 := Color("6ef8ff")
 const COR_P2 := Color("ff55c6")
@@ -61,7 +61,6 @@ var _reservas: Array[HBoxContainer] = []
 var _placar: Label
 var _turno_label: Label
 var _mensagem: Label
-var _detalhe_acao: Label
 var _botoes: Array[Button] = []
 var _camada_numeros: Control
 var _fonte_batalha: Font
@@ -135,15 +134,7 @@ func _montar_arena_3d() -> void:
 
 	_estadio = BattleStadium3D.new()
 	_viewport.add_child(_estadio)
-	var variante_arena: String = BattleStadium3D.variante_para_tipos(
-		str(_lutador(0)["data"]["type"]),
-		str(_lutador(1)["data"]["type"])
-	)
-	_estadio.configurar(
-		COR_P1,
-		COR_P2,
-		variante_arena
-	)
+	_estadio.configurar(COR_P1, COR_P2)
 
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
@@ -464,28 +455,11 @@ func _montar_hud() -> void:
 	var margem := _margem(8)
 	painel.add_child(margem)
 
-	var coluna_acoes := VBoxContainer.new()
-	coluna_acoes.add_theme_constant_override("separation", 6)
-	margem.add_child(coluna_acoes)
-
-	var faixa_detalhe := PanelContainer.new()
-	faixa_detalhe.custom_minimum_size = Vector2(0, 36)
-	faixa_detalhe.add_theme_stylebox_override(
-		"panel", _estilo_botao(Color("7d8cff"), 0.10)
-	)
-	coluna_acoes.add_child(faixa_detalhe)
-	var margem_detalhe := _margem(5)
-	faixa_detalhe.add_child(margem_detalhe)
-	_detalhe_acao = _rotulo("", 14, Color("edf3ff"), HORIZONTAL_ALIGNMENT_CENTER)
-	_detalhe_acao.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detalhe_acao.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	margem_detalhe.add_child(_detalhe_acao)
-
 	var grade := GridContainer.new()
-	grade.columns = 3
-	grade.add_theme_constant_override("h_separation", 8)
+	grade.columns = 2
+	grade.add_theme_constant_override("h_separation", 10)
 	grade.add_theme_constant_override("v_separation", 6)
-	coluna_acoes.add_child(grade)
+	margem.add_child(grade)
 
 	for indice in ACTION_COUNT:
 		var cor := Color("bf6cff")
@@ -503,13 +477,13 @@ func _montar_hud() -> void:
 		botao.expand_icon = true
 		botao.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		botao.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		botao.add_theme_font_size_override("font_size", 14)
+		botao.add_theme_font_size_override("font_size", 15)
 		if _fonte_batalha != null:
 			botao.add_theme_font_override("font", _fonte_batalha)
 		botao.add_theme_color_override("font_color", Color.WHITE)
 		botao.add_theme_color_override("font_disabled_color", Color(0.45, 0.48, 0.60))
-		botao.add_theme_constant_override("icon_max_width", 30)
-		botao.add_theme_constant_override("h_separation", 5)
+		botao.add_theme_constant_override("icon_max_width", 34)
+		botao.add_theme_constant_override("h_separation", 7)
 		botao.add_theme_stylebox_override("normal", _estilo_botao(cor, 0.12))
 		botao.add_theme_stylebox_override("hover", _estilo_botao(cor, 0.24))
 		botao.add_theme_stylebox_override("pressed", _estilo_botao(cor, 0.34))
@@ -616,10 +590,8 @@ func _painel(fundo: Color, borda: Color) -> PanelContainer:
 	var estilo := StyleBoxFlat.new()
 	estilo.bg_color = fundo
 	estilo.border_color = borda
-	estilo.set_border_width_all(1)
-	estilo.set_corner_radius_all(18)
-	estilo.shadow_color = Color(0.0, 0.0, 0.0, 0.42)
-	estilo.shadow_size = 8
+	estilo.set_border_width_all(2)
+	estilo.set_corner_radius_all(20)
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", estilo)
 	return p
@@ -629,12 +601,12 @@ func _estilo_botao(cor: Color, alfa: float) -> StyleBoxFlat:
 	var e := StyleBoxFlat.new()
 	e.bg_color = Color(cor.r, cor.g, cor.b, alfa)
 	e.border_color = Color(cor.r, cor.g, cor.b, 0.70)
-	e.set_border_width_all(1)
-	e.set_corner_radius_all(13)
-	e.content_margin_left = 9
-	e.content_margin_right = 9
-	e.content_margin_top = 6
-	e.content_margin_bottom = 6
+	e.set_border_width_all(2)
+	e.set_corner_radius_all(16)
+	e.content_margin_left = 12
+	e.content_margin_right = 12
+	e.content_margin_top = 8
+	e.content_margin_bottom = 8
 	return e
 
 
@@ -1067,9 +1039,10 @@ func _atualizar_acoes() -> void:
 		if recarga > 0.001:
 			estado = "REC %d" % MoveDB.cooldown_turns(recarga)
 		var dano_previsto := MoveDB.damage_preview(lutador, _lutador(1 - _turn), golpe)
-		_botoes[indice].text = "%s\nD%02d • %s" % [
+		_botoes[indice].text = "%s\nDANO %02d • P%02d • %s" % [
 			str(golpe["name"]).to_upper(),
 			dano_previsto,
+			golpe["power"],
 			estado
 		]
 		var cor_golpe := CreatureDB.color_for_type(str(golpe["element"]))
@@ -1083,16 +1056,16 @@ func _atualizar_acoes() -> void:
 
 	var recarga_escudo := int(lutador.get("guard_cooldown", 0))
 	_botoes[GUARD_ACTION].text = (
-		"ESCUDO\nREC %d TURNO(S)" % recarga_escudo
+		"ESCUDO\nRECARGA %d" % recarga_escudo
 		if recarga_escudo > 0
-		else "ESCUDO\n1–3T • -52%"
+		else "ESCUDO\n1–3 RODADAS • -52%"
 	)
 	_botoes[GUARD_ACTION].disabled = (
 		recarga_escudo > 0 or bool(lutador.get("guard", false))
 	)
 	var pode_trocar := _proximo_vivo(_turn, _active[_turn]) != -1
 	_botoes[SWITCH_ACTION].text = (
-		"TROCAR\nPRÓXIMA BEAST" if pode_trocar else "REAGRUPAR\nAVANÇAR TURNO"
+		"TROCAR\nPRÓXIMA BEAST" if pode_trocar else "REAGRUPAR\nPASSAR TURNO"
 	)
 	_botoes[SWITCH_ACTION].disabled = false
 	if ResourceLoader.exists("res://assets/actions/guard.svg"):
@@ -1103,32 +1076,7 @@ func _atualizar_acoes() -> void:
 	var liberado := not _busy and not _battle_over and GameState.is_human_player(_turn)
 	for indice in _botoes.size():
 		var selecionado := indice == _action_cursor
-		_botoes[indice].modulate = Color.WHITE if selecionado else Color(0.86, 0.88, 0.95)
+		_botoes[indice].modulate = Color.WHITE if selecionado else Color(0.72, 0.76, 0.88)
 		_botoes[indice].mouse_filter = (
 			Control.MOUSE_FILTER_STOP if liberado else Control.MOUSE_FILTER_IGNORE
 		)
-	_atualizar_detalhe_acao(lutador)
-
-
-func _atualizar_detalhe_acao(lutador: Dictionary) -> void:
-	if _detalhe_acao == null:
-		return
-	if _action_cursor < MOVE_COUNT:
-		var golpe := _golpe_da_acao(_turn, _action_cursor)
-		if golpe.is_empty():
-			_detalhe_acao.text = "GOLPE INDISPONÍVEL"
-			return
-		var dano := MoveDB.damage_preview(lutador, _lutador(1 - _turn), golpe)
-		var recarga := MoveDB.cooldown_left(lutador, str(golpe["id"]))
-		var estado := "PRONTO" if recarga <= 0.001 else "RECARGA %d" % MoveDB.cooldown_turns(recarga)
-		_detalhe_acao.text = "%s • %s • DANO %d • PODER %d • %s" % [
-			str(golpe["name"]).to_upper(),
-			str(golpe["element"]).to_upper(),
-			dano,
-			int(golpe["power"]),
-			estado
-		]
-	elif _action_cursor == GUARD_ACTION:
-		_detalhe_acao.text = "ESCUDO • REDUZ 52% • DURA 1–3 RODADAS • RECARGA ALTA"
-	else:
-		_detalhe_acao.text = "TROCAR BEAST • PRESERVA VIDA E RECARGAS"
