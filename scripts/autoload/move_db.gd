@@ -1,6 +1,8 @@
 extends Node
 
 const DATA_PATH := "res://data/moves.json"
+const GUARD_COOLDOWN_TURNS := 4
+const GUARD_DAMAGE_FACTOR := 0.48
 
 const WEIGHT_PROFILES := {
 	"Ultra Leve": {"cooldown": 0.70, "hp_bonus": 0, "damage": 1.08, "label": "RECARGA RELÂMPAGO"},
@@ -91,6 +93,56 @@ func cooldown_left(fighter: Dictionary, move_id: String) -> float:
 
 func can_use(fighter: Dictionary, move: Dictionary) -> bool:
 	return cooldown_left(fighter, str(move["id"])) <= 0.001
+
+
+func guard_duration(fighter: Dictionary) -> int:
+	var resistance := int(fighter.get("data", {}).get("resistance", 60))
+	if resistance >= 78:
+		return 3
+	if resistance >= 52:
+		return 2
+	return 1
+
+
+func can_guard(fighter: Dictionary) -> bool:
+	return (
+		not bool(fighter.get("guard", false))
+		and int(fighter.get("guard_cooldown", 0)) <= 0
+	)
+
+
+func activate_guard(fighter: Dictionary) -> int:
+	if not can_guard(fighter):
+		return 0
+	var duration := guard_duration(fighter)
+	fighter["guard"] = true
+	fighter["guard_turns"] = duration
+	fighter["guard_cooldown"] = 0
+	return duration
+
+
+func begin_fighter_turn(fighter: Dictionary) -> Dictionary:
+	var expired := false
+	if bool(fighter.get("guard", false)):
+		fighter["guard_turns"] = maxi(0, int(fighter.get("guard_turns", 1)) - 1)
+		if int(fighter["guard_turns"]) <= 0:
+			fighter["guard"] = false
+			fighter["guard_cooldown"] = GUARD_COOLDOWN_TURNS
+			expired = true
+	elif int(fighter.get("guard_cooldown", 0)) > 0:
+		fighter["guard_cooldown"] = maxi(0, int(fighter["guard_cooldown"]) - 1)
+	return {
+		"expired": expired,
+		"turns": int(fighter.get("guard_turns", 0)),
+		"cooldown": int(fighter.get("guard_cooldown", 0)),
+	}
+
+
+func cancel_guard(fighter: Dictionary) -> void:
+	if bool(fighter.get("guard", false)):
+		fighter["guard"] = false
+		fighter["guard_turns"] = 0
+		fighter["guard_cooldown"] = GUARD_COOLDOWN_TURNS
 
 
 func damage_preview(attacker: Dictionary, defender: Dictionary, move: Dictionary) -> int:

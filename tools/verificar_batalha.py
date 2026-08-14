@@ -141,7 +141,7 @@ def checar_criaturas():
     if sem_atlas:
         erros.append("sem atlas de combate frente/costas: %s" % ", ".join(sem_atlas))
     else:
-        ok.append("as %d Beasts tem atlas 4x4 frente/costas" % len(criaturas))
+        ok.append("as %d Beasts tem atlas V3 8x4 frente/costas" % len(criaturas))
     print("  atlas cinematograficos: %d de %d"
           % (len(list(atlas_dir.glob("*.png"))), len(criaturas)))
 

@@ -3,27 +3,43 @@ extends Node3D
 
 ## Beast animada por quadros-chave dentro do mundo 3D.
 ##
-## Atlas 4x4:
-##   0..7  = costas (jogador)
-##   8..15 = frente (oponente)
-## Em cada vista: repouso A/B, carga, ataque, dano, esquiva, vitoria e KO.
+## Atlas V3 8x4, celulas fixas de 384x384:
+##   0..15  = costas (jogador)
+##   16..31 = frente (oponente)
+## Em cada vista: seis idles, leve, pesado, dano, esquivas, vitoria, KO e guarda.
 ## Duas AnimatedSprite3D fazem crossfade entre poses; tweens de posicao,
 ## rotacao e escala completam a continuidade do movimento.
 
 signal animacao_terminou(nome: String)
 
-const ATLAS_COLUNAS := 4
-const ATLAS_LINHAS := 4
-const QUADROS_POR_VISTA := 8
+const CODIGO_SOMBRA := """
+shader_type spatial;
+render_mode blend_mix, cull_disabled, unshaded, depth_draw_never;
+uniform float alpha = 0.38;
+void fragment() {
+	vec2 p = (UV - vec2(0.5)) * vec2(1.0, 2.45);
+	float mascara = 1.0 - smoothstep(0.16, 0.52, length(p));
+	ALBEDO = vec3(0.004, 0.006, 0.018);
+	ALPHA = mascara * alpha;
+}
+"""
 
-const POSE_REPOUSO_A := 0
-const POSE_REPOUSO_B := 1
-const POSE_CARGA := 2
-const POSE_ATAQUE := 3
-const POSE_DANO := 4
-const POSE_ESQUIVA := 5
-const POSE_VITORIA := 6
-const POSE_KO := 7
+const ATLAS_COLUNAS := 8
+const ATLAS_LINHAS := 4
+const QUADROS_POR_VISTA := 16
+const QUADROS_IDLE := 6
+
+const POSE_IDLE_0 := 0
+const POSE_CARGA_LEVE := 6
+const POSE_ATAQUE_LEVE := 7
+const POSE_CARGA_PESADA := 8
+const POSE_ATAQUE_PESADO := 9
+const POSE_DANO := 10
+const POSE_ESQUIVA_ESQUERDA := 11
+const POSE_ESQUIVA_DIREITA := 12
+const POSE_VITORIA := 13
+const POSE_KO := 14
+const POSE_GUARDA := 15
 
 const PERFIS: Dictionary = {
 	"ave": {"idle": 0.42, "flutua": 0.075, "ataque": 0.95, "esquiva": 1.10, "ritmo": 3.6, "respira": 0.024, "balanco": 2.5},
@@ -64,9 +80,12 @@ var _de_costas := false
 var _ocupado := false
 var _tempo := 0.0
 var _tempo_idle := 0.0
-var _pose_idle := POSE_REPOUSO_A
+var _pose_idle := POSE_IDLE_0
 var _offset_vista := 0
+var _ataque_pesado_pendente := false
+var _pose_impacto_atual := POSE_ATAQUE_LEVE
 var _sombra: MeshInstance3D
+var _material_sombra: ShaderMaterial
 var _anel_interno: MeshInstance3D
 var _anel_externo: MeshInstance3D
 var _material_anel_interno: StandardMaterial3D
@@ -115,7 +134,7 @@ func configurar(
 	_sprite_reserva.modulate.a = 0.0
 	add_child(_sprite_ativo)
 	add_child(_sprite_reserva)
-	_definir_pose_imediata(POSE_REPOUSO_A)
+	_definir_pose_imediata(POSE_IDLE_0)
 
 	# O centro do plano fica acima da origem, mantendo a base no piso.
 	var altura_celula := textura.get_height() / float(ATLAS_LINHAS)
@@ -150,7 +169,6 @@ func _construir_quadros(textura: Texture2D) -> SpriteFrames:
 			largura,
 			altura
 		)
-		atlas.filter_clip = true
 		recurso.add_frame(animacao, atlas)
 	return recurso
 
@@ -176,25 +194,25 @@ func _process(delta: float) -> void:
 	if not _ocupado:
 		var flutuacao := float(_perfil["flutua"])
 		var ritmo := float(_perfil["ritmo"])
-		var respira := float(_perfil["respira"])
-		var balanco := float(_perfil["balanco"])
 		var pulso := sin(_tempo * ritmo)
 		var deslocamento := pulso * flutuacao
 		var atual := _sprite_ativo.position.y - _altura_visual()
 		_sprite_ativo.position.y += (deslocamento - atual) * minf(1.0, delta * 4.0)
 		_sprite_reserva.position.y = _sprite_ativo.position.y
-		var escala_x := 1.0 - pulso * respira * 0.52
-		var escala_y := 1.0 + pulso * respira
+		# Os seis quadros carregam a respiracao anatomica. O plano inteiro recebe
+		# apenas um pulso minimo para nao parecer borracha ou um personagem morto.
+		var escala_x := 1.0 - pulso * 0.004
+		var escala_y := 1.0 + pulso * 0.006
 		var escala_viva := Vector3(escala_x, escala_y, 1.0)
 		_sprite_ativo.scale = _sprite_ativo.scale.lerp(escala_viva, minf(1.0, delta * 5.5))
 		_sprite_reserva.scale = _sprite_ativo.scale
-		_sprite_ativo.rotation_degrees.z = sin(_tempo * ritmo * 0.58) * balanco
+		_sprite_ativo.rotation_degrees.z = sin(_tempo * ritmo * 0.58) * 0.35
 		_sprite_reserva.rotation_degrees.z = _sprite_ativo.rotation_degrees.z
 		_tempo_idle -= delta
 		if _tempo_idle <= 0.0:
-			_pose_idle = POSE_REPOUSO_B if _pose_idle == POSE_REPOUSO_A else POSE_REPOUSO_A
-			_crossfade(_pose_idle, 0.18)
-			_tempo_idle = float(_perfil["idle"])
+			_pose_idle = (_pose_idle + 1) % QUADROS_IDLE
+			_crossfade(_pose_idle, 0.12)
+			_tempo_idle = maxf(0.12, float(_perfil["idle"]) * 0.42)
 	_atualizar_presenca()
 
 
@@ -204,12 +222,12 @@ func _criar_presenca_3d(altura: float) -> void:
 	malha_sombra.size = Vector2(altura * 0.72, altura * 0.25)
 	_sombra.mesh = malha_sombra
 	_sombra.position = Vector3(0.0, 0.018, 0.0)
-	var material_sombra := StandardMaterial3D.new()
-	material_sombra.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material_sombra.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material_sombra.albedo_color = Color(0.0, 0.0, 0.0, 0.38)
-	material_sombra.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_DISABLED
-	_sombra.material_override = material_sombra
+	var shader_sombra := Shader.new()
+	shader_sombra.code = CODIGO_SOMBRA
+	_material_sombra = ShaderMaterial.new()
+	_material_sombra.shader = shader_sombra
+	_material_sombra.set_shader_parameter("alpha", 0.38)
+	_sombra.material_override = _material_sombra
 	add_child(_sombra)
 
 	_anel_externo = _criar_anel(altura * 0.40, altura * 0.018, 0.16)
@@ -260,8 +278,8 @@ func _atualizar_presenca() -> void:
 	_material_anel_interno.emission_energy_multiplier = (0.95 + pulso * 1.65) * _impulso_presenca
 	_luz_presenca.light_energy = (0.28 + pulso * 0.22) * _impulso_presenca
 	var alpha_sombra := 0.34 - absf(sin(_tempo * float(_perfil["ritmo"]))) * 0.08
-	var material_sombra := _sombra.material_override as StandardMaterial3D
-	material_sombra.albedo_color.a = alpha_sombra
+	if _material_sombra != null:
+		_material_sombra.set_shader_parameter("alpha", alpha_sombra)
 
 
 func _definir_intensidade_presenca(valor: float) -> void:
@@ -335,6 +353,7 @@ func definir_contraluz(_valor: float) -> void:
 
 func repousar() -> void:
 	_ocupado = false
+	_ataque_pesado_pendente = false
 	position = _origem
 	rotation = Vector3.ZERO
 	scale = _escala_base
@@ -344,12 +363,13 @@ func repousar() -> void:
 	_sprite_ativo.rotation_degrees.z = 0.0
 	_sprite_reserva.rotation_degrees.z = 0.0
 	_definir_intensidade_presenca(1.0)
-	_crossfade(POSE_REPOUSO_A, 0.16)
+	_pose_idle = POSE_IDLE_0
+	_crossfade(POSE_IDLE_0, 0.16)
 
 
 func entrar(duracao: float = 0.70) -> void:
 	_ocupado = true
-	_definir_pose_imediata(POSE_REPOUSO_A)
+	_definir_pose_imediata(POSE_IDLE_0)
 	scale = _escala_base * 0.68
 	_sprite_ativo.modulate.a = 0.0
 	var tween := _novo_tween()
@@ -361,8 +381,9 @@ func entrar(duracao: float = 0.70) -> void:
 
 func carregar(duracao: float = 0.85) -> void:
 	_ocupado = true
+	_ataque_pesado_pendente = true
 	_definir_intensidade_presenca(4.6)
-	_crossfade(POSE_CARGA, 0.14)
+	_crossfade(POSE_CARGA_PESADA, 0.14)
 	var tween := _novo_tween()
 	tween.tween_property(self, "scale", Vector3(1.08, 0.88, 1.08), duracao * 0.58)
 	var inclinacao := -3.0 if _de_costas else 3.0
@@ -374,43 +395,29 @@ func carregar(duracao: float = 0.85) -> void:
 	tween.tween_callback(_finalizar_estado.bind("carregar", false))
 
 
-func atacar(pesado: bool = false, duracao: float = 0.62) -> void:
+func atacar(duracao: float = 0.62) -> void:
 	_ocupado = true
 	var multiplicador := float(_perfil["ataque"])
 	var tempo_total := duracao / maxf(0.35, multiplicador)
 	var direcao_z := -1.0 if _de_costas else 1.0
 	var inicio := position
-	# Golpes leves não passam pela pose de carga. Isso dá resposta imediata e
-	# reserva a antecipação longa, aura e leitura de peso para o golpe pesado.
-	if not pesado:
-		_crossfade(POSE_ATAQUE, 0.055)
+	var pose_carga := POSE_CARGA_PESADA if _ataque_pesado_pendente else POSE_CARGA_LEVE
+	_pose_impacto_atual = (
+		POSE_ATAQUE_PESADO if _ataque_pesado_pendente else POSE_ATAQUE_LEVE
+	)
+	_crossfade(pose_carga, 0.10)
 	var tween := _novo_tween()
-	var antecipacao := 0.24 if pesado else 0.11
-	tween.tween_property(self, "position:z", inicio.z - direcao_z * (0.16 if pesado else 0.07), tempo_total * antecipacao)
-	tween.parallel().tween_property(
-		self,
-		"scale",
-		Vector3(1.08, 0.91, 1.0) if pesado else Vector3(1.035, 0.97, 1.0),
-		tempo_total * antecipacao
-	)
-	if pesado:
-		tween.tween_callback(_crossfade.bind(POSE_ATAQUE, 0.075))
+	tween.tween_property(self, "position:z", inicio.z - direcao_z * 0.16, tempo_total * 0.24)
+	tween.parallel().tween_property(self, "scale", Vector3(1.08, 0.91, 1.0), tempo_total * 0.24)
+	tween.tween_callback(_crossfade.bind(_pose_impacto_atual, 0.08))
 	tween.tween_property(
-		self,
-		"position:z",
-		inicio.z + direcao_z * (1.02 if pesado else 0.64),
-		tempo_total * (0.20 if pesado else 0.17)
+		self, "position:z", inicio.z + direcao_z * 0.92, tempo_total * 0.20
 	).set_trans(Tween.TRANS_EXPO)
-	tween.parallel().tween_property(
-		self,
-		"scale",
-		Vector3(0.95, 1.10, 1.0) if pesado else Vector3(0.98, 1.055, 1.0),
-		tempo_total * (0.20 if pesado else 0.17)
-	)
+	tween.parallel().tween_property(self, "scale", Vector3(0.96, 1.08, 1.0), tempo_total * 0.20)
 	tween.tween_callback(_emitir_impacto)
-	tween.tween_interval(tempo_total * (0.12 if pesado else 0.06))
-	tween.tween_property(self, "position", inicio, tempo_total * (0.36 if pesado else 0.30))
-	tween.parallel().tween_property(self, "scale", _escala_base, tempo_total * (0.36 if pesado else 0.30))
+	tween.tween_interval(tempo_total * 0.12)
+	tween.tween_property(self, "position", inicio, tempo_total * 0.36)
+	tween.parallel().tween_property(self, "scale", _escala_base, tempo_total * 0.36)
 	tween.tween_callback(_finalizar_estado.bind("atacar"))
 
 
@@ -438,24 +445,19 @@ func levar_dano(cor: Color = Color(1.0, 0.35, 0.35), duracao: float = 0.42) -> v
 
 func esquivar(direcao: int, duracao: float = 0.38) -> void:
 	_ocupado = true
-	_crossfade(POSE_ESQUIVA, 0.045)
+	var pose := POSE_ESQUIVA_ESQUERDA if direcao < 0 else POSE_ESQUIVA_DIREITA
+	_crossfade(pose, 0.07)
 	var inicio_x := position.x
 	var destino_x := inicio_x + float(signi(direcao)) * 0.72
 	var velocidade := float(_perfil["esquiva"])
 	var tween := _novo_tween()
-	tween.tween_callback(_gerar_rastros_esquiva.bind(signi(direcao)))
 	tween.tween_property(
 		self, "position:x", destino_x, duracao / maxf(0.4, velocidade)
 	).set_trans(Tween.TRANS_EXPO)
 	tween.parallel().tween_property(
-		self, "rotation_degrees:z", -9.0 * float(signi(direcao)), duracao * 0.50
+		self, "rotation_degrees:z", -7.0 * float(signi(direcao)), duracao * 0.55
 	)
-	tween.parallel().tween_property(
-		self, "scale", Vector3(0.93, 1.04, 1.0), duracao * 0.44
-	)
-	tween.tween_callback(_crossfade.bind(POSE_REPOUSO_A, 0.075))
-	tween.tween_property(self, "rotation_degrees:z", 0.0, duracao * 0.22)
-	tween.parallel().tween_property(self, "scale", _escala_base, duracao * 0.22)
+	tween.tween_property(self, "rotation_degrees:z", 0.0, duracao * 0.30)
 	tween.tween_callback(_fixar_nova_origem.bind(destino_x))
 
 
@@ -488,12 +490,33 @@ func tombar(duracao: float = 0.95) -> void:
 	tween.tween_callback(_finalizar_estado.bind("tombar", false))
 
 
+func guardar(rodadas: int = 1) -> void:
+	_ocupado = true
+	_definir_intensidade_presenca(4.2)
+	_crossfade(POSE_GUARDA, 0.12)
+	var tween := _novo_tween()
+	tween.tween_property(self, "scale", _escala_base * 1.035, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "scale", _escala_base, 0.18)
+	tween.tween_callback(_emitir_guarda_pronta.bind(rodadas))
+
+
+func _emitir_guarda_pronta(rodadas: int) -> void:
+	animacao_terminou.emit("guardar_%d" % rodadas)
+
+
+func encerrar_guarda() -> void:
+	_ocupado = false
+	_crossfade(POSE_IDLE_0, 0.16)
+	_definir_intensidade_presenca(1.0)
+
+
 func _criar_rastro(atraso: float = 0.0) -> void:
 	if _sprite_ativo == null:
 		return
 	var fantasma := AnimatedSprite3D.new()
 	fantasma.sprite_frames = _quadros
-	fantasma.play(_nome_pose(POSE_ATAQUE))
+	fantasma.play(_nome_pose(_pose_impacto_atual))
 	fantasma.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	fantasma.shaded = false
 	fantasma.transparent = true
@@ -512,39 +535,12 @@ func _criar_rastro(atraso: float = 0.0) -> void:
 	tween.chain().tween_callback(fantasma.queue_free)
 
 
-func _criar_rastro_esquiva(atraso: float, direcao: int) -> void:
-	if _sprite_ativo == null:
-		return
-	var fantasma := AnimatedSprite3D.new()
-	fantasma.sprite_frames = _quadros
-	fantasma.play(_nome_pose(POSE_ESQUIVA))
-	fantasma.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	fantasma.shaded = false
-	fantasma.transparent = true
-	fantasma.no_depth_test = true
-	fantasma.render_priority = 3
-	fantasma.pixel_size = _sprite_ativo.pixel_size
-	fantasma.position = _sprite_ativo.position
-	fantasma.position.x -= float(direcao) * atraso * 5.0
-	fantasma.modulate = Color(_cor_elemento.r, _cor_elemento.g, _cor_elemento.b, 0.27)
-	add_child(fantasma)
-	var tween := create_tween()
-	if atraso > 0.0:
-		tween.tween_interval(atraso)
-	tween.set_parallel(true)
-	tween.tween_property(fantasma, "modulate:a", 0.0, 0.20)
-	tween.tween_property(fantasma, "position:x", fantasma.position.x - float(direcao) * 0.18, 0.20)
-	tween.chain().tween_callback(fantasma.queue_free)
-
-
-func _gerar_rastros_esquiva(direcao: int) -> void:
-	for atraso in range(3):
-		_criar_rastro_esquiva(float(atraso) * 0.035, direcao)
-
-
 func _finalizar_estado(nome: String, voltar_ao_idle: bool = true) -> void:
 	if voltar_ao_idle:
-		_crossfade(POSE_REPOUSO_A, 0.16)
+		_pose_idle = POSE_IDLE_0
+		_crossfade(POSE_IDLE_0, 0.16)
+	if nome == "atacar":
+		_ataque_pesado_pendente = false
 	_ocupado = false
 	_definir_intensidade_presenca(1.0)
 	animacao_terminou.emit(nome)

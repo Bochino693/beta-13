@@ -4,11 +4,9 @@ class_name BeastAtlas
 # ---------------------------------------------------------------------------
 # BeastAtlas — corte correto dos atlas de combate.
 #
-# Substitui a divisao rigida 4x4 de cinematic_beast_sprite_3d.gd, que assume
-# celulas de largura/4 por altura/4. Os 30 atlas tem 11 resolucoes diferentes
-# e as poses nao estao alinhadas numa grade matematica: medindo o arcdrake,
-# as colunas reais tem 333, 304, 345 e 320 px, e a grade assume 350 fixo.
-# Por isso aparece pedaco da pose vizinha dentro do quadro.
+# Le o contrato V3 de celulas fixas. Os atlas antigos tinham resolucoes e
+# recortes diferentes; o V3 padroniza tudo em 8x4 e impede puxar pixels da
+# pose vizinha.
 #
 # Aqui as poses vem de assets/sprites_combat/<id>.poses.json, gerado por
 # tools/mapear_poses.py a partir da transparencia real de cada imagem.
@@ -25,7 +23,7 @@ class_name BeastAtlas
 
 const PASTA := "res://assets/sprites_combat/"
 const LINHAS := 4
-const COLUNAS := 4
+const COLUNAS := 8
 
 # Nomes legiveis. ATENCAO a ordem do atlas do beta-13:
 #   0..7  = COSTAS (Beast do jogador)
@@ -62,7 +60,7 @@ static func manifesto(id_beast: String) -> Dictionary:
 	return dados
 
 
-## Retangulo real de uma pose. Cai na grade 4x4 se nao houver manifesto.
+## Retangulo real de uma pose. Cai na grade 8x4 se nao houver manifesto.
 static func retangulo(id_beast: String, indice: int, textura: Texture2D) -> Rect2:
 	var dados := manifesto(id_beast)
 	var poses: Array = dados.get("poses", [])

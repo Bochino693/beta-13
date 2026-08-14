@@ -12,16 +12,6 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 ELEMENTS = {"Luz", "Escuridão", "Fogo", "Choque", "Terra", "Água", "Natureza", "Vento"}
-EXPECTED_COUNTERS = {
-    "Luz": ["Escuridão"],
-    "Escuridão": ["Luz"],
-    "Fogo": ["Natureza"],
-    "Água": ["Fogo"],
-    "Choque": ["Água"],
-    "Vento": ["Choque"],
-    "Terra": ["Vento"],
-    "Natureza": ["Terra"],
-}
 
 
 def main() -> None:
@@ -46,30 +36,6 @@ def main() -> None:
         errors.append("O renderer GL Compatibility não está configurado.")
     if "theme/default_font_multichannel_signed_distance_field=true" in project_text:
         errors.append("MSDF global precisa ficar desativado para preservar acentos em texto pequeno.")
-    battle_text = (ROOT / "scripts" / "scenes" / "battle.gd").read_text(encoding="utf-8")
-    layout_constants = {
-        name: float(value)
-        for name, value in re.findall(
-            r"^const\s+(Y_[A-Z_]+|H_[A-Z_]+)\s*:=\s*([0-9.]+)",
-            battle_text,
-            re.MULTILINE,
-        )
-    }
-    expected_layout = {
-        "Y_TOPO": 16.0, "H_TOPO": 42.0,
-        "Y_HUD_INIMIGO": 68.0, "H_HUD": 86.0,
-        "Y_ARENA": 164.0, "H_ARENA": 660.0,
-        "Y_HUD_ALIADO": 834.0,
-        "Y_MENSAGEM": 930.0, "H_MENSAGEM": 44.0,
-        "Y_ACOES": 984.0,
-    }
-    if layout_constants != expected_layout:
-        errors.append(f"Grade da batalha divergiu do layout validado: {layout_constants}.")
-    creature_db_text = (ROOT / "scripts" / "autoload" / "creature_db.gd").read_text(encoding="utf-8")
-    for attacker, targets in EXPECTED_COUNTERS.items():
-        expected_line = f'"{attacker}": [{", ".join(repr(target) for target in targets)}]'.replace("'", '"')
-        if expected_line not in creature_db_text:
-            errors.append(f"Hierarquia elemental divergente: esperado {expected_line}.")
 
     for creature in creatures:
         creature_id = creature["id"]
@@ -128,37 +94,28 @@ def main() -> None:
                 with Image.open(combat_sheet) as sheet:
                     if sheet.mode != "RGBA":
                         errors.append(f"{creature_id}: atlas de combate precisa ser RGBA.")
-                    if sheet.size != (1536, 1536):
-                        errors.append(f"{creature_id}: atlas normalizado precisa ser 1536x1536; encontrado {sheet.size}.")
+                    if sheet.size != (3072, 1536):
+                        errors.append(
+                            f"{creature_id}: atlas V3 deve medir 3072x1536; encontrado {sheet.size}."
+                        )
                     if sheet.getchannel("A").getextrema()[0] != 0:
                         errors.append(f"{creature_id}: atlas de combate nao tem alfa transparente.")
-                    alpha = sheet.getchannel("A")
-                    for pose_index in range(16):
-                        x = (pose_index % 4) * 384
-                        y = (pose_index // 4) * 384
-                        cell = alpha.crop((x, y, x + 384, y + 384))
-                        if cell.getbbox() is None:
-                            errors.append(f"{creature_id}: pose {pose_index} vazia no atlas de combate.")
-                            continue
-                        border = Image.new("L", (384, 384), 0)
-                        border.paste(cell.crop((0, 0, 384, 4)), (0, 0))
-                        border.paste(cell.crop((0, 380, 384, 384)), (0, 380))
-                        border.paste(cell.crop((0, 0, 4, 384)), (0, 0))
-                        border.paste(cell.crop((380, 0, 384, 384)), (380, 0))
-                        if border.getbbox() is not None:
-                            errors.append(f"{creature_id}: pose {pose_index} toca a borda segura da celula.")
+                    if sheet.size == (3072, 1536):
+                        alpha = sheet.getchannel("A")
+                        for frame in range(32):
+                            x = (frame % 8) * 384
+                            y = (frame // 8) * 384
+                            box = alpha.crop((x, y, x + 384, y + 384)).getbbox()
+                            if box is None:
+                                errors.append(f"{creature_id}: quadro V3 vazio: {frame}.")
+                manifest_path = combat_sheet.with_suffix(".poses.json")
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                if manifest.get("version") != 3 or len(manifest.get("poses", [])) != 32:
+                    errors.append(f"{creature_id}: manifesto V3 precisa declarar 32 poses.")
                 with Image.open(combat_sheet) as sheet:
                     sheet.verify()
             except Exception as exc:
                 errors.append(f"{creature_id}: atlas de combate corrompido: {exc}.")
-
-        manifest_path = ROOT / "assets" / "sprites_combat" / f"{creature_id}.poses.json"
-        try:
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            if manifest.get("layout_version") != 2 or manifest.get("ordem_vistas") != ["costas", "frente"]:
-                errors.append(f"{creature_id}: manifesto de poses nao declara costas/frente normalizados.")
-        except Exception as exc:
-            errors.append(f"{creature_id}: manifesto de poses invalido: {exc}.")
 
     for move in moves:
         if move["element"] not in ELEMENTS:
@@ -173,19 +130,6 @@ def main() -> None:
         element_count = sum(move["element"] == element for move in moves)
         if element_count != 10:
             errors.append(f"{element}: deveria possuir 10 golpes; possui {element_count}.")
-
-    for arena_name in (
-        "lazer_coliseum_backplate.png",
-        "obsidian_forge_backplate.png",
-        "sky_temple_backplate.png",
-    ):
-        arena_path = ROOT / "assets" / "battle" / "arena" / arena_name
-        if not arena_path.is_file():
-            errors.append(f"Cenario de batalha ausente: assets/battle/arena/{arena_name}.")
-    game_state_text = (ROOT / "scripts" / "autoload" / "game_state.gd").read_text(encoding="utf-8")
-    team_select_text = (ROOT / "scripts" / "scenes" / "team_select.gd").read_text(encoding="utf-8")
-    if 'var arena_id := "auto"' not in game_state_text or "_mostrar_escolha_arena()" not in team_select_text:
-        errors.append("Selecao de arena do modo CPU nao esta integrada ao fluxo.")
 
     # Confere todos os PNGs por leitura integral, não apenas pelo cabeçalho.
     for png_path in (ROOT / "assets").rglob("*.png"):

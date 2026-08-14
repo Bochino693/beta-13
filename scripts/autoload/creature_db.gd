@@ -18,16 +18,14 @@ const TYPE_COLORS := {
 }
 
 const STRONG_AGAINST := {
-	# Luz e Escuridão são um contra-ataque natural: ambas causam dano alto
-	# entre si. Os demais elementos formam um ciclo legível e fechado.
-	"Luz": ["Escuridão"],
-	"Escuridão": ["Luz"],
-	"Fogo": ["Natureza"],
-	"Água": ["Fogo"],
-	"Choque": ["Água"],
-	"Vento": ["Choque"],
-	"Terra": ["Vento"],
-	"Natureza": ["Terra"]
+	"Luz": ["Escuridão", "Natureza"],
+	"Escuridão": ["Vento", "Água"],
+	"Fogo": ["Luz", "Natureza"],
+	"Choque": ["Água", "Vento"],
+	"Terra": ["Choque", "Fogo"],
+	"Água": ["Fogo", "Terra"],
+	"Natureza": ["Terra", "Água"],
+	"Vento": ["Natureza", "Luz"]
 }
 
 
@@ -108,6 +106,8 @@ func make_fighter(creature_id: String) -> Dictionary:
 		"energy": 0,
 		"cooldowns": {},
 		"guard": false,
+		"guard_turns": 0,
+		"guard_cooldown": 0,
 		"ko": false,
 		"round_damage": 0
 	}

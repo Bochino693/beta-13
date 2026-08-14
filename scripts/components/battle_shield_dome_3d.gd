@@ -82,18 +82,39 @@ func _montar() -> void:
 	add_child(_rotulo)
 
 
-func ativar(cor: Color = Color("59d7ff")) -> void:
+func ativar(cor: Color = Color("59d7ff"), rodadas: int = 1) -> void:
 	_cor = cor
 	visible = true
-	_material.set_shader_parameter("cor", Vector3(cor.r, cor.g, cor.b))
-	_material.set_shader_parameter("intensidade", 1.0)
-	(_anel.material_override as StandardMaterial3D).emission = cor
-	_rotulo.text = "GUARDA • 1 IMPACTO"
-	_rotulo.modulate.a = 1.0
+	if _material != null:
+		_material.set_shader_parameter("cor", Vector3(cor.r, cor.g, cor.b))
+		_material.set_shader_parameter("intensidade", 1.0)
+	if _anel != null:
+		var material_anel := _anel.material_override as StandardMaterial3D
+		if material_anel != null:
+			material_anel.emission = cor
+	atualizar_rodadas(rodadas)
+	if _rotulo != null:
+		_rotulo.modulate.a = 1.0
 	scale = _escala_base * 0.16
 	var tween := create_tween()
 	tween.tween_property(self, "scale", _escala_base, 0.28) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func atualizar_rodadas(rodadas: int) -> void:
+	if _rotulo != null:
+		_rotulo.text = "ESCUDO • %d RODADA(S)" % maxi(0, rodadas)
+
+
+func absorver_impacto(rodadas: int) -> void:
+	if not visible:
+		return
+	atualizar_rodadas(rodadas)
+	var tween := create_tween()
+	tween.tween_method(_definir_intensidade, 1.0, 2.4, 0.08)
+	tween.parallel().tween_property(self, "scale", _escala_base * 1.09, 0.08)
+	tween.tween_method(_definir_intensidade, 2.4, 1.0, 0.18)
+	tween.parallel().tween_property(self, "scale", _escala_base, 0.18)
 
 
 func romper() -> void:
@@ -108,6 +129,11 @@ func romper() -> void:
 	tween.parallel().tween_property(self, "scale", _escala_base * 1.55, 0.22)
 	tween.parallel().tween_property(_rotulo, "modulate:a", 0.0, 0.22)
 	tween.chain().tween_callback(_ocultar)
+
+
+func desativar() -> void:
+	if visible:
+		romper()
 
 
 func _definir_intensidade(valor: float) -> void:

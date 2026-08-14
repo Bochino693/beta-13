@@ -1,239 +1,463 @@
 {
+  "version": 3,
   "id": "helionce",
   "atlas": "res://assets/sprites_combat/helionce.png",
-  "layout_version": 2,
-  "tamanho": [
-    1536,
+  "size": [
+    3072,
     1536
   ],
-  "linhas": 4,
-  "colunas": 4,
-  "deteccao": "componentes_isolados",
-  "ordem_vistas": [
-    "costas",
-    "frente"
+  "rows": 4,
+  "columns": 8,
+  "cell": [
+    384,
+    384
   ],
+  "safe_margin": 22,
   "poses": [
     {
-      "nome": "repouso_a_costas",
-      "indice": 0,
+      "name": "back_idle_0",
+      "index": 0,
       "rect": [
         0,
         0,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "repouso_b_costas",
-      "indice": 1,
+      "name": "back_idle_1",
+      "index": 1,
       "rect": [
         384,
         0,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "carga_costas",
-      "indice": 2,
+      "name": "back_idle_2",
+      "index": 2,
       "rect": [
         768,
         0,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "ataque_costas",
-      "indice": 3,
+      "name": "back_idle_3",
+      "index": 3,
       "rect": [
         1152,
         0,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "dano_costas",
-      "indice": 4,
+      "name": "back_idle_4",
+      "index": 4,
+      "rect": [
+        1536,
+        0,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_idle_5",
+      "index": 5,
+      "rect": [
+        1920,
+        0,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_light_charge",
+      "index": 6,
+      "rect": [
+        2304,
+        0,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_light_impact",
+      "index": 7,
+      "rect": [
+        2688,
+        0,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_heavy_charge",
+      "index": 8,
       "rect": [
         0,
         384,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "esquiva_costas",
-      "indice": 5,
+      "name": "back_heavy_impact",
+      "index": 9,
       "rect": [
         384,
         384,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "vitoria_costas",
-      "indice": 6,
+      "name": "back_damage",
+      "index": 10,
       "rect": [
         768,
         384,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "ko_costas",
-      "indice": 7,
+      "name": "back_dodge_left",
+      "index": 11,
       "rect": [
         1152,
         384,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "repouso_a_frente",
-      "indice": 8,
+      "name": "back_dodge_right",
+      "index": 12,
+      "rect": [
+        1536,
+        384,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_victory",
+      "index": 13,
+      "rect": [
+        1920,
+        384,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_ko",
+      "index": 14,
+      "rect": [
+        2304,
+        384,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "back_guard",
+      "index": 15,
+      "rect": [
+        2688,
+        384,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_idle_0",
+      "index": 16,
       "rect": [
         0,
         768,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "repouso_b_frente",
-      "indice": 9,
+      "name": "front_idle_1",
+      "index": 17,
       "rect": [
         384,
         768,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "carga_frente",
-      "indice": 10,
+      "name": "front_idle_2",
+      "index": 18,
       "rect": [
         768,
         768,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "ataque_frente",
-      "indice": 11,
+      "name": "front_idle_3",
+      "index": 19,
       "rect": [
         1152,
         768,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "dano_frente",
-      "indice": 12,
+      "name": "front_idle_4",
+      "index": 20,
+      "rect": [
+        1536,
+        768,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_idle_5",
+      "index": 21,
+      "rect": [
+        1920,
+        768,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_light_charge",
+      "index": 22,
+      "rect": [
+        2304,
+        768,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_light_impact",
+      "index": 23,
+      "rect": [
+        2688,
+        768,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_heavy_charge",
+      "index": 24,
       "rect": [
         0,
         1152,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "esquiva_frente",
-      "indice": 13,
+      "name": "front_heavy_impact",
+      "index": 25,
       "rect": [
         384,
         1152,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "vitoria_frente",
-      "indice": 14,
+      "name": "front_damage",
+      "index": 26,
       "rect": [
         768,
         1152,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
         0.5,
         1.0
       ]
     },
     {
-      "nome": "ko_frente",
-      "indice": 15,
+      "name": "front_dodge_left",
+      "index": 27,
       "rect": [
         1152,
         1152,
         384,
         384
       ],
-      "ancora": [
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_dodge_right",
+      "index": 28,
+      "rect": [
+        1536,
+        1152,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_victory",
+      "index": 29,
+      "rect": [
+        1920,
+        1152,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_ko",
+      "index": 30,
+      "rect": [
+        2304,
+        1152,
+        384,
+        384
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "name": "front_guard",
+      "index": 31,
+      "rect": [
+        2688,
+        1152,
+        384,
+        384
+      ],
+      "anchor": [
         0.5,
         1.0
       ]

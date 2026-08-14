@@ -7,29 +7,6 @@ const CATEGORY_HINTS := {
 	"Fogo":"ígneos e vulcânicos", "Choque":"condutores e plasma", "Terra":"fósseis e minerais",
 	"Água":"seres oceânicos", "Natureza":"insetos, flora e fungos", "Vento":"planadores e seres aéreos"
 }
-const ARENAS := [
-	{
-		"id": "coliseu",
-		"nome": "COLISEU LAZER",
-		"descricao": "Arquibancadas tecnológicas e luz competitiva.",
-		"imagem": "res://assets/battle/arena/lazer_coliseum_backplate.png",
-		"cor": Color("6ef8ff"),
-	},
-	{
-		"id": "forja",
-		"nome": "FORJA DE OBSIDIANA",
-		"descricao": "Basalto, metal e energia vulcânica controlada.",
-		"imagem": "res://assets/battle/arena/obsidian_forge_backplate.png",
-		"cor": Color("ff784d"),
-	},
-	{
-		"id": "celeste",
-		"nome": "TEMPLO CELESTE",
-		"descricao": "Arena suspensa entre nuvens e auroras.",
-		"imagem": "res://assets/battle/arena/sky_temple_backplate.png",
-		"cor": Color("8cb7ff"),
-	},
-]
 
 var _catalog: Array[Dictionary] = []
 var _card_buttons: Array[Button] = []
@@ -51,7 +28,6 @@ var _phase_label: Label
 var _category_hint: Label
 var _instruction: Label
 var _ready_button: Button
-var _arena_overlay: Control
 var _locked := false
 
 
@@ -133,11 +109,11 @@ func _build_screen() -> void:
 		UIFactory.apply_font(card, true)
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.text = "%s\n%s • %s" % [creature["name"], creature["type"], _weight_short(str(creature["weight_class"]))]
-		var icon_path := "res://assets/sprites_combat/%s.png" % creature["id"]
+		var icon_path := "res://assets/creatures_hd/%s.png" % creature["id"]
 		if ResourceLoader.exists(icon_path):
 			card.icon = _front_icon(str(creature["id"]))
 		else:
-			push_error("Atlas de combate obrigatório ausente: %s" % icon_path)
+			push_error("Retrato HD obrigatório ausente: %s" % icon_path)
 		card.expand_icon = true
 		card.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		card.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -197,11 +173,6 @@ func _build_screen() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _arena_overlay != null:
-		if event.is_action_pressed("p1_cancel"):
-			_fechar_escolha_arena()
-		get_viewport().set_input_as_handled()
-		return
 	if _locked:
 		return
 	var prefix := "p1_" if _current_player == 0 else "p2_"
@@ -322,114 +293,10 @@ func _confirm_team() -> void:
 		return
 	if GameState.mode == "cpu":
 		GameState.set_team(1, CreatureDB.random_team(5, _selected_teams[0]))
-		_locked = true
-		_mostrar_escolha_arena()
-		return
 	else:
 		GameState.set_team(1, _selected_teams[1])
 	_locked = true
 	Transition.go_to(GameState.BATTLE_SCENE, "ENTRANDO NA ARENA")
-
-
-func _mostrar_escolha_arena() -> void:
-	_arena_overlay = Control.new()
-	_arena_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_arena_overlay.z_index = 100
-	add_child(_arena_overlay)
-
-	var bloqueio := ColorRect.new()
-	bloqueio.color = Color(0.008, 0.012, 0.035, 0.97)
-	bloqueio.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bloqueio.mouse_filter = Control.MOUSE_FILTER_STOP
-	_arena_overlay.add_child(bloqueio)
-
-	var titulo := UIFactory.title("ESCOLHA A ARENA", 38, Color.WHITE)
-	titulo.position = Vector2(35, 36)
-	titulo.size = Vector2(650, 52)
-	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_arena_overlay.add_child(titulo)
-	var subtitulo := UIFactory.label(
-		"EXCLUSIVO DO DESAFIO CPU",
-		15,
-		Color("8fdcff"),
-		HORIZONTAL_ALIGNMENT_CENTER
-	)
-	subtitulo.position = Vector2(35, 92)
-	subtitulo.size = Vector2(650, 34)
-	_arena_overlay.add_child(subtitulo)
-
-	var coluna := VBoxContainer.new()
-	coluna.position = Vector2(35, 148)
-	coluna.size = Vector2(650, 930)
-	coluna.add_theme_constant_override("separation", 16)
-	_arena_overlay.add_child(coluna)
-
-	for arena in ARENAS:
-		var cor: Color = arena["cor"]
-		var cartao := Button.new()
-		cartao.custom_minimum_size = Vector2(650, 284)
-		cartao.focus_mode = Control.FOCUS_NONE
-		cartao.clip_contents = true
-		cartao.add_theme_stylebox_override(
-			"normal", UIFactory.style_box(Color("f00c1730"), Color(cor, 0.72), 24, 3)
-		)
-		cartao.add_theme_stylebox_override(
-			"hover", UIFactory.style_box(Color(cor, 0.22), cor, 24, 5)
-		)
-		cartao.add_theme_stylebox_override(
-			"pressed", UIFactory.style_box(Color(cor, 0.34), Color.WHITE, 24, 5)
-		)
-		cartao.pressed.connect(_selecionar_arena.bind(str(arena["id"])))
-		coluna.add_child(cartao)
-
-		var imagem := TextureRect.new()
-		imagem.position = Vector2(12, 12)
-		imagem.size = Vector2(256, 260)
-		imagem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		imagem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		imagem.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-		imagem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var caminho: String = str(arena["imagem"])
-		if ResourceLoader.exists(caminho):
-			imagem.texture = load(caminho) as Texture2D
-		cartao.add_child(imagem)
-
-		var nome := UIFactory.label(str(arena["nome"]), 25, Color.WHITE)
-		nome.position = Vector2(292, 62)
-		nome.size = Vector2(330, 46)
-		nome.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cartao.add_child(nome)
-		var descricao := UIFactory.label(str(arena["descricao"]), 16, Color("dce9ff"))
-		descricao.position = Vector2(292, 116)
-		descricao.size = Vector2(320, 78)
-		descricao.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		descricao.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cartao.add_child(descricao)
-		var acao := UIFactory.badge("LUTAR NESTA ARENA", cor)
-		acao.position = Vector2(292, 211)
-		acao.size = Vector2(250, 34)
-		acao.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cartao.add_child(acao)
-
-	var voltar := UIFactory.button("VOLTAR À EQUIPE", Color("6d7da0"), Vector2(330, 58))
-	voltar.position = Vector2(195, 1166)
-	voltar.size = Vector2(330, 58)
-	voltar.pressed.connect(_fechar_escolha_arena)
-	_arena_overlay.add_child(voltar)
-
-
-func _selecionar_arena(arena_id: String) -> void:
-	GameState.arena_id = arena_id
-	AudioSynth.ui_confirm()
-	Transition.go_to(GameState.BATTLE_SCENE, "ENTRANDO NA ARENA")
-
-
-func _fechar_escolha_arena() -> void:
-	AudioSynth.ui_cancel()
-	_locked = false
-	if _arena_overlay != null:
-		_arena_overlay.queue_free()
-		_arena_overlay = null
 
 
 func _refresh_all(play_sound: bool = false) -> void:
@@ -513,12 +380,4 @@ func _weight_short(weight_class: String) -> String:
 
 
 func _front_icon(creature_id: String) -> Texture2D:
-	var texture := load("res://assets/sprites_combat/%s.png" % creature_id) as Texture2D
-	if texture == null:
-		return null
-	var cell_width := texture.get_width() / 4.0
-	var cell_height := texture.get_height() / 4.0
-	var atlas := AtlasTexture.new()
-	atlas.atlas = texture
-	atlas.region = Rect2(0.0, cell_height * 2.0, cell_width, cell_height)
-	return atlas
+	return load("res://assets/creatures_hd/%s.png" % creature_id) as Texture2D

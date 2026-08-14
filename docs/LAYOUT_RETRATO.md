@@ -28,10 +28,10 @@ no topo do script, nunca digitadas soltas no meio do código.
 ```gdscript
 const Y_TOPO          := 16.0
 const Y_HUD_INIMIGO   := 68.0
-const Y_ARENA         := 164.0
-const Y_HUD_ALIADO    := 834.0
-const Y_MENSAGEM      := 930.0
-const Y_ACOES         := 984.0
+const Y_ARENA         := 156.0
+const Y_HUD_ALIADO    := 876.0
+const Y_MENSAGEM      := 964.0
+const Y_ACOES         := 1012.0
 ```
 
 ## Faixas da batalha
@@ -39,11 +39,11 @@ const Y_ACOES         := 984.0
 | Faixa | Y inicial | Y final | Altura | Conteúdo |
 |---|---|---|---|---|
 | Topo | 16 | 58 | 42 | Turno + placar |
-| Oponente | 68 | 154 | 86 | Nome, elemento, vida e reservas |
-| Arena | 164 | 824 | 660 | Estádio 3D, lutadores e impacto |
-| Aliado | 834 | 920 | 86 | Nome, elemento, vida e reservas |
-| Mensagem | 930 | 974 | 44 | Texto do turno |
-| Ações | 984 | 1256 | 272 | 5 golpes + defender/trocar |
+| Oponente | 68 | 146 | 78 | Nome, elemento, vida e reservas |
+| Arena | 156 | 866 | 710 | Estádio 3D, lutadores e impacto |
+| Aliado | 876 | 954 | 78 | Nome, elemento, vida e reservas |
+| Mensagem | 964 | 1002 | 38 | Texto do turno |
+| Ações | 1012 | 1256 | 244 | 5 golpes + escudo/troca |
 
 Todas as fronteiras têm 10 px de respiro. A arena cresceu sem invadir o HUD;
 os dois lutadores ocupam diagonais diferentes para nunca se esconderem.
@@ -56,9 +56,10 @@ os dois lutadores ocupam diagonais diferentes para nunca se esconderem.
    cresce com o conteúdo em vez de cortar texto.
 3. **Margem interna de 18 px em todo painel**, via
    `add_theme_constant_override("margin_left", 18)` nos quatro lados.
-4. **Hierarquia tipográfica explícita.** Nome de Beast: 23. Mensagem de turno:
-   20. Botão de golpe: 15 com alto contraste e contorno.
-5. **Botão de golpe: altura mínima 59 px.** É toque de dedo em pé, não mouse.
+4. **Hierarquia tipográfica explícita.** Nome, vida, dano, poder e recarga
+   permanecem legíveis mesmo com os painéis compactos.
+5. **Botão de golpe: altura mínima 50 px.** O grid libera 134 px adicionais
+   para a arena sem remover informação de combate.
 6. **Área da arena fica livre de UI.** Se precisar mostrar dano ou nome flutuante
    sobre a Beast, use `Label3D` no espaço 3D, não `Control` por cima.
 7. **Zero `size` fixo em Label.** `custom_minimum_size` sim, `size` não.
@@ -70,8 +71,8 @@ faixa de cada script de cena e falha se duas faixas se sobrepuserem. É barato e
 elimina a classe inteira de bug.
 
 ```python
-FAIXAS = [("topo",16,58),("oponente",68,154),("arena",164,824),
-          ("aliado",834,920),("mensagem",930,974),("acoes",984,1256)]
+FAIXAS = [("topo",16,58),("oponente",68,146),("arena",156,866),
+          ("aliado",876,954),("mensagem",964,1002),("acoes",1012,1256)]
 
 for i in range(len(FAIXAS) - 1):
     nome_a, _, fim_a = FAIXAS[i]

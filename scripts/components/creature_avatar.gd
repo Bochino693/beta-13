@@ -95,9 +95,9 @@ func _load_combat_sheet() -> void:
 	if creature.is_empty():
 		return
 	var creature_id := str(creature.get("id", ""))
-	var sheet_path := "res://assets/sprites_combat/%s.png" % creature_id
-	if not ResourceLoader.exists(sheet_path):
-		sheet_path = "res://assets/sprites/beasts/%s.png" % creature_id
+	# Menus usam a folha leve 4x4. Os atlas cinematograficos V3 ficam restritos
+	# a batalha para evitar carregar 30 texturas 3072x1536 na selecao de equipe.
+	var sheet_path := "res://assets/sprites/beasts/%s.png" % creature_id
 	var sheet := load(sheet_path) as Texture2D
 	if sheet == null:
 		push_error("Spritesheet HD obrigatório ausente: %s" % sheet_path)
@@ -131,16 +131,16 @@ func _load_combat_sheet() -> void:
 func _state_sequence() -> Array[int]:
 	match _state:
 		MotionState.IDLE:
-			return [8, 9]
+			return [0, 1, 2, 3]
 		MotionState.ATTACK:
-			return [10, 11, 11, 9]
+			return [4, 5, 6, 7, 3]
 		MotionState.HIT:
-			return [12, 12, 9]
+			return [8, 9, 10, 11, 3]
 		MotionState.CELEBRATE:
-			return [14, 9, 14, 9]
+			return [12, 13, 14, 13]
 		MotionState.DEFEAT:
 			return [15]
-	return [8]
+	return [0]
 
 
 func _set_motion_state(next_state: MotionState) -> void:
