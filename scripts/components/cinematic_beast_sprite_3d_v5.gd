@@ -1,4 +1,4 @@
-class_name CinematicBeastSprite3D
+﻿class_name CinematicBeastSprite3DV5
 extends Node3D
 
 ## Ator 2.5D V5: movimentação física por tipo de locomoção.
@@ -772,3 +772,5 @@ func _finalizar_estado(nome: String, voltar_ao_idle: bool = true) -> void:
 		_ocupado = false
 		_definir_intensidade_presenca(1.0)
 		animacao_terminou.emit(nome)
+
+
