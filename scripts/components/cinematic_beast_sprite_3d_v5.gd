@@ -5,29 +5,31 @@ extends Node3D
 ## Voador: bate asas, flutua com física de ar, projétil sai das asas.
 ## Terrestre: pisa no chão, dá passos, projétil sai da boca/garras.
 ## Aquático: ondula, projétil sai em jato de água/energia.
-## 0..31 = costas; 32..63 = frente.
+## Contrato real do atlas: 8x4, 16 poses de costas e 16 de frente.
+## Cada celula e recortada para uma ImageTexture independente. Isso evita que
+## o material 3D exiba a folha inteira e elimina vazamento entre poses.
 
 signal animacao_terminou(nome: String)
 
 const ATLAS_COLUNAS := 8
-const ATLAS_LINHAS := 8
-const QUADROS_POR_VISTA := 32
+const ATLAS_LINHAS := 4
+const QUADROS_POR_VISTA := 16
 
 const SEQUENCIAS: Dictionary = {
-	"idle": {"inicio": 0, "quantidade": 8, "fps": 9.0, "loop": true},
-	"light": {"inicio": 8, "quantidade": 4, "fps": 15.0, "loop": false},
-	"heavy_charge": {"inicio": 12, "quantidade": 3, "fps": 9.0, "loop": false},
-	"heavy_release": {"inicio": 15, "quantidade": 3, "fps": 13.0, "loop": false},
-	"damage": {"inicio": 18, "quantidade": 3, "fps": 14.0, "loop": false},
-	"dodge_left": {"inicio": 21, "quantidade": 3, "fps": 16.0, "loop": false},
-	"dodge_right": {"inicio": 24, "quantidade": 3, "fps": 16.0, "loop": false},
-	"victory": {"inicio": 27, "quantidade": 2, "fps": 6.0, "loop": true},
-	"ko": {"inicio": 29, "quantidade": 2, "fps": 5.0, "loop": false},
-	"guard": {"inicio": 31, "quantidade": 1, "fps": 1.0, "loop": true},
-	## NOVO: animações específicas por tipo
-	"wing_flap": {"inicio": 0, "quantidade": 4, "fps": 18.0, "loop": true},
-	"walk": {"inicio": 4, "quantidade": 4, "fps": 10.0, "loop": true},
-	"swim": {"inicio": 8, "quantidade": 4, "fps": 12.0, "loop": true},
+	# O retorno 5->4->3->2 impede o salto seco do ultimo para o primeiro.
+	"idle": {"quadros": [0, 1, 2, 3, 4, 5, 4, 3, 2, 1], "fps": 8.0, "loop": true},
+	"light": {"quadros": [1, 6, 7, 6, 1], "fps": 15.0, "loop": false},
+	"heavy_charge": {"quadros": [1, 8, 8, 9], "fps": 9.0, "loop": false},
+	"heavy_release": {"quadros": [9, 7, 6, 1], "fps": 13.0, "loop": false},
+	"damage": {"quadros": [1, 10, 10, 1], "fps": 14.0, "loop": false},
+	"dodge_left": {"quadros": [1, 11, 11, 1], "fps": 16.0, "loop": false},
+	"dodge_right": {"quadros": [1, 12, 12, 1], "fps": 16.0, "loop": false},
+	"victory": {"quadros": [1, 13, 13, 1], "fps": 6.0, "loop": true},
+	"ko": {"quadros": [10, 14, 14], "fps": 5.0, "loop": false},
+	"guard": {"quadros": [1, 15, 15, 1], "fps": 8.0, "loop": true},
+	"wing_flap": {"quadros": [0, 1, 2, 3, 4, 3, 2, 1], "fps": 13.0, "loop": true},
+	"walk": {"quadros": [0, 1, 2, 3, 4, 5, 4, 2], "fps": 10.0, "loop": true},
+	"swim": {"quadros": [0, 1, 2, 3, 4, 5, 4, 2], "fps": 11.0, "loop": true},
 }
 
 ## === TIPOS DE LOCOMOÇÃO ===
@@ -125,8 +127,8 @@ func configurar(
 		push_error("CinematicBeastSprite3D: atlas ausente: " + caminho)
 		return false
 	var textura: Texture2D = load(caminho) as Texture2D
-	if textura == null or textura.get_width() != 3072 or textura.get_height() != 3072:
-		push_error("CinematicBeastSprite3D: atlas V4 invalido: " + caminho)
+	if textura == null or textura.get_width() != 3072 or textura.get_height() != 1536:
+		push_error("CinematicBeastSprite3D: atlas 8x4 invalido: " + caminho)
 		return false
 
 	_de_costas = de_costas
@@ -169,21 +171,24 @@ func _construir_quadros(textura: Texture2D, offset_vista: int) -> SpriteFrames:
 		if nome == "idle":
 			fps *= float(_perfil["idle_speed"])
 		recurso.set_animation_speed(nome, fps)
-		var inicio := int(contrato["inicio"])
-		var quantidade := int(contrato["quantidade"])
-		for local_index in range(inicio, inicio + quantidade):
-			var indice: int = offset_vista + int(local_index)
-			var atlas := AtlasTexture.new()
-			atlas.atlas = textura
-			atlas.region = Rect2(
-				float(indice % ATLAS_COLUNAS) * largura,
-				floorf(float(indice) / float(ATLAS_COLUNAS)) * altura,
-				largura,
-				altura
-			)
-			atlas.filter_clip = true
-			recurso.add_frame(nome, atlas)
+		var indices: Array = contrato["quadros"]
+		for local_index_variante in indices:
+			var indice: int = offset_vista + int(local_index_variante)
+			var recorte := _recortar_quadro(textura, indice, int(largura), int(altura))
+			recurso.add_frame(nome, recorte)
 	return recurso
+
+func _recortar_quadro(textura: Texture2D, indice: int, largura: int, altura: int) -> Texture2D:
+	var origem := textura.get_image()
+	var regiao := Rect2i(
+		(indice % ATLAS_COLUNAS) * largura,
+		floori(float(indice) / float(ATLAS_COLUNAS)) * altura,
+		largura,
+		altura
+	)
+	var quadro := origem.get_region(regiao)
+	# O recorte vira recurso proprio; AnimatedSprite3D nunca recebe o atlas.
+	return ImageTexture.create_from_image(quadro)
 
 func _criar_sprite() -> AnimatedSprite3D:
 	var sprite := AnimatedSprite3D.new()
@@ -772,5 +777,3 @@ func _finalizar_estado(nome: String, voltar_ao_idle: bool = true) -> void:
 		_ocupado = false
 		_definir_intensidade_presenca(1.0)
 		animacao_terminou.emit(nome)
-
-

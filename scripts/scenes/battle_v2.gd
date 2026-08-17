@@ -1,6 +1,6 @@
 extends Node
 
-## Battle V2: integra CinematicBeastSprite3DV5V5 V5, PhysicalProjectile,
+## Battle V2: integra CinematicBeastSprite3DV5, PhysicalProjectile,
 ## BattleUIV2 e BattleStadium3DV2.
 ## Substitui a battle.gd original mantendo a lógica de estado.
 
@@ -113,12 +113,12 @@ func _trocar_beast(jogador: int, indice: int, animado: bool = true) -> void:
 	var dados: Dictionary = lutador["data"]
 	var id := str(dados["id"])
 	var altura := float(dados["height_m"])
-	var familia := CinematicBeastSprite3DV5V5.familia_de(dados)
+	var familia := CinematicBeastSprite3DV5.familia_de(dados)
 	var de_costas := (jogador == 0)
 	var cor := CreatureDB.color_for_type(str(dados["type"]))
 
 	## Cria sprite V5 com tipo de locomoção
-	var sprite := CinematicBeastSprite3DV5V5.new()
+	var sprite := CinematicBeastSprite3DV5.new()
 	var sucesso := sprite.configurar(id, altura, familia, de_costas, cor)
 	if not sucesso:
 		push_warning("BattleV2: falha ao carregar sprite de " + id)
@@ -205,8 +205,8 @@ func _on_acao_escolhida(indice: int) -> void:
 
 func _executar_golpe(atacante: int, lutador: Dictionary, alvo: Dictionary, golpe: Dictionary) -> void:
 	var defensor := 1 if atacante == 0 else 0
-	var sprite_atacante: CinematicBeastSprite3DV5V5 = _sprites[atacante]
-	var sprite_defensor: CinematicBeastSprite3DV5V5 = _sprites[defensor]
+	var sprite_atacante: CinematicBeastSprite3DV5 = _sprites[atacante]
+	var sprite_defensor: CinematicBeastSprite3DV5 = _sprites[defensor]
 
 	_ui.definir_mensagem("%s USA %s!" % [lutador["data"]["name"], golpe["name"]])
 
@@ -239,7 +239,7 @@ func _executar_golpe(atacante: int, lutador: Dictionary, alvo: Dictionary, golpe
 	await proj.impacto_alcancado
 
 func _on_impacto_projetil(defensor: int, lutador: Dictionary, alvo: Dictionary, golpe: Dictionary, pesado: bool) -> void:
-	var sprite_defensor: CinematicBeastSprite3DV5V5 = _sprites[defensor]
+	var sprite_defensor: CinematicBeastSprite3DV5 = _sprites[defensor]
 
 	## Calcula dano
 	var dano := MoveDB.calculate_damage(lutador, alvo, golpe)
@@ -279,7 +279,7 @@ func _on_impacto_projetil(defensor: int, lutador: Dictionary, alvo: Dictionary, 
 		sprite_defensor.repousar()
 
 func _executar_escudo(jogador: int, lutador: Dictionary) -> void:
-	var sprite: CinematicBeastSprite3DV5V5 = _sprites[jogador]
+	var sprite: CinematicBeastSprite3DV5 = _sprites[jogador]
 	_ui.definir_mensagem("%s LEVANTA O ESCUDO!" % lutador["data"]["name"])
 
 	lutador["guard"] = true
@@ -295,7 +295,7 @@ func _executar_troca(jogador: int, lutador: Dictionary) -> void:
 		return
 
 	_ui.definir_mensagem("%s VOLTA!" % lutador["data"]["name"])
-	var sprite: CinematicBeastSprite3DV5V5 = _sprites[jogador]
+	var sprite: CinematicBeastSprite3DV5 = _sprites[jogador]
 
 	## Fade out
 	var tween := create_tween()
