@@ -40,7 +40,7 @@ func _build_screen() -> void:
 	avatar.selected_glow = true
 	avatar.play_celebration()
 
-	var info_panel := UIFactory.panel(Color("ed09132e"), Color(winner_color, 0.86), 26)
+	var info_panel := UIFactory.panel(Color("09132eed"), Color(winner_color, 0.86), 26)
 	info_panel.position = Vector2(45, 625)
 	info_panel.size = Vector2(630, 320)
 	add_child(info_panel)
@@ -59,7 +59,7 @@ func _build_screen() -> void:
 	var stats := UIFactory.label("PONTUAÇÃO J1  %05d     PONTUAÇÃO J2  %05d\nTURNOS  %02d     BEASTS RESTANTES  %d\nCARTA  %s" % [GameState.scores[0], GameState.scores[1], GameState.battle_summary.get("rounds", 0), GameState.battle_summary.get("remaining", 0), creature["card_code"]], 17, Color("eaf2ff"), HORIZONTAL_ALIGNMENT_CENTER)
 	stats.position = Vector2(35, 152)
 	stats.size = Vector2(560, 132)
-	stats.add_theme_stylebox_override("normal", UIFactory.style_box(Color("b8080d20"), Color("4c6481aa"), 16, 1))
+	stats.add_theme_stylebox_override("normal", UIFactory.style_box(Color("080d20b8"), Color("6481aa4c"), 16, 1))
 	info_panel.add_child(stats)
 
 	var options := [["REVANCHE", winner_color], ["NOVAS EQUIPES", Color("ffdf47")], ["MENU PRINCIPAL", Color("a878ff")]]

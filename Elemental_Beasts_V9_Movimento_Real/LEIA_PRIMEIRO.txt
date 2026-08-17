@@ -1,0 +1,23 @@
+ELEMENTAL BEASTS V9 - MOVIMENTO REAL
+====================================
+
+Esta atualizacao corrige o contrato dos sprites das 30 Beasts.
+
+O que muda:
+- jogador usa somente os 16 quadros traseiros;
+- oponente usa somente os 16 quadros frontais;
+- idle usa 10 etapas com retorno suave, sem salto seco;
+- ataque, carga, dano, esquivas, defesa, vitoria e KO usam poses proprias;
+- cada quadro vira uma textura isolada de 384x384;
+- a folha completa de sprites nunca e enviada ao personagem 3D;
+- transicoes preservam o quadro anterior durante o crossfade;
+- familias voadora, terrestre e aquatica mantem ritmos diferentes.
+
+COMO APLICAR
+1. Extraia a pasta Elemental_Beasts_V9_Movimento_Real dentro da pasta beta-13.
+2. Execute APLICAR_ATUALIZACAO_V9.bat.
+3. O instalador cria um backup automatico.
+4. Abra o project.godot no Godot 4.6 e teste.
+
+Esta atualizacao pode ser aplicada por cima da V8.1.
+Ela nao executa Git, commit ou push.

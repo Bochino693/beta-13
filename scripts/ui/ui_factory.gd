@@ -1,6 +1,19 @@
 class_name UIFactory
 extends RefCounted
 
+## ORDEM DAS CORES EM HEXA: o Godot le `Color("...")` de oito digitos como
+## **RRGGBBAA** — o alfa vem por ULTIMO.
+##
+## As telas estavam escritas em AARRGGBB (alfa primeiro), como em CSS/Android.
+## O resultado era cor errada E alfa errado ao mesmo tempo: `Color("e8101732")`
+## era para ser um azul-marinho a 91% de opacidade e virava um vermelho a 20%.
+## Por isso todas as placas apareciam lavadas, avermelhadas e deixando a arte
+## de fundo atravessar o texto.
+##
+## Ao escrever uma cor nova: `Color("101732e8")`, nao `Color("e8101732")`.
+## Na duvida, use a forma numerica — `Color(0.06, 0.09, 0.20, 0.91)` — que nao
+## tem ambiguidade de ordem.
+
 const DISPLAY_FONT_PATH := "res://assets/battle/fonts/URWGothic-Demi.otf"
 const BODY_FONT_PATH := "res://assets/battle/fonts/URWGothic-Book.otf"
 
@@ -51,16 +64,48 @@ static func style_box(
 	return style
 
 
+## Placa de fundo das telas.
+##
+## Devolve um `Panel`, NAO um `PanelContainer`.
+##
+## `PanelContainer` e um container: ele reposiciona e redimensiona TODO filho
+## para preencher o proprio retangulo, a cada passe de layout. Como as telas
+## montam o conteudo com posicao absoluta — `nome.position = Vector2(20, 15)`,
+## `selo.position = Vector2(205, 68)` e assim por diante — o container apagava
+## essas posicoes e empilhava tudo no mesmo ponto. Era isso que imprimia nome,
+## selo, peso e atributos uns por cima dos outros no guia de poderes, na tela
+## de resultado, na abertura e na montagem de equipe.
+##
+## `Panel` desenha a mesma moldura e nao mexe nos filhos: a posicao que a tela
+## pede e a posicao que aparece.
+##
+## Quando o conteudo for um container que DEVE preencher a placa (uma grade,
+## uma lista rolavel), use `fill_panel()` em vez de adicionar o filho direto.
 static func panel(
-	color: Color = Color("e8101732"),
-	border_color: Color = Color("666ef8ff"),
+	color: Color = Color("101732e8"),
+	border_color: Color = Color("6ef8ff66"),
 	radius: int = 20
-) -> PanelContainer:
-	var output := PanelContainer.new()
+) -> Panel:
+	var output := Panel.new()
 	output.add_theme_stylebox_override(
 		"panel", style_box(color, border_color, radius, 2, true)
 	)
 	return output
+
+
+## Ancora um filho para preencher a placa inteira, com margem.
+##
+## E o substituto explicito do preenchimento que o `PanelContainer` fazia
+## sozinho: quem realmente quer um filho ocupando a placa pede aqui, em vez de
+## todo mundo receber esse comportamento sem querer.
+static func fill_panel(parent: Control, child: Control, margin: float = 16.0) -> Control:
+	parent.add_child(child)
+	child.set_anchors_preset(Control.PRESET_FULL_RECT)
+	child.offset_left = margin
+	child.offset_top = margin
+	child.offset_right = -margin
+	child.offset_bottom = -margin
+	return child
 
 
 static func label(
@@ -113,17 +158,27 @@ static func button(
 	output.add_theme_color_override("font_outline_color", Color(0.01, 0.02, 0.07, 0.95))
 	output.add_theme_constant_override("outline_size", 3)
 	output.add_theme_stylebox_override(
-		"normal", style_box(Color("ed111936"), Color(accent, 0.68), 18, 2, true)
+		"normal", style_box(Color("111936ed"), Color(accent, 0.68), 18, 2, true)
 	)
 	output.add_theme_stylebox_override(
-		"hover", style_box(Color("f5213158"), accent, 18, 3, true)
+		"hover", style_box(Color("213158f5"), accent, 18, 3, true)
 	)
 	output.add_theme_stylebox_override(
-		"focus", style_box(Color("f5213158"), accent, 18, 3, true)
+		"focus", style_box(Color("213158f5"), accent, 18, 3, true)
 	)
 	output.add_theme_stylebox_override(
 		"pressed", style_box(Color(accent, 0.38), Color.WHITE, 18, 3, false)
 	)
+	## Estado desabilitado tambem precisa de moldura.
+	##
+	## Sem este override o botao caia no tema padrao do Godot e ficava SEM
+	## fundo e SEM borda: o "CONFIRMAR EQUIPE" da montagem de equipe, que
+	## nasce desabilitado ate a quinta Beast entrar, aparecia como um texto
+	## cinza solto no rodape — parecia fonte quebrada, nao botao inativo.
+	output.add_theme_stylebox_override(
+		"disabled", style_box(Color("0a0f1ec0"), Color(accent, 0.30), 18, 2, false)
+	)
+	output.add_theme_color_override("font_disabled_color", Color("7d8aa6"))
 	apply_font(output, true)
 	return output
 

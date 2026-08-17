@@ -11,7 +11,15 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ELEMENTS = {"Luz", "Escuridão", "Fogo", "Choque", "Terra", "Água", "Natureza", "Vento"}
+
+# A lista de elementos vem de data/elements.json — a mesma fonte que o
+# runtime e o simulate_balance.py leem. Era mais uma cópia escrita à mão.
+ELEMENTS = {
+    entry["name"]
+    for entry in json.loads(
+        (ROOT / "data" / "elements.json").read_text(encoding="utf-8")
+    )["elements"]
+}
 
 
 def main() -> None:
@@ -133,14 +141,14 @@ def main() -> None:
             errors.append(f"PNG corrompido: {png_path.relative_to(ROOT)}: {exc}.")
 
     # Confere referências literais usadas por cenas, scripts e configuração.
-    legacy_prototypes = {
-        ROOT / "scripts" / "scenes" / "battle_v2.gd",
-        ROOT / "scripts" / "components" / "battle_stadium_3d_v2.gd",
-    }
+    # Não existe mais lista de exceção: os protótipos paralelos (battle_v2,
+    # battle_ui_v2, battle_stadium_3d_v2, battle_encenacao, arena_3d_v2 e os
+    # cinco shaders que só eles usavam) foram removidos. Todo script em
+    # scripts/ é código vivo e tem de apontar para arquivos existentes.
     source_files = [
         ROOT / "project.godot",
         *list((ROOT / "scenes").glob("*.tscn")),
-        *[path for path in (ROOT / "scripts").rglob("*.gd") if path not in legacy_prototypes],
+        *list((ROOT / "scripts").rglob("*.gd")),
     ]
     for source_path in source_files:
         source = source_path.read_text(encoding="utf-8")
@@ -163,14 +171,51 @@ def main() -> None:
             errors.append(f"Contagem de {key}: {counts[key]}; esperado {expected_value}.")
     required_scripts = {
         "scripts/scenes/battle.gd",
-        "scripts/components/stable_beast_rig_3d.gd",
-        "scripts/components/physical_projectile.gd",
-        "scripts/components/battle_stadium_3d.gd",
+        "scripts/components/beast_pose_atlas.gd",
+        "scripts/components/beast_rig_3d.gd",
+        "scripts/components/element_power_3d.gd",
+        "scripts/components/battle_arena_3d.gd",
         "scripts/components/battle_shield_dome_3d.gd",
     }
     for relative in required_scripts:
         if not (ROOT / relative).is_file():
             errors.append(f"Script de batalha ausente: {relative}.")
+
+    # A hierarquia elemental mora em data/elements.json e é lida tanto pelo
+    # runtime quanto por simulate_balance.py. Aqui só se confere que ela está
+    # bem formada: alvo inexistente quebraria a vantagem em silêncio.
+    elements_file = json.loads((ROOT / "data" / "elements.json").read_text(encoding="utf-8"))
+    element_names = ELEMENTS
+    if len(element_names) != 8:
+        errors.append(f"Hierarquia: {len(element_names)} elementos; esperado 8.")
+    for entry in elements_file["elements"]:
+        targets = entry["strong_against"]
+        for target in targets:
+            if target not in element_names:
+                errors.append(
+                    f"Hierarquia: {entry['name']} vence '{target}', que não é elemento."
+                )
+        if len(targets) != 2:
+            errors.append(
+                f"Hierarquia: {entry['name']} vence {len(targets)} elementos; "
+                "todos devem vencer exatamente 2 para a roda fechar."
+            )
+
+    # O atlas de combate é o que põe a Beast do jogador de costas e a rival
+    # de frente. Sem as duas vistas não existe leitura 3D.
+    for creature in creatures:
+        manifest_path = ROOT / "assets" / "sprites_combat" / f"{creature['id']}.poses.json"
+        if not manifest_path.is_file():
+            errors.append(f"Manifesto de poses ausente: {creature['id']}.")
+            continue
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        pose_names = {pose["name"] for pose in manifest["poses"]}
+        for view in ("back", "front"):
+            if not any(name.startswith(f"{view}_idle") for name in pose_names):
+                errors.append(f"{creature['id']}: sem poses de idle na vista {view}.")
+            for state in ("damage", "guard", "ko", "victory"):
+                if f"{view}_{state}" not in pose_names:
+                    errors.append(f"{creature['id']}: falta {view}_{state}.")
 
     print(f"Beasts: {len(creatures)} | Golpes: {len(moves)} | Elementos: {len({c['type'] for c in creatures})}")
     print(" | ".join(f"{key}: {value}" for key, value in counts.items()))

@@ -21,7 +21,7 @@ func _build_screen() -> void:
 	brand.size = Vector2(660, 38)
 	add_child(brand)
 
-	var title_plate := UIFactory.panel(Color("d6081028"), Color("aa75ecff"), 28)
+	var title_plate := UIFactory.panel(Color("081028d6"), Color("75ecffaa"), 28)
 	title_plate.position = Vector2(35, 58)
 	title_plate.size = Vector2(650, 222)
 	add_child(title_plate)
@@ -60,7 +60,7 @@ func _build_screen() -> void:
 		avatar.modulate.a = item[4]
 		avatar.setup(CreatureDB.get_creature(item[0]), item[3])
 
-	var types_panel := UIFactory.panel(Color("bd071025"), Color("556ef8ff"), 22)
+	var types_panel := UIFactory.panel(Color("071025bd"), Color("6ef8ff55"), 22)
 	types_panel.position = Vector2(30, 700)
 	types_panel.size = Vector2(660, 164)
 	add_child(types_panel)
@@ -70,14 +70,26 @@ func _build_screen() -> void:
 	type_grid.size = Vector2(636, 126)
 	type_grid.add_theme_constant_override("h_separation", 5)
 	types_panel.add_child(type_grid)
+	## Emblema desenhado em vetor, sem o quadrado opaco e sem o nome
+	## queimado na imagem que os PNGs de type_icons carregavam.
 	for element in CreatureDB.ELEMENTS:
-		var icon := TextureRect.new()
-		icon.custom_minimum_size = Vector2(74, 112)
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture = load("res://assets/type_icons/%s.png" % _type_slug(element)) as Texture2D
-		icon.tooltip_text = element
-		type_grid.add_child(icon)
+		var coluna := VBoxContainer.new()
+		coluna.custom_minimum_size = Vector2(74, 112)
+		coluna.add_theme_constant_override("separation", 2)
+		coluna.tooltip_text = element
+		type_grid.add_child(coluna)
+
+		var emblema := TypeEmblem.new()
+		emblema.element = element
+		emblema.custom_minimum_size = Vector2(74, 74)
+		coluna.add_child(emblema)
+
+		var nome := UIFactory.label(
+			element.to_upper(), 10, CreatureDB.color_for_type(element).lightened(0.30),
+			HORIZONTAL_ALIGNMENT_CENTER
+		)
+		nome.custom_minimum_size = Vector2(74, 20)
+		coluna.add_child(nome)
 
 	_start_button = UIFactory.button("ENTRAR NA ARENA", Color("ff4fc8"), Vector2(620, 108))
 	_start_button.position = Vector2(50, 895)
@@ -145,7 +157,3 @@ func _update_credit_label() -> void:
 		_credit_label.text = "MODO LIVRE • ARENA ABERTA"
 	else:
 		_credit_label.text = "CRÉDITOS DISPONÍVEIS: %02d" % GameState.credits
-
-
-func _type_slug(element: String) -> String:
-	return {"Luz":"luz", "Escuridão":"escuridao", "Fogo":"fogo", "Choque":"choque", "Terra":"terra", "Água":"agua", "Natureza":"natureza", "Vento":"vento"}[element]

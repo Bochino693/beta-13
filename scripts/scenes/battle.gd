@@ -42,10 +42,9 @@ var _camera: Camera3D
 var _camera_home_position := Vector3.ZERO
 var _camera_home_rotation := Vector3.ZERO
 var _camera_home_fov := 50.0
-var _rigs: Array[StableBeastRig3D] = [null, null]
-var _fx: Array[Sprite3D] = [null, null]
+var _rigs: Array[BeastRig3D] = [null, null]
 var _escudos: Array[BattleShieldDome3D] = [null, null]
-var _estadio: BattleStadium3D
+var _arena: BattleArena3D
 var _faixas: Array[int] = [0, 0]
 var _esquiva_pronta: Array[bool] = [false, false]
 var _tempo := 0.0
@@ -54,6 +53,7 @@ var _audio_batalha: BattleAudioDirector
 # --- HUD -------------------------------------------------------------------
 var _nome_labels: Array[Label] = []
 var _tipo_labels: Array[Label] = []
+var _tipo_emblemas: Array[TypeEmblem] = []
 var _peso_labels: Array[Label] = []
 var _hp_bars: Array[ProgressBar] = []
 var _hp_labels: Array[Label] = []
@@ -135,11 +135,11 @@ func _montar_arena_3d() -> void:
 	mundo.environment = ambiente
 	_viewport.add_child(mundo)
 
-	_estadio = BattleStadium3D.new()
-	_viewport.add_child(_estadio)
+	_arena = BattleArena3D.new()
+	_viewport.add_child(_arena)
 	GameState.resolve_arena_for_battle()
 	var arena := ArenaDB.get_arena(GameState.arena_id)
-	_estadio.configurar(COR_P1, COR_P2, "", "", str(arena.get("path", "")))
+	_arena.configurar(COR_P1, COR_P2, "", "", str(arena.get("path", "")))
 
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
@@ -152,6 +152,10 @@ func _montar_arena_3d() -> void:
 	_camera_home_position = _camera.position
 	_camera_home_rotation = _camera.rotation
 	_camera.make_current()
+
+	## A arte da arena so pode ser dimensionada depois que a camera existe:
+	## o painel e recortado para COBRIR exatamente o campo de visao dela.
+	_arena.alinhar_camera(_camera, Vector2(LARGURA, H_ARENA))
 
 	# Camada 2D para numeros de dano, alinhada exatamente sobre a faixa.
 	_camada_numeros = Control.new()
@@ -166,19 +170,24 @@ func _montar_arena_3d() -> void:
 func _trocar_rig(jogador: int) -> bool:
 	if _rigs[jogador] != null and is_instance_valid(_rigs[jogador]):
 		_rigs[jogador].queue_free()
-	if _fx[jogador] != null and is_instance_valid(_fx[jogador]):
-		_fx[jogador].queue_free()
 	if _escudos[jogador] != null and is_instance_valid(_escudos[jogador]):
 		_escudos[jogador].queue_free()
 
 	var dados: Dictionary = _lutador(jogador)["data"]
 	var id_beast: String = str(dados.get("id", ""))
-	var de_costas: bool = jogador == 0
-	var cor: Color = CreatureDB.color_for_type(str(dados.get("type", "Luz")))
-	var familia: String = StableBeastRig3D.familia_de(dados)
-	var locomocao: String = StableBeastRig3D.locomocao_de(dados)
 
-	var rig := StableBeastRig3D.new()
+	## ESTA e a regra de camera do jogo, e ela vale a luta inteira:
+	## o jogador 0 e SEMPRE visto de costas, em primeiro plano, e o
+	## adversario SEMPRE de frente, ao fundo. Nao e espelhamento da mesma
+	## arte — sao linhas diferentes do atlas de combate (`back_*` e
+	## `front_*`), desenhadas separadamente.
+	var de_costas: bool = jogador == 0
+
+	var cor: Color = CreatureDB.color_for_type(str(dados.get("type", "Luz")))
+	var familia: String = BeastRig3D.familia_de(dados)
+	var locomocao: String = BeastRig3D.locomocao_de(dados)
+
+	var rig := BeastRig3D.new()
 	_viewport.add_child(rig)
 	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 0.30) \
 		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.35)
@@ -193,9 +202,10 @@ func _trocar_rig(jogador: int) -> bool:
 	if not configurado:
 		rig.queue_free()
 		_rigs[jogador] = null
-		push_error("Batalha: arte mestre ausente para " + id_beast)
+		push_error("Batalha: atlas de combate ausente para " + id_beast)
 		return false
 	_rigs[jogador] = rig
+	rig.alinhar_camera(_camera)
 	rig.entrar()
 
 	var escudo := BattleShieldDome3D.new()
@@ -204,19 +214,6 @@ func _trocar_rig(jogador: int) -> bool:
 	escudo.visible = false
 	_viewport.add_child(escudo)
 	_escudos[jogador] = escudo
-
-	# A camada de efeito fica sobre o ALVO, nao sobre o atacante.
-	var sprite := Sprite3D.new()
-	sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	sprite.shaded = false
-	sprite.transparent = true
-	sprite.no_depth_test = true
-	sprite.render_priority = 8
-	sprite.pixel_size = 0.0065 if de_costas else 0.0056
-	sprite.position = rig.position + Vector3(0.0, 1.30 if not de_costas else 1.05, 0.30)
-	sprite.visible = false
-	_viewport.add_child(sprite)
-	_fx[jogador] = sprite
 	return true
 
 
@@ -241,10 +238,7 @@ func _mover_faixa(jogador: int, direcao: int) -> void:
 	if _escudos[jogador] != null:
 		var tween := create_tween()
 		tween.tween_property(_escudos[jogador], "position:x", _x_da_faixa(jogador, nova_faixa), 0.28)
-	if _fx[jogador] != null:
-		var tween_fx := create_tween()
-		tween_fx.tween_property(_fx[jogador], "position:x", _x_da_faixa(jogador, nova_faixa), 0.28)
-	_estadio.definir_faixa(jogador, nova_faixa)
+	_arena.definir_faixa(jogador, nova_faixa)
 	_mensagem.text = "%s • FAIXA %s • PROXIMO DANO -28%%" % [
 		str(_lutador(jogador)["data"]["name"]),
 		["ESQUERDA", "CENTRO", "DIREITA"][nova_faixa + 1]
@@ -265,37 +259,31 @@ func _recentralizar_faixa(jogador: int) -> void:
 	if _escudos[jogador] != null:
 		var tween := create_tween()
 		tween.tween_property(_escudos[jogador], "position:x", _x_da_faixa(jogador, 0), 0.26)
-	if _fx[jogador] != null:
-		var tween_fx := create_tween()
-		tween_fx.tween_property(_fx[jogador], "position:x", _x_da_faixa(jogador, 0), 0.26)
-	_estadio.definir_faixa(jogador, 0)
+	_arena.definir_faixa(jogador, 0)
 
 
+## Dispara o poder do atacante e espera ele CHEGAR no alvo.
+##
+## Quem chama espera esta funcao: o dano so e aplicado depois do impacto,
+## nunca no instante em que o botao e apertado.
 func _tocar_fx_do_golpe(
 	alvo_jogador: int, golpe: Dictionary, atacante_jogador: int
 ) -> void:
-	var sprite: Sprite3D = _fx[alvo_jogador]
-	if sprite == null or not is_instance_valid(sprite):
-		return
 	var caminho := str(golpe.get("sprite_sheet", ""))
 	if caminho.is_empty() or not ResourceLoader.exists(caminho):
 		return
-
 	var textura := load(caminho) as Texture2D
 	if textura == null:
 		return
-
-	# A tira e horizontal e os quadros sao quadrados: quadros = largura/altura.
-	var tam := textura.get_size()
-	var quadros := maxi(1, roundi(tam.x / maxf(1.0, tam.y)))
-	var cor_fx: Color = CreatureDB.color_for_type(str(golpe.get("element", "Luz")))
-
 	if _rigs[atacante_jogador] == null or _rigs[alvo_jogador] == null:
 		return
-	# A geometria e a tira animada nascem na Beast e percorrem o espaço 3D.
-	var projetil := PhysicalProjectile.new()
+
+	var cor_fx: Color = CreatureDB.color_for_type(str(golpe.get("element", "Luz")))
 	var pesado: bool = str(golpe.get("role", "")) == "pesado"
-	projetil.disparar(
+
+	## O poder nasce na Beast atacante e atravessa a arena em 3D.
+	var poder := ElementPower3D.new()
+	poder.disparar(
 		_viewport,
 		_rigs[atacante_jogador].ponto_emissao(),
 		_rigs[alvo_jogador].ponto_impacto(),
@@ -304,32 +292,12 @@ func _tocar_fx_do_golpe(
 		pesado,
 		golpe
 	)
-	await projetil.impacto_alcancado
+	await poder.impacto_alcancado
 
-	sprite.texture = textura
-	sprite.hframes = quadros
-	sprite.vframes = 1
-	sprite.frame = 0
-	sprite.modulate = cor_fx
-	sprite.visible = true
-
-	var t := create_tween()
-	t.tween_method(
-		_definir_quadro_fx.bind(sprite, quadros),
-		0.0,
-		float(quadros),
-		0.050 * float(quadros)
+	## Clarao sobre o alvo, no contato. Nasce e se apaga sozinho.
+	ElementPower3D.clarao_de_impacto(
+		_viewport, _rigs[alvo_jogador].ponto_impacto(), textura, cor_fx, pesado
 	)
-	t.tween_callback(_esconder_fx.bind(sprite))
-
-func _definir_quadro_fx(valor: float, sprite: Sprite3D, quadros: int) -> void:
-	if is_instance_valid(sprite):
-		sprite.frame = clampi(int(valor), 0, quadros - 1)
-
-
-func _esconder_fx(sprite: Sprite3D) -> void:
-	if is_instance_valid(sprite):
-		sprite.visible = false
 
 
 func _sacudir_camera(forca: float) -> void:
@@ -471,10 +439,25 @@ func _montar_bloco_vida(_jogador: int, y: float, cor: Color) -> void:
 	linha1.add_child(nome)
 	_nome_labels.append(nome)
 
-	var tipo := _rotulo("", 11, Color.BLACK, HORIZONTAL_ALIGNMENT_CENTER)
-	tipo.custom_minimum_size = Vector2(104, 18)
+	## Elemento entra como EMBLEMA, nao como pilula de texto. O simbolo e
+	## lido de relance no meio da luta; a palavra "ESCURIDAO" escrita em 11 px
+	## dentro de uma pilula preta, nao.
+	var selo_tipo := HBoxContainer.new()
+	selo_tipo.add_theme_constant_override("separation", 5)
+	linha1.add_child(selo_tipo)
+
+	var emblema := TypeEmblem.new()
+	emblema.custom_minimum_size = Vector2(26, 26)
+	emblema.enfeitado = false
+	selo_tipo.add_child(emblema)
+	_tipo_emblemas.append(emblema)
+
+	var tipo := _rotulo("", 12, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT)
+	tipo.custom_minimum_size = Vector2(86, 26)
 	tipo.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	linha1.add_child(tipo)
+	tipo.add_theme_color_override("font_outline_color", Color("080c1d"))
+	tipo.add_theme_constant_override("outline_size", 4)
+	selo_tipo.add_child(tipo)
 	_tipo_labels.append(tipo)
 
 	# Linha 2: barra larga + valor legivel.
@@ -703,7 +686,7 @@ func _atacar(indice_golpe: int) -> void:
 	await _tocar_fx_do_golpe(alvo_jogador, golpe, _turn)
 	var cor_impacto := CreatureDB.color_for_type(str(golpe["element"]))
 	rig_alvo.levar_dano(cor_impacto)
-	_estadio.reagir_golpe(
+	_arena.reagir_golpe(
 		golpe, cor_impacto, 1.0 if pesado else 0.55, rig_alvo.ponto_impacto()
 	)
 	_sacudir_camera(0.42 if pesado else 0.20)
@@ -717,7 +700,9 @@ func _atacar(indice_golpe: int) -> void:
 		CreatureDB.color_for_type(str(golpe["element"])),
 		"%d • %s%s" % [
 			dano,
-			CreatureDB.effectiveness_text(multiplicador),
+			CreatureDB.effectiveness_text(
+				multiplicador, str(golpe["element"]), str(defensor["data"]["type"])
+			),
 			(" • ESQUIVA -28%" if esquivou else "")
 			+ (" • ESCUDO -52%" if protegido else "")
 		]
@@ -933,13 +918,11 @@ func _atualizar_ui() -> void:
 
 		_nome_labels[jogador].text = str(dados["name"])
 
+		_tipo_emblemas[jogador].element = str(dados["type"])
 		_tipo_labels[jogador].text = str(dados["type"]).to_upper()
-		var selo := StyleBoxFlat.new()
-		selo.bg_color = cor_tipo
-		selo.set_corner_radius_all(12)
-		selo.content_margin_left = 8
-		selo.content_margin_right = 8
-		_tipo_labels[jogador].add_theme_stylebox_override("normal", selo)
+		_tipo_labels[jogador].add_theme_color_override(
+			"font_color", cor_tipo.lightened(0.30)
+		)
 
 		_peso_labels[jogador].text = "%s • %.1f kg • %s" % [
 			dados["weight_class"],

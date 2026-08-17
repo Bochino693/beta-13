@@ -45,8 +45,8 @@ func _build_screen() -> void:
 		UIFactory.apply_font(card, true)
 		card.focus_mode = Control.FOCUS_NONE
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		card.add_theme_stylebox_override("normal", UIFactory.style_box(Color("e30f1733"), Color(mode_data["color"], 0.62), 28, 3))
-		card.add_theme_stylebox_override("hover", UIFactory.style_box(Color("f21b2852"), mode_data["color"], 28, 5))
+		card.add_theme_stylebox_override("normal", UIFactory.style_box(Color("0f1733e3"), Color(mode_data["color"], 0.62), 28, 3))
+		card.add_theme_stylebox_override("hover", UIFactory.style_box(Color("1b2852f2"), mode_data["color"], 28, 5))
 		card.add_theme_stylebox_override("pressed", UIFactory.style_box(Color(mode_data["color"], 0.30), Color.WHITE, 28, 5))
 		card.pressed.connect(_choose.bind(mode_index))
 		column.add_child(card)
@@ -102,7 +102,7 @@ func _update_selection(play_sound: bool = true) -> void:
 		var selected := card_index == _selected
 		_cards[card_index].scale = Vector2(1.018, 1.018) if selected else Vector2.ONE
 		_cards[card_index].modulate = Color.WHITE if selected else Color(0.68, 0.73, 0.88, 0.88)
-		_cards[card_index].add_theme_stylebox_override("normal", UIFactory.style_box(Color("f11b2852") if selected else Color("e30f1733"), mode_data["color"] if selected else Color(mode_data["color"], 0.48), 28, 5 if selected else 2))
+		_cards[card_index].add_theme_stylebox_override("normal", UIFactory.style_box(Color("1b2852f1") if selected else Color("0f1733e3"), mode_data["color"] if selected else Color(mode_data["color"], 0.48), 28, 5 if selected else 2))
 	if play_sound:
 		AudioSynth.ui_move()
 

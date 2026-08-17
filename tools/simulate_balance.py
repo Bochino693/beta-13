@@ -13,16 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 CREATURES = json.loads((ROOT / "data" / "creatures.json").read_text(encoding="utf-8"))["creatures"]
 MOVES = {move["id"]: move for move in json.loads((ROOT / "data" / "moves.json").read_text(encoding="utf-8"))["moves"]}
 
+# A hierarquia vem de data/elements.json — o MESMO arquivo que o runtime lê
+# em scripts/autoload/creature_db.gd. Antes esta tabela era escrita à mão
+# aqui e divergia da do jogo: esta dava um alvo por elemento, a do runtime
+# dava dois. O simulador aprovava um equilíbrio que não era o do jogo
+# instalado.
+ELEMENTS = json.loads((ROOT / "data" / "elements.json").read_text(encoding="utf-8"))
 STRONG = {
-    "Luz": ["Escuridão"],
-    "Escuridão": ["Luz"],
-    "Fogo": ["Natureza"],
-    "Água": ["Fogo"],
-    "Choque": ["Água"],
-    "Vento": ["Choque"],
-    "Terra": ["Vento"],
-    "Natureza": ["Terra"],
+    element["name"]: list(element["strong_against"]) for element in ELEMENTS["elements"]
 }
+MULT = ELEMENTS["multipliers"]
 
 WEIGHT = {
     "Ultra Leve": {"cooldown": .70, "hp": 0, "damage": 1.08},
@@ -34,13 +34,16 @@ WEIGHT = {
 
 
 def type_multiplier(attack_type: str, defense_type: str) -> float:
+    # Mesma ordem de decisão do runtime: a vantagem é conferida ANTES da
+    # resistência, então num par recíproco (Luz/Escuridão) os dois lados
+    # atacam com vantagem.
     if attack_type == defense_type:
-        return .82
+        return MULT["same_type"]
     if defense_type in STRONG[attack_type]:
-        return 1.45
+        return MULT["advantage"]
     if attack_type in STRONG[defense_type]:
-        return .68
-    return 1.0
+        return MULT["resistance"]
+    return MULT["neutral"]
 
 
 def max_hp(creature: dict) -> int:

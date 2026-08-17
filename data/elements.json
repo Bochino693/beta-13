@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "_leia_me": [
+    "FONTE UNICA DA HIERARQUIA ELEMENTAL.",
+    "",
+    "O runtime (scripts/autoload/creature_db.gd) e a simulacao de",
+    "equilibrio (tools/simulate_balance.py) leem ESTE arquivo. Nao existe",
+    "segunda tabela: ate a versao 1 cada um dos dois tinha a sua propria",
+    "copia divergente, entao o simulador aprovava um jogo que nao era o",
+    "jogo instalado.",
+    "",
+    "'strong_against' lista quem AQUELE elemento vence. Quem vence AQUELE",
+    "elemento e derivado por leitura inversa: nao se escreve a mao.",
+    "",
+    "Um par e RECIPROCO quando cada um aparece na lista do outro. Hoje so",
+    "Luz/Escuridao e reciproco: os dois se vencem, nao existe lado seguro,",
+    "e a interface anuncia esse confronto como CHOQUE DE RIVAIS."
+  ],
+  "multipliers": {
+    "advantage": 1.45,
+    "resistance": 0.68,
+    "same_type": 0.82,
+    "neutral": 1.0
+  },
+  "elements": [
+    {
+      "name": "Luz",
+      "slug": "luz",
+      "color": "ffe477",
+      "strong_against": ["Escuridão", "Natureza"]
+    },
+    {
+      "name": "Escuridão",
+      "slug": "escuridao",
+      "color": "a856ff",
+      "_nota": "Trocou Água por Luz para fechar o par recíproco. Continua com dois alvos, como todos os outros: ganhar Luz sem largar nada deixava Escuridão com três e a curva estourava (IMPAVOR e ABISSARCA a 80% de vitória).",
+      "strong_against": ["Luz", "Vento"]
+    },
+    {
+      "name": "Fogo",
+      "slug": "fogo",
+      "color": "ff5733",
+      "strong_against": ["Luz", "Natureza"]
+    },
+    {
+      "name": "Choque",
+      "slug": "choque",
+      "color": "ffdb32",
+      "strong_against": ["Água", "Vento"]
+    },
+    {
+      "name": "Terra",
+      "slug": "terra",
+      "color": "c58b52",
+      "strong_against": ["Choque", "Fogo"]
+    },
+    {
+      "name": "Água",
+      "slug": "agua",
+      "color": "27bcff",
+      "strong_against": ["Fogo", "Terra"]
+    },
+    {
+      "name": "Natureza",
+      "slug": "natureza",
+      "color": "50d35a",
+      "strong_against": ["Terra", "Água"]
+    },
+    {
+      "name": "Vento",
+      "slug": "vento",
+      "color": "9cf4e8",
+      "strong_against": ["Natureza", "Luz"]
+    }
+  ]
+}

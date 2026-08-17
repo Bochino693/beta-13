@@ -1,7 +1,7 @@
 extends Control
 
 var _element_index := 0
-var _element_icon: TextureRect
+var _element_icon: TypeEmblem
 var _element_title: Label
 var _relations: Label
 var _move_rows: VBoxContainer
@@ -26,15 +26,14 @@ func _build_screen() -> void:
 	subtitle.size = Vector2(650, 32)
 	add_child(subtitle)
 
-	var element_panel := UIFactory.panel(Color("e009122b"), Color("886ef8ff"), 26)
+	var element_panel := UIFactory.panel(Color("09122be0"), Color("6ef8ff88"), 26)
 	element_panel.position = Vector2(30, 130)
 	element_panel.size = Vector2(660, 190)
 	add_child(element_panel)
-	_element_icon = TextureRect.new()
+	_element_icon = TypeEmblem.new()
 	_element_icon.position = Vector2(22, 20)
 	_element_icon.size = Vector2(150, 150)
-	_element_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_element_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_element_icon.destaque = 1.0
 	element_panel.add_child(_element_icon)
 	_element_title = UIFactory.title("", 34, Color.WHITE)
 	_element_title.position = Vector2(180, 25)
@@ -79,16 +78,30 @@ func _unhandled_input(event: InputEvent) -> void:
 func _show_element() -> void:
 	var element: String = CreatureDB.ELEMENTS[_element_index]
 	var color := CreatureDB.color_for_type(element)
-	_element_icon.texture = load("res://assets/type_icons/%s.png" % _type_slug(element)) as Texture2D
+	_element_icon.element = element
 	_element_title.text = "%s  %d/8" % [element.to_upper(), _element_index + 1]
 	_element_title.add_theme_color_override("font_color", color)
-	_relations.text = "FORTE CONTRA: %s\nVULNERÁVEL A: %s" % [", ".join(MoveDB.strongest_against(element)), ", ".join(MoveDB.vulnerable_to(element))]
+	## Num par reciproco o mesmo elemento aparece nas DUAS listas (forte
+	## contra e vulneravel a). Sem aviso isso pareceria erro de tela, entao a
+	## rivalidade ganha uma linha propria.
+	var rivais: Array[String] = []
+	for outro: String in CreatureDB.strong_against(element):
+		if CreatureDB.are_rivals(element, outro):
+			rivais.append(outro.to_upper())
+
+	var texto := "FORTE CONTRA: %s\nVULNERÁVEL A: %s" % [
+		", ".join(MoveDB.strongest_against(element)),
+		", ".join(MoveDB.vulnerable_to(element)),
+	]
+	if not rivais.is_empty():
+		texto += "\nRIVAL DE %s — os dois se vencem." % ", ".join(rivais)
+	_relations.text = texto
 	for child in _move_rows.get_children():
 		child.queue_free()
 	for move in MoveDB.moves:
 		if str(move["element"]) != element:
 			continue
-		var row := UIFactory.panel(Color("e20a1229"), Color(color, 0.68), 18)
+		var row := UIFactory.panel(Color("0a1229e2"), Color(color, 0.68), 18)
 		row.custom_minimum_size = Vector2(640, 118)
 		_move_rows.add_child(row)
 		var icon := TextureRect.new()
@@ -110,7 +123,3 @@ func _show_element() -> void:
 		objective.position = Vector2(120, 74)
 		objective.size = Vector2(490, 30)
 		row.add_child(objective)
-
-
-func _type_slug(element: String) -> String:
-	return {"Luz":"luz", "Escuridão":"escuridao", "Fogo":"fogo", "Choque":"choque", "Terra":"terra", "Água":"agua", "Natureza":"natureza", "Vento":"vento"}[element]

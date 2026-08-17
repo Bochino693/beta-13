@@ -3,6 +3,8 @@
 ## Catálogos
 
 - Oito elementos: Luz, Escuridão, Fogo, Choque, Terra, Água, Natureza e Vento.
+- Rivalidades mútuas: Luz ↔ Escuridão, Fogo ↔ Água, Terra ↔ Vento e Natureza ↔ Choque.
+- Cada elemento possui exatamente duas forças e duas fraquezas; a tabela oficial vive em `CreatureDB.STRONG_AGAINST` e nunca deve ser duplicada em cenas.
 - Dez golpes por elemento; índices 1–8 são rápidos/técnicos/controle e 9–10 são pesados.
 - Cada Beast recebe quatro golpes do elemento primário e uma cobertura técnica contra fraqueza.
 - Entre os cinco golpes há exatamente um pesado, sempre do elemento primário.

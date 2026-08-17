@@ -13,10 +13,10 @@ pixel do corpo mudava de pose. O resultado parece um cartão, não um vídeo.
 grayscale) e chamar aquilo de animação. Se os quadros não mudam a silhueta, o
 arquivo não é animação.
 
-**Padrão correto**: a ilustração HD única vira uma malha deformável em tempo
-real. Ver `scripts/components/beast_rig_3d.gd`. A malha é um `PlaneMesh` com
-`subdivide_width = subdivide_depth = 32` e um shader `spatial` que empurra os
-vértices.
+**Padrão correto**: uma textura única por vista vira uma malha deformável em
+tempo real. Ver `scripts/components/stable_beast_rig_3d.gd`. A malha contínua é
+construída como grade 32×32 e seus vértices são atualizados pelo rig, sem trocar
+imagens durante o idle.
 
 ## 2. Movimento vivo obrigatório em toda Beast
 
@@ -29,6 +29,9 @@ Nenhuma Beast pode ficar parada em tela. Todas rodam permanentemente:
 | `pelo` | ondulação de pelo, franja, folhagem, chamas | silhueta e topo |
 | `balanco` | peso do corpo deslocando devagar | corpo inteiro, proporcional à altura |
 | `flutuacao` | subida e descida de quem não toca o chão | corpo inteiro |
+| `cabeca` | atenção e antecipação do golpe | topo e miolo da silhueta |
+| `cauda` | atraso elástico do movimento | bordas laterais e região inferior |
+| `passo` | alternância de apoio no chão | pernas e base de Beasts terrestres |
 
 Cada Beast declara `familia_anim` em `data/creatures.json`. Valores aceitos:
 `ave`, `dragao`, `felpudo`, `reptil`, `planta`, `mineral`, `aquatico`,
@@ -55,31 +58,35 @@ Efeito antes do movimento é o que faz o combate parecer dessincronizado.
 
 ## 4. Enquadramento do duelo
 
-- Aliado: `Vector3(-0.55, 0, 1.15)`, altura 2.95, `de_costas = true`
-- Inimigo: `Vector3(0.35, 0, -5.40)`, altura 2.35, `de_costas = false`
+- Aliado: eixo Z `0.75`, altura 2.75, `de_costas = true`
+- Inimigo: eixo Z `-4.90`, altura 2.25, `de_costas = false`
 - Os dois deslocados em X para lados opostos: nunca se sobrepõem na silhueta
 - Câmera: `Camera3D`, `keep_aspect = KEEP_WIDTH`, `fov = 46`,
-  posição `(0, 2.10, 4.60)`, rotação X `-9.5°`
+  posição `(0, 2.72, 6.95)`, olhando para `(0, 1.16, -2.05)`
 - A câmera tem respiro lento permanente em `_process`. Câmera imóvel mata a
   sensação de 3D.
 - Golpe pesado empurra o `fov` para 36 e volta. Golpe normal não mexe no `fov`.
 
 ### Vista de costas
 
-O projeto não tem arte de costas das 30 Beasts. Enquanto não tiver, `de_costas`
-usa espelhamento horizontal + `contraluz = 0.85`: o corpo escurece e só a borda
-fica acesa pela luz da arena. Lê como silhueta em contraluz, não como erro.
+As 30 Beasts possuem vista traseira no primeiro quadro de
+`assets/sprites_combat/<id>.png`. O rig recorta os pixels desse quadro em uma
+`ImageTexture` isolada e aplica a mesma deformação contínua usada pela vista
+frontal. Não aplicar `AtlasTexture` diretamente ao material 3D, pois o RID pode
+exibir a folha completa. Não percorrer o atlas durante o idle: poses com
+enquadramentos diferentes provocam saltos visuais.
 
-Quando houver arte de costas real, ela entra em `assets/creatures_back/<id>.png`
-e o rig passa a carregar essa textura com `contraluz = 0.25`. Não remover o modo
-contraluz: ele continua sendo o fallback de qualquer Beast sem arte de costas.
+Se o atlas traseiro estiver ausente ou inválido, `de_costas` usa a arte mestre
+espelhada como fallback. O projeto deve continuar carregando, mas a validação
+de entrega precisa acusar qualquer vista traseira ausente.
 
 ## 5. Efeitos de golpe
 
 - Tira horizontal em `assets/moves_fx/<elemento>_<n>_<nome>.png`
 - Renderizados em `Sprite3D` com `billboard = BILLBOARD_ENABLED`,
   `no_depth_test = true`, `render_priority = 5`
-- `modulate` sempre na cor do elemento do golpe, nunca branco
+- a tira é apoio visual translúcido; a energia procedural define a cor, o
+  volume, o rastro e a assinatura do elemento
 - O FX do aliado usa `pixel_size` maior que o do inimigo — perspectiva
 - Cada tira declara `quadros` no `data/moves.json`. Sem esse campo, assume 8.
 
@@ -104,15 +111,17 @@ contraluz: ele continua sendo o fallback de qualquer Beast sem arte de costas.
 - `scripts/scenes/battle.gd` — batalha 2.5D completa. Raiz `Control`, arena
   dentro de um `SubViewport` 3D. Não converter para `Node3D`: o `battle.tscn`
   original continua válido.
-- `scripts/components/beast_rig_3d.gd` — rig de deformação + `FAMILIA_POR_ID`
+- `scripts/components/stable_beast_rig_3d.gd` — rig de deformação +
+  `FAMILY_BY_ID`
   com a família anatômica das 30 Beasts.
 - `tools/validar_layout.py` — roda antes de qualquer entrega que mexa em faixa.
 
 Regras que não podem ser revertidas:
 
 - `assets/sprites/beasts/*.png` é lixo herdado (16 quadros idênticos). Não usar,
-  não regenerar, não "corrigir". A fonte de arte da batalha é
-  `assets/creatures_hd/<id>.png`.
+  não regenerar, não "corrigir". A vista frontal da batalha vem de
+  `assets/creatures_hd/<id>.png`; a vista traseira estática vem do primeiro
+  quadro de `assets/sprites_combat/<id>.png`.
 - O número de quadros do FX de golpe é calculado como `largura / altura` da
   tira. Não adicionar campo `quadros` no `moves.json`.
 - Toda regra de combate vive em `MoveDB` e `CreatureDB`. `battle.gd` só desenha.

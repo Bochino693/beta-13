@@ -56,7 +56,7 @@ func _build_screen() -> void:
 	add_child(background)
 	background.setup("res://assets/backgrounds/selection_archive.png", Color.WHITE, 0.43)
 
-	var header := UIFactory.panel(Color("e4081028"), Color("776ef8ff"), 24)
+	var header := UIFactory.panel(Color("081028e4"), Color("6ef8ff77"), 24)
 	header.position = Vector2(20, 18)
 	header.size = Vector2(680, 112)
 	add_child(header)
@@ -93,7 +93,7 @@ func _build_screen() -> void:
 		filter_grid.add_child(filter_button)
 		_filter_buttons.append(filter_button)
 
-	var catalog_panel := UIFactory.panel(Color("e2091129"), Color("556ef8ff"), 23)
+	var catalog_panel := UIFactory.panel(Color("091129e2"), Color("6ef8ff55"), 23)
 	catalog_panel.position = Vector2(20, 312)
 	catalog_panel.size = Vector2(680, 520)
 	add_child(catalog_panel)
@@ -130,15 +130,15 @@ func _build_screen() -> void:
 		card.add_theme_constant_override("h_separation", 9)
 		card.add_theme_font_size_override("font_size", 15)
 		card.add_theme_color_override("font_color", Color("f0f7ff"))
-		card.add_theme_stylebox_override("normal", UIFactory.style_box(Color("e7111934"), Color(type_color, 0.62), 13, 2))
-		card.add_theme_stylebox_override("hover", UIFactory.style_box(Color("f3263458"), type_color, 13, 3))
+		card.add_theme_stylebox_override("normal", UIFactory.style_box(Color("111934e7"), Color(type_color, 0.62), 13, 2))
+		card.add_theme_stylebox_override("hover", UIFactory.style_box(Color("263458f3"), type_color, 13, 3))
 		card.mouse_entered.connect(_hover_card.bind(creature_index))
 		card.pressed.connect(_toggle_current.bind(creature_index))
 		grid.add_child(card)
 		_card_buttons.append(card)
 	_update_filter_buttons()
 
-	var preview_panel := UIFactory.panel(Color("ed09122d"), Color("77ff4fc8"), 24)
+	var preview_panel := UIFactory.panel(Color("09122ded"), Color("ff4fc877"), 24)
 	preview_panel.position = Vector2(20, 848)
 	preview_panel.size = Vector2(680, 292)
 	add_child(preview_panel)
@@ -306,13 +306,19 @@ func _confirm_team() -> void:
 		return
 	if GameState.mode == "cpu":
 		GameState.set_team(1, CreatureDB.random_team(5, _selected_teams[0]))
-		_show_arena_picker()
-		return
 	else:
 		GameState.set_team(1, _selected_teams[1])
-	GameState.resolve_arena_for_battle()
-	_locked = true
-	Transition.go_to(GameState.BATTLE_SCENE, "ENTRANDO NA ARENA")
+
+	## A escolha da arena vale para TODOS os modos.
+	##
+	## Antes so o modo CPU chegava aqui: no duelo local o jogo pulava direto
+	## para `resolve_arena_for_battle()`, que sorteia. Quem jogava contra
+	## outra pessoa nunca via as seis arenas e nunca podia escolher onde
+	## lutar, mesmo com a tela de selecao pronta e completa no projeto.
+	##
+	## Quem prefere sorteio continua atendido: a primeira opcao da lista e
+	## justamente ARENA ALEATORIA.
+	_show_arena_picker()
 
 
 func _build_arena_picker() -> void:
@@ -324,11 +330,11 @@ func _build_arena_picker() -> void:
 
 	var dim := ColorRect.new()
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dim.color = Color("f0060b1d")
+	dim.color = Color("060b1df0")
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_arena_overlay.add_child(dim)
 
-	var panel := UIFactory.panel(Color("f20a122b"), Color("aa6ef8ff"), 28)
+	var panel := UIFactory.panel(Color("0a122bf2"), Color("6ef8ffaa"), 28)
 	panel.position = Vector2(28, 54)
 	panel.size = Vector2(664, 1164)
 	_arena_overlay.add_child(panel)
@@ -349,7 +355,7 @@ func _build_arena_picker() -> void:
 	for arena in ArenaDB.all():
 		_arena_options.append(str(arena["id"]))
 
-	var preview_frame := UIFactory.panel(Color("ff050a17"), Color("886ef8ff"), 22)
+	var preview_frame := UIFactory.panel(Color("050a17ff"), Color("6ef8ff88"), 22)
 	preview_frame.position = Vector2(32, 116)
 	preview_frame.size = Vector2(600, 690)
 	panel.add_child(preview_frame)
@@ -363,7 +369,7 @@ func _build_arena_picker() -> void:
 	var shade := ColorRect.new()
 	shade.position = Vector2(7, 505)
 	shade.size = Vector2(586, 178)
-	shade.color = Color("d9040918")
+	shade.color = Color("040918d9")
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview_frame.add_child(shade)
 
@@ -516,7 +522,7 @@ func _update_cards() -> void:
 		var is_cursor: bool = card_index == _cursor
 		var is_selected: bool = selected.has(str(data["id"]))
 		var border_color: Color = Color.WHITE if is_selected else type_color
-		var background_color: Color = Color(type_color, 0.35) if is_selected else (Color("f3263458") if is_cursor else Color("e7111934"))
+		var background_color: Color = Color(type_color, 0.35) if is_selected else (Color("263458f3") if is_cursor else Color("111934e7"))
 		_card_buttons[card_index].add_theme_stylebox_override("normal", UIFactory.style_box(background_color, border_color, 13, 4 if is_cursor or is_selected else 2))
 		_card_buttons[card_index].modulate = Color.WHITE if is_cursor or is_selected else Color(0.80, 0.84, 0.94, 0.92)
 		var marker := "✓ " if is_selected else ""

@@ -59,16 +59,26 @@ As classes são Ultra Leve, Leve, Médio, Pesado e Colossal. Vida e defesa cresc
 
 Cada Beast recebe quatro golpes de seu elemento e um golpe técnico de cobertura. Isso mantém fraquezas relevantes sem transformar uma afinidade ruim em derrota automática.
 
+A tabela vive em `data/elements.json` e é lida tanto pelo runtime
+(`scripts/autoload/creature_db.gd`) quanto pela simulação de equilíbrio
+(`tools/simulate_balance.py`). Não existe segunda cópia.
+
 | Elemento | Forte contra |
 |---|---|
-| Luz | Escuridão, Natureza |
-| Escuridão | Vento, Água |
+| Luz | **Escuridão**, Natureza |
+| Escuridão | **Luz**, Vento |
 | Fogo | Luz, Natureza |
 | Choque | Água, Vento |
 | Terra | Choque, Fogo |
 | Água | Fogo, Terra |
 | Natureza | Terra, Água |
 | Vento | Natureza, Luz |
+
+**Luz e Escuridão são rivais recíprocos**: cada um vence o outro, com o mesmo
+multiplicador nos dois sentidos. Nesse confronto não existe lado seguro — quem
+acertar primeiro leva a vantagem — e o jogo anuncia o golpe como
+`CHOQUE DE RIVAIS!` em vez de `SUPER EFETIVO!`. Todos os oito elementos vencem
+exatamente dois outros, então a roda continua fechada e nenhum elemento domina.
 
 ## Sprites, golpes e cartas
 
@@ -108,8 +118,8 @@ Não é necessário alterar o Arduino se o encoder já aparece como teclado ou j
 ```text
 beta-13/
 ├── .claude/skills/    contrato persistente para futuros agentes
-├── assets/            Beasts HD, sprites, golpes, cartas, cenários e áudio
-├── data/              30 Beasts e 80 golpes
+├── assets/            Beasts HD, atlas de combate, golpes, cartas, cenários e áudio
+├── data/              30 Beasts, 80 golpes, 6 arenas e a hierarquia elemental
 ├── scenes/            7 telas verticais
 ├── scripts/           autoloads, componentes, cenas e UI
 ├── tools/             geração, validação e simulação de equilíbrio

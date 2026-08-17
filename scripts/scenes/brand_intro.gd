@@ -37,7 +37,7 @@ func _build_screen() -> void:
 	_logo_group.scale = Vector2(0.72, 0.72)
 	add_child(_logo_group)
 
-	var plate := UIFactory.panel(Color("d9081028"), Color("aa6ef8ff"), 36)
+	var plate := UIFactory.panel(Color("081028d9"), Color("6ef8ffaa"), 36)
 	plate.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_logo_group.add_child(plate)
 
