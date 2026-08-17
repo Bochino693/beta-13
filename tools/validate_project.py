@@ -70,8 +70,6 @@ def main() -> None:
                 errors.append(f"{creature_id}: {stat} fora de 1..100 ({value}).")
         resources = (
             f"assets/creatures_hd/{creature_id}.png",
-            f"assets/sprites/beasts/{creature_id}.png",
-            f"assets/sprites_combat/{creature_id}.png",
             f"assets/materials/creatures/{creature_id}.tres",
             f"assets/cards/{creature_id}.png",
         )
@@ -79,43 +77,24 @@ def main() -> None:
             path = ROOT / relative
             if not path.is_file() or path.stat().st_size == 0:
                 errors.append(f"{creature_id}: recurso ausente ou vazio: {relative}.")
-        sheet_path = ROOT / "assets" / "sprites" / "beasts" / f"{creature_id}.png"
-        if sheet_path.is_file():
+        master_path = ROOT / "assets" / "creatures_hd" / f"{creature_id}.png"
+        if master_path.is_file():
             try:
-                with Image.open(sheet_path) as sheet:
-                    if sheet.size != (1280, 1280):
-                        errors.append(f"{creature_id}: spritesheet deve ser 1280×1280; encontrado {sheet.size}.")
-                    sheet.verify()
+                with Image.open(master_path) as master:
+                    master.load()
+                    if master.mode != "RGBA":
+                        errors.append(f"{creature_id}: arte mestre precisa ser RGBA.")
+                    else:
+                        alpha = master.getchannel("A")
+                        if alpha.getextrema() != (0, 255):
+                            errors.append(f"{creature_id}: arte mestre não possui transparência completa.")
+                        bounds = alpha.getbbox()
+                        if bounds is None:
+                            errors.append(f"{creature_id}: arte mestre está vazia.")
+                        elif bounds[0] < 2 or bounds[1] < 2 or bounds[2] > master.width - 2 or bounds[3] > master.height - 2:
+                            errors.append(f"{creature_id}: arte mestre encosta na borda: {bounds}/{master.size}.")
             except Exception as exc:
-                errors.append(f"{creature_id}: spritesheet corrompido: {exc}.")
-        combat_sheet = ROOT / "assets" / "sprites_combat" / f"{creature_id}.png"
-        if combat_sheet.is_file():
-            try:
-                with Image.open(combat_sheet) as sheet:
-                    if sheet.mode != "RGBA":
-                        errors.append(f"{creature_id}: atlas de combate precisa ser RGBA.")
-                    if sheet.size != (3072, 1536):
-                        errors.append(
-                            f"{creature_id}: atlas V3 deve medir 3072x1536; encontrado {sheet.size}."
-                        )
-                    if sheet.getchannel("A").getextrema()[0] != 0:
-                        errors.append(f"{creature_id}: atlas de combate nao tem alfa transparente.")
-                    if sheet.size == (3072, 1536):
-                        alpha = sheet.getchannel("A")
-                        for frame in range(32):
-                            x = (frame % 8) * 384
-                            y = (frame // 8) * 384
-                            box = alpha.crop((x, y, x + 384, y + 384)).getbbox()
-                            if box is None:
-                                errors.append(f"{creature_id}: quadro V3 vazio: {frame}.")
-                manifest_path = combat_sheet.with_suffix(".poses.json")
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                if manifest.get("version") != 3 or len(manifest.get("poses", [])) != 32:
-                    errors.append(f"{creature_id}: manifesto V3 precisa declarar 32 poses.")
-                with Image.open(combat_sheet) as sheet:
-                    sheet.verify()
-            except Exception as exc:
-                errors.append(f"{creature_id}: atlas de combate corrompido: {exc}.")
+                errors.append(f"{creature_id}: arte mestre corrompida: {exc}.")
 
     for move in moves:
         if move["element"] not in ELEMENTS:
@@ -126,6 +105,20 @@ def main() -> None:
             path = ROOT / relative
             if not path.is_file() or path.stat().st_size == 0:
                 errors.append(f"Golpe {move['id']}: recurso ausente {relative}.")
+        for visual_key in ("effect_family", "travel_style", "scene_reaction"):
+            if not str(move.get(visual_key, "")):
+                errors.append(f"Golpe {move['id']}: metadado visual ausente: {visual_key}.")
+        fx_path = ROOT / "assets" / "moves_fx" / f"{move['id']}.png"
+        if fx_path.is_file():
+            try:
+                with Image.open(fx_path) as effect:
+                    effect.load()
+                    if effect.mode != "RGBA" or effect.size != (1536, 192):
+                        errors.append(f"{move['id']}: FX deve ser RGBA 1536×192; encontrado {effect.mode} {effect.size}.")
+                    elif effect.getchannel("A").getextrema() != (0, 255):
+                        errors.append(f"{move['id']}: FX sem transparência completa.")
+            except Exception as exc:
+                errors.append(f"{move['id']}: FX corrompido: {exc}.")
     for element in ELEMENTS:
         element_count = sum(move["element"] == element for move in moves)
         if element_count != 10:
@@ -140,7 +133,15 @@ def main() -> None:
             errors.append(f"PNG corrompido: {png_path.relative_to(ROOT)}: {exc}.")
 
     # Confere referências literais usadas por cenas, scripts e configuração.
-    source_files = [ROOT / "project.godot", *list((ROOT / "scenes").glob("*.tscn")), *list((ROOT / "scripts").rglob("*.gd"))]
+    legacy_prototypes = {
+        ROOT / "scripts" / "scenes" / "battle_v2.gd",
+        ROOT / "scripts" / "components" / "battle_stadium_3d_v2.gd",
+    }
+    source_files = [
+        ROOT / "project.godot",
+        *list((ROOT / "scenes").glob("*.tscn")),
+        *[path for path in (ROOT / "scripts").rglob("*.gd") if path not in legacy_prototypes],
+    ]
     for source_path in source_files:
         source = source_path.read_text(encoding="utf-8")
         for relative in re.findall(r'res://([^"\']+\.(?:gd|tscn|png|svg|wav|tres|json))', source):
@@ -162,7 +163,8 @@ def main() -> None:
             errors.append(f"Contagem de {key}: {counts[key]}; esperado {expected_value}.")
     required_scripts = {
         "scripts/scenes/battle.gd",
-        "scripts/components/cinematic_beast_sprite_3d.gd",
+        "scripts/components/stable_beast_rig_3d.gd",
+        "scripts/components/physical_projectile.gd",
         "scripts/components/battle_stadium_3d.gd",
         "scripts/components/battle_shield_dome_3d.gd",
     }

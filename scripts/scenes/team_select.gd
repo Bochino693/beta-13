@@ -29,6 +29,15 @@ var _category_hint: Label
 var _instruction: Label
 var _ready_button: Button
 var _locked := false
+var _arena_selecting := false
+var _arena_overlay: Control
+var _arena_options: Array[String] = []
+var _arena_cursor := 0
+var _arena_status: Label
+var _arena_preview: TextureRect
+var _arena_name: Label
+var _arena_subtitle: Label
+var _arena_counter: Label
 
 
 func _ready() -> void:
@@ -170,9 +179,13 @@ func _build_screen() -> void:
 	_ready_button.size = Vector2(650, 76)
 	_ready_button.pressed.connect(_confirm_team)
 	add_child(_ready_button)
+	_build_arena_picker()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _arena_selecting:
+		_handle_arena_input(event)
+		return
 	if _locked:
 		return
 	var prefix := "p1_" if _current_player == 0 else "p2_"
@@ -293,10 +306,182 @@ func _confirm_team() -> void:
 		return
 	if GameState.mode == "cpu":
 		GameState.set_team(1, CreatureDB.random_team(5, _selected_teams[0]))
+		_show_arena_picker()
+		return
 	else:
 		GameState.set_team(1, _selected_teams[1])
+	GameState.resolve_arena_for_battle()
 	_locked = true
 	Transition.go_to(GameState.BATTLE_SCENE, "ENTRANDO NA ARENA")
+
+
+func _build_arena_picker() -> void:
+	_arena_overlay = Control.new()
+	_arena_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_arena_overlay.visible = false
+	_arena_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_arena_overlay)
+
+	var dim := ColorRect.new()
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color("f0060b1d")
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_arena_overlay.add_child(dim)
+
+	var panel := UIFactory.panel(Color("f20a122b"), Color("aa6ef8ff"), 28)
+	panel.position = Vector2(28, 54)
+	panel.size = Vector2(664, 1164)
+	_arena_overlay.add_child(panel)
+
+	var title := UIFactory.title("ARENA DA PARTIDA", 35, Color.WHITE)
+	title.position = Vector2(24, 18)
+	title.size = Vector2(616, 54)
+	panel.add_child(title)
+	var subtitle := UIFactory.label(
+		"ESCOLHA UMA ARENA OU DEIXE O JOGO SORTEAR",
+		14, Color("a9eaff"), HORIZONTAL_ALIGNMENT_CENTER
+	)
+	subtitle.position = Vector2(24, 70)
+	subtitle.size = Vector2(616, 32)
+	panel.add_child(subtitle)
+
+	_arena_options = [ArenaDB.AUTO_ID]
+	for arena in ArenaDB.all():
+		_arena_options.append(str(arena["id"]))
+
+	var preview_frame := UIFactory.panel(Color("ff050a17"), Color("886ef8ff"), 22)
+	preview_frame.position = Vector2(32, 116)
+	preview_frame.size = Vector2(600, 690)
+	panel.add_child(preview_frame)
+	_arena_preview = TextureRect.new()
+	_arena_preview.position = Vector2(7, 7)
+	_arena_preview.size = Vector2(586, 676)
+	_arena_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_arena_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_arena_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview_frame.add_child(_arena_preview)
+	var shade := ColorRect.new()
+	shade.position = Vector2(7, 505)
+	shade.size = Vector2(586, 178)
+	shade.color = Color("d9040918")
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview_frame.add_child(shade)
+
+	_arena_counter = UIFactory.badge("", Color("6ef8ff"))
+	_arena_counter.position = Vector2(52, 640)
+	_arena_counter.size = Vector2(154, 34)
+	panel.add_child(_arena_counter)
+	_arena_name = UIFactory.label("", 27, Color.WHITE)
+	_arena_name.position = Vector2(52, 686)
+	_arena_name.size = Vector2(560, 42)
+	panel.add_child(_arena_name)
+	_arena_subtitle = UIFactory.label("", 15, Color("d5e4f7"))
+	_arena_subtitle.position = Vector2(52, 730)
+	_arena_subtitle.size = Vector2(560, 58)
+	_arena_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	panel.add_child(_arena_subtitle)
+
+	var previous := UIFactory.button("‹  ANTERIOR", Color("6ef8ff"), Vector2(242, 62))
+	previous.position = Vector2(52, 830)
+	previous.size = Vector2(242, 62)
+	previous.pressed.connect(_move_arena_choice.bind(-1))
+	panel.add_child(previous)
+	var next := UIFactory.button("PRÓXIMA  ›", Color("ff4fc8"), Vector2(242, 62))
+	next.position = Vector2(370, 830)
+	next.size = Vector2(242, 62)
+	next.pressed.connect(_move_arena_choice.bind(1))
+	panel.add_child(next)
+	var confirm := UIFactory.button("JOGAR NESTA ARENA", Color("ffde5b"), Vector2(560, 78))
+	confirm.position = Vector2(52, 918)
+	confirm.size = Vector2(560, 78)
+	confirm.pressed.connect(_confirm_arena_choice)
+	panel.add_child(confirm)
+
+	_arena_status = UIFactory.label(
+		"ESQUERDA/DIREITA PARA ESCOLHER • CONFIRMAR PARA ENTRAR",
+		13, Color("d5e4f7"), HORIZONTAL_ALIGNMENT_CENTER
+	)
+	_arena_status.position = Vector2(24, 1020)
+	_arena_status.size = Vector2(616, 38)
+	panel.add_child(_arena_status)
+	var back := UIFactory.label("CANCELAR VOLTA PARA A EQUIPE", 12, Color("899bb8"), HORIZONTAL_ALIGNMENT_CENTER)
+	back.position = Vector2(24, 1064)
+	back.size = Vector2(616, 30)
+	panel.add_child(back)
+	_update_arena_preview()
+
+
+func _show_arena_picker() -> void:
+	_arena_cursor = 0
+	_arena_selecting = true
+	_locked = false
+	_arena_overlay.visible = true
+	_update_arena_preview()
+	AudioSynth.ui_confirm()
+
+
+func _handle_arena_input(event: InputEvent) -> void:
+	if event.is_action_pressed("p1_left") or event.is_action_pressed("p2_left"):
+		_move_arena_choice(-1)
+	elif event.is_action_pressed("p1_right") or event.is_action_pressed("p2_right"):
+		_move_arena_choice(1)
+	elif event.is_action_pressed("p1_up") or event.is_action_pressed("p2_up"):
+		_move_arena_choice(-1)
+	elif event.is_action_pressed("p1_down") or event.is_action_pressed("p2_down"):
+		_move_arena_choice(1)
+	elif event.is_action_pressed("p1_confirm") or event.is_action_pressed("p2_confirm") or event.is_action_pressed("start"):
+		_confirm_arena_choice()
+	elif event.is_action_pressed("p1_cancel") or event.is_action_pressed("p2_cancel"):
+		_arena_selecting = false
+		_arena_overlay.visible = false
+		_locked = false
+		AudioSynth.ui_cancel()
+
+
+func _move_arena_choice(delta: int) -> void:
+	if not _arena_selecting or _arena_options.is_empty():
+		return
+	_arena_cursor = wrapi(_arena_cursor + delta, 0, _arena_options.size())
+	_update_arena_preview()
+	AudioSynth.ui_move()
+
+
+func _update_arena_preview() -> void:
+	if _arena_options.is_empty() or _arena_preview == null:
+		return
+	var requested := _arena_options[_arena_cursor]
+	var is_random := requested == ArenaDB.AUTO_ID
+	var preview_id := str(ArenaDB.all()[0]["id"]) if is_random else requested
+	var arena := ArenaDB.get_arena(preview_id)
+	var accent := Color("6ef8ff") if is_random else ArenaDB.color(preview_id)
+	_arena_preview.texture = load(str(arena.get("path", ""))) as Texture2D
+	_arena_preview.modulate = Color(0.72, 0.78, 0.90, 0.82) if is_random else Color.WHITE
+	_arena_counter.text = "OPÇÃO ALEATÓRIA" if is_random else "ARENA %d DE %d" % [_arena_cursor, _arena_options.size() - 1]
+	_arena_counter.add_theme_stylebox_override(
+		"normal", UIFactory.style_box(Color(accent, 0.90), accent.lightened(0.25), 12, 1)
+	)
+	_arena_name.text = "ARENA ALEATÓRIA" if is_random else str(arena.get("name", "ARENA"))
+	_arena_name.add_theme_color_override("font_color", accent.lightened(0.18))
+	_arena_subtitle.text = (
+		"O jogo escolhe uma das seis arenas completas no início da partida."
+		if is_random else str(arena.get("subtitle", ""))
+	)
+	_arena_status.text = "PRONTA PARA SORTEAR" if is_random else "PRONTA PARA JOGAR"
+
+
+func _confirm_arena_choice() -> void:
+	if not _arena_selecting or _arena_options.is_empty():
+		return
+	_arena_selecting = false
+	_locked = true
+	var requested := _arena_options[_arena_cursor]
+	var resolved := ArenaDB.resolve_id(requested)
+	GameState.set_arena(resolved)
+	var arena := ArenaDB.get_arena(resolved)
+	_arena_status.text = ("SORTEADA • " if requested == ArenaDB.AUTO_ID else "SELECIONADA • ") + str(arena.get("name", "ARENA"))
+	AudioSynth.ui_confirm()
+	await get_tree().create_timer(0.28).timeout
+	Transition.go_to(GameState.BATTLE_SCENE, "ABRINDO " + str(arena.get("name", "A ARENA")))
 
 
 func _refresh_all(play_sound: bool = false) -> void:

@@ -21,29 +21,36 @@ func _build_screen() -> void:
 	brand.size = Vector2(660, 38)
 	add_child(brand)
 
-	var title_plate := UIFactory.panel(Color("c8081028"), Color("8875ecff"), 28)
-	title_plate.position = Vector2(35, 65)
-	title_plate.size = Vector2(650, 205)
+	var title_plate := UIFactory.panel(Color("d6081028"), Color("aa75ecff"), 28)
+	title_plate.position = Vector2(35, 58)
+	title_plate.size = Vector2(650, 222)
 	add_child(title_plate)
-	var title := UIFactory.title("LAZER BEASTS", 57, Color("f8fbff"))
-	title.position = Vector2(0, 23)
-	title.size = Vector2(650, 78)
+	var game_icon := TextureRect.new()
+	game_icon.position = Vector2(275, 10)
+	game_icon.size = Vector2(100, 100)
+	game_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	game_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	game_icon.texture = load("res://assets/branding/elemental_beasts_icon.png") as Texture2D
+	title_plate.add_child(game_icon)
+	var title := UIFactory.title("ELEMENTAL BEASTS", 46, Color("f8fbff"))
+	title.position = Vector2(0, 105)
+	title.size = Vector2(650, 60)
 	title.add_theme_color_override("font_outline_color", Color("762bca"))
 	title.add_theme_constant_override("outline_size", 7)
 	title_plate.add_child(title)
-	var subtitle := UIFactory.title("ELEMENTAL ARENA", 30, Color("ffe14c"))
-	subtitle.position = Vector2(0, 96)
-	subtitle.size = Vector2(650, 48)
+	var subtitle := UIFactory.title("ARENA ELEMENTAL", 24, Color("ffe14c"))
+	subtitle.position = Vector2(0, 160)
+	subtitle.size = Vector2(650, 36)
 	title_plate.add_child(subtitle)
-	var summary := UIFactory.label("30 BEASTS HD  •  8 ELEMENTOS  •  5 × 5", 15, Color("80f6ff"), HORIZONTAL_ALIGNMENT_CENTER)
-	summary.position = Vector2(0, 151)
-	summary.size = Vector2(650, 32)
+	var summary := UIFactory.label("30 BEASTS  •  8 ELEMENTOS  •  EQUIPES 5 × 5", 13, Color("80f6ff"), HORIZONTAL_ALIGNMENT_CENTER)
+	summary.position = Vector2(0, 194)
+	summary.size = Vector2(650, 24)
 	title_plate.add_child(summary)
 
 	var showcase := [
-		["pyrocondor", Vector2(5, 345), Vector2(270, 330), 1.0, 0.82],
-		["lumari", Vector2(185, 285), Vector2(350, 420), 1.0, 1.0],
-		["abissarca", Vector2(450, 350), Vector2(270, 330), -1.0, 0.82]
+		["pyrocondor", Vector2(-18, 322), Vector2(300, 350), 1.0, 0.92],
+		["helionce", Vector2(155, 300), Vector2(410, 390), 1.0, 1.0],
+		["prismara", Vector2(446, 320), Vector2(292, 350), -1.0, 0.92]
 	]
 	for item in showcase:
 		var avatar := CreatureAvatar.new()

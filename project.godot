@@ -10,16 +10,17 @@ config_version=5
 
 [application]
 
-config/name="Lazer Beasts: Elemental Arena"
-config/version="4.1.0"
+config/name="Elemental Beasts: Arena Elemental"
+config/version="7.2.0"
 run/main_scene="res://scenes/brand_intro.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 boot_splash/show_image=false
-config/icon="res://assets/icon.svg"
+config/icon="res://assets/branding/elemental_beasts_icon.png"
 
 [autoload]
 
 CreatureDB="*res://scripts/autoload/creature_db.gd"
+ArenaDB="*res://scripts/autoload/arena_db.gd"
 MoveDB="*res://scripts/autoload/move_db.gd"
 CardRegistry="*res://scripts/autoload/card_registry.gd"
 GameState="*res://scripts/autoload/game_state.gd"

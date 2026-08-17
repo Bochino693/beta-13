@@ -3,9 +3,8 @@
 """
 verificar_batalha.py
 
-Confere, sem abrir o Godot, se a batalha 2.5D esta consistente com o resto do
-projeto: metodos de autoload que existem, assets que existem, as 30 Beasts com
-retrato e familia de animacao, os 80 golpes com sprite de efeito.
+Confere se a batalha contínua 2.5D está consistente: arte mestre transparente,
+rig deformável, três locomoções, projéteis 3D e 80 golpes contextuais.
 
 Rodar de dentro da pasta do projeto:
     python tools/verificar_batalha.py
@@ -18,7 +17,8 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 BATALHA = RAIZ / "scripts" / "scenes" / "battle.gd"
-SPRITE = RAIZ / "scripts" / "components" / "cinematic_beast_sprite_3d.gd"
+SPRITE = RAIZ / "scripts" / "components" / "stable_beast_rig_3d.gd"
+PROJETIL = RAIZ / "scripts" / "components" / "physical_projectile.gd"
 ESTADIO = RAIZ / "scripts" / "components" / "battle_stadium_3d.gd"
 ESCUDO = RAIZ / "scripts" / "components" / "battle_shield_dome_3d.gd"
 FUNDO_ARENA = RAIZ / "assets" / "battle" / "arena" / "lazer_coliseum_backplate.png"
@@ -26,6 +26,7 @@ FONTE_CORPO = RAIZ / "assets" / "battle" / "fonts" / "URWGothic-Book.otf"
 
 AUTOLOADS = {
     "CreatureDB": RAIZ / "scripts" / "autoload" / "creature_db.gd",
+    "ArenaDB": RAIZ / "scripts" / "autoload" / "arena_db.gd",
     "MoveDB": RAIZ / "scripts" / "autoload" / "move_db.gd",
     "GameState": RAIZ / "scripts" / "autoload" / "game_state.gd",
     "AudioSynth": RAIZ / "scripts" / "autoload" / "audio_synth.gd",
@@ -44,7 +45,7 @@ def secao(titulo):
 
 
 def checar_arquivos():
-    for caminho in (BATALHA, SPRITE, ESTADIO, ESCUDO, FUNDO_ARENA, FONTE_CORPO):
+    for caminho in (BATALHA, SPRITE, PROJETIL, ESTADIO, ESCUDO, FUNDO_ARENA, FONTE_CORPO):
         if not caminho.exists():
             erros.append("arquivo ausente: %s" % caminho.relative_to(RAIZ))
         else:
@@ -84,13 +85,13 @@ def checar_metodos_do_rig(texto):
 
     chamados = set(re.findall(r"rig[a-z_]*\.([a-z_0-9]+)\(", texto))
     chamados |= set(re.findall(r"_rigs\[[^\]]+\]\.([a-z_0-9]+)\(", texto))
-    chamados |= set(re.findall(r"CinematicBeastSprite3D\.([a-z_0-9]+)\(", texto))
+    chamados |= set(re.findall(r"StableBeastRig3D\.([a-z_0-9]+)\(", texto))
 
     for membro in sorted(chamados):
         if membro in definidos or membro in nativos:
-            ok.append("Rig cinematografico.%s" % membro)
+            ok.append("Rig contínuo.%s" % membro)
         else:
-            erros.append("Rig cinematografico.%s nao existe" % membro)
+            erros.append("Rig contínuo.%s nao existe" % membro)
 
 
 def checar_criaturas():
@@ -103,9 +104,9 @@ def checar_criaturas():
     print("  criaturas no catalogo: %d" % len(criaturas))
 
     fonte_rig = SPRITE.read_text(encoding="utf-8") if SPRITE.exists() else ""
-    trecho_mapa = fonte_rig.split("const FAMILIA_POR_ID", 1)[-1].split("}", 1)[0]
+    trecho_mapa = fonte_rig.split("const FAMILY_BY_ID", 1)[-1].split("}", 1)[0]
     mapeadas = set(re.findall(r'"([a-z_0-9]+)"\s*:', trecho_mapa))
-    familias = set(re.findall(r'^\t"([a-z]+)":\s*\{', fonte_rig, re.M))
+    familias = set(re.findall(r'^\t"([a-z]+)":\s*\{', fonte_rig.split("const FAMILY_BY_ID", 1)[0], re.M))
 
     sem_retrato = []
     sem_familia = []
@@ -128,22 +129,13 @@ def checar_criaturas():
     else:
         ok.append("as %d Beasts tem familia de animacao definida" % len(criaturas))
 
-    perfis_usados = set(re.findall(r':\s*"([a-z]+)"', "\n".join(
-        re.findall(r'^\t"[a-z_0-9]+":\s*("[a-z]+"),', fonte_rig, re.M))))
+    perfis_usados = set(re.findall(r':\s*"([a-z]+)"', trecho_mapa))
     invalidos = perfis_usados - familias
     if invalidos:
         erros.append("familias usadas que nao existem em PERFIS: %s"
                      % ", ".join(sorted(invalidos)))
 
-    atlas_dir = RAIZ / "assets" / "sprites_combat"
-    sem_atlas = [c["id"] for c in criaturas
-                 if not (atlas_dir / (c["id"] + ".png")).is_file()]
-    if sem_atlas:
-        erros.append("sem atlas de combate frente/costas: %s" % ", ".join(sem_atlas))
-    else:
-        ok.append("as %d Beasts tem atlas V3 8x4 frente/costas" % len(criaturas))
-    print("  atlas cinematograficos: %d de %d"
-          % (len(list(atlas_dir.glob("*.png"))), len(criaturas)))
+    print("  artes mestre transparentes: %d de %d" % (len(criaturas) - len(sem_retrato), len(criaturas)))
 
     return criaturas
 
@@ -159,6 +151,7 @@ def checar_golpes():
 
     sem_fx = []
     sem_icone = []
+    sem_perfil_visual = []
     for g in golpes:
         fx = str(g.get("sprite_sheet", "")).replace("res://", "")
         icone = str(g.get("icon", "")).replace("res://", "")
@@ -166,6 +159,8 @@ def checar_golpes():
             sem_fx.append(g["id"])
         if not icone or not (RAIZ / icone).exists():
             sem_icone.append(g["id"])
+        if any(not str(g.get(key, "")) for key in ("effect_family", "travel_style", "scene_reaction")):
+            sem_perfil_visual.append(g["id"])
 
     if sem_fx:
         erros.append("golpes sem sprite de efeito: %d (%s...)"
@@ -177,6 +172,10 @@ def checar_golpes():
         avisos.append("golpes sem icone: %d" % len(sem_icone))
     else:
         ok.append("os %d golpes tem icone" % len(golpes))
+    if sem_perfil_visual:
+        erros.append("golpes sem perfil visual contextual: %s" % ", ".join(sem_perfil_visual))
+    else:
+        ok.append("os %d golpes têm família, viagem e reação de cenário" % len(golpes))
 
     pesados = [g for g in golpes if str(g.get("role", "")) == "pesado"]
     print("  golpes marcados como pesado: %d" % len(pesados))
@@ -202,13 +201,14 @@ def checar_audio(criaturas):
 def checar_presenca_das_mudancas(texto):
     exigido = {
         "SubViewport": "arena 3D dentro do Control",
-        "CinematicBeastSprite3D": "AnimatedSprite3D frente/costas",
+        "StableBeastRig3D": "malha contínua com arte mestre",
+        "PhysicalProjectile": "geometria 3D viajando do atacante ao alvo",
         "BattleStadium3D": "estadio 3D estavel",
         "BattleShieldDome3D": "redoma de guarda",
         "_tocar_fx_do_golpe": "sprite de golpe tocando no impacto",
         "sprite_sheet": "leitura da tira de efeito do moves.json",
         "_sacudir_camera": "tremor de camera no impacto",
-        "_empurrar_camera": "zoom no golpe pesado",
+        "preparar_golpe": "movimento contextual da Beast",
         "_numero_de_dano": "numero de dano flutuante",
         "Y_ARENA": "grade de faixas do retrato",
         "unproject_position": "projecao 3D->2D do numero de dano",
@@ -224,6 +224,8 @@ def checar_presenca_das_mudancas(texto):
         "sprites/beasts": "spritesheet falso antigo",
         "CreatureAvatar": "avatar 2D antigo",
         "ElementSkillFX": "efeito generico antigo",
+        "CinematicBeastSprite3D": "atlas/crossfade que causava piscadas",
+        "_empurrar_camera": "zoom de ataque rejeitado",
     }
     for marca, descricao in proibido.items():
         if marca in texto:
@@ -234,7 +236,7 @@ def checar_presenca_das_mudancas(texto):
 
 def main():
     print()
-    print("VERIFICACAO DA BATALHA 2.5D")
+    print("VERIFICACAO DA BATALHA CONTINUA 2.5D")
     print("=" * 40)
 
     secao("1. Arquivos")

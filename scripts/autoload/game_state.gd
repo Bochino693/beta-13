@@ -42,6 +42,15 @@ func set_team(player_index: int, ids: Array) -> void:
 	team_ids[player_index] = ids.duplicate()
 
 
+func set_arena(selected_arena_id: String) -> void:
+	arena_id = selected_arena_id if ArenaDB.has_arena(selected_arena_id) else ArenaDB.AUTO_ID
+
+
+func resolve_arena_for_battle() -> String:
+	arena_id = ArenaDB.resolve_id(arena_id)
+	return arena_id
+
+
 func runtime_team(player_index: int) -> Array[Dictionary]:
 	var output: Array[Dictionary] = []
 	for creature_id in team_ids[player_index]:
@@ -177,14 +186,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		free_play = not free_play
 		save_settings()
 		AudioSynth.ui_confirm()
-		print("LAZER BEASTS • Modo livre: ", "LIGADO" if free_play else "DESLIGADO")
+		print("ELEMENTAL BEASTS • Modo livre: ", "LIGADO" if free_play else "DESLIGADO")
 	elif event.is_action_pressed("operator_sound"):
 		sound_enabled = not sound_enabled
 		save_settings()
 		AudioSynth.set_enabled(sound_enabled)
 		if sound_enabled:
 			AudioSynth.ui_confirm()
-		print("LAZER BEASTS • Som: ", "LIGADO" if sound_enabled else "DESLIGADO")
+		print("ELEMENTAL BEASTS • Som: ", "LIGADO" if sound_enabled else "DESLIGADO")
 	elif event.is_action_pressed("operator_fullscreen"):
 		var fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "arenas": [
+    {
+      "id": "nexus_elemental",
+      "name": "NEXO ELEMENTAL",
+      "subtitle": "Gelo e magma dividem o coliseu central",
+      "path": "res://assets/battle/arena/elemental_nexus_backplate_v2.png",
+      "accent": "6ef8ff",
+      "secondary": "ff784b",
+      "atmosphere": "crystal"
+    },
+    {
+      "id": "coliseu_neon",
+      "name": "COLISEU NEON",
+      "subtitle": "Arquibancadas tecnológicas e luzes reativas",
+      "path": "res://assets/battle/arena/lazer_coliseum_backplate.png",
+      "accent": "49d9ff",
+      "secondary": "ff55c6",
+      "atmosphere": "neon"
+    },
+    {
+      "id": "forja_obsidiana",
+      "name": "FORJA OBSIDIANA",
+      "subtitle": "Rocha vulcânica, brasas e metal incandescente",
+      "path": "res://assets/battle/arena/obsidian_forge_backplate.png",
+      "accent": "ff743d",
+      "secondary": "ffd05c",
+      "atmosphere": "embers"
+    },
+    {
+      "id": "templo_celeste",
+      "name": "TEMPLO CELESTE",
+      "subtitle": "Aurora, nuvens e cristais acima do horizonte",
+      "path": "res://assets/battle/arena/sky_temple_backplate.png",
+      "accent": "75bfff",
+      "secondary": "a986ff",
+      "atmosphere": "clouds"
+    },
+    {
+      "id": "santuario_eter",
+      "name": "SANTUÁRIO DO ÉTER",
+      "subtitle": "Arquitetura luminosa suspensa entre dimensões",
+      "path": "res://assets/battle/arena/aether_sanctum_backplate.png",
+      "accent": "75f2ff",
+      "secondary": "ffe8a8",
+      "atmosphere": "light"
+    },
+    {
+      "id": "nucleo_infernal",
+      "name": "NÚCLEO INFERNAL",
+      "subtitle": "Arena industrial alimentada por energia ígnea",
+      "path": "res://assets/battle/arena/obsidian_foundry_backplate.png",
+      "accent": "ff4a2e",
+      "secondary": "32c8ff",
+      "atmosphere": "embers"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "moves": [
     {
       "id": "luz_01_faisca_da_aurora",
@@ -15,7 +15,11 @@
       "visual": "clarão",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/luz_01_faisca_da_aurora.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_01_faisca_da_aurora.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_01_faisca_da_aurora.png",
+      "effect_style": "aurora_spark",
+      "effect_family": "orb",
+      "travel_style": "direct",
+      "scene_reaction": "radiance"
     },
     {
       "id": "luz_02_lanca_solar",
@@ -31,7 +35,11 @@
       "visual": "clarão",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/luz_02_lanca_solar.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_02_lanca_solar.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_02_lanca_solar.png",
+      "effect_style": "solar_spear",
+      "effect_family": "spear",
+      "travel_style": "direct",
+      "scene_reaction": "sun_flare"
     },
     {
       "id": "luz_03_prisma_cortante",
@@ -47,7 +55,11 @@
       "visual": "clarão",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/luz_03_prisma_cortante.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_03_prisma_cortante.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_03_prisma_cortante.png",
+      "effect_style": "prism_blade",
+      "effect_family": "slash",
+      "travel_style": "sweeping",
+      "scene_reaction": "prism_shards"
     },
     {
       "id": "luz_04_halo_pulsante",
@@ -63,7 +75,11 @@
       "visual": "clarão",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/luz_04_halo_pulsante.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_04_halo_pulsante.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_04_halo_pulsante.png",
+      "effect_style": "pulsing_halo",
+      "effect_family": "ring",
+      "travel_style": "wave",
+      "scene_reaction": "radiance"
     },
     {
       "id": "luz_05_reflexo_radiante",
@@ -79,7 +95,11 @@
       "visual": "clarão",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/luz_05_reflexo_radiante.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_05_reflexo_radiante.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_05_reflexo_radiante.png",
+      "effect_style": "radiant_reflection",
+      "effect_family": "beam",
+      "travel_style": "direct",
+      "scene_reaction": "light_path"
     },
     {
       "id": "luz_06_chuva_de_fotons",
@@ -95,7 +115,11 @@
       "visual": "clarão",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/luz_06_chuva_de_fotons.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_06_chuva_de_fotons.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_06_chuva_de_fotons.png",
+      "effect_style": "photon_rain",
+      "effect_family": "rain",
+      "travel_style": "overhead",
+      "scene_reaction": "star_rain"
     },
     {
       "id": "luz_07_selo_do_zenite",
@@ -111,7 +135,11 @@
       "visual": "clarão",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/luz_07_selo_do_zenite.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_07_selo_do_zenite.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_07_selo_do_zenite.png",
+      "effect_style": "zenith_sigil",
+      "effect_family": "sigil",
+      "travel_style": "ground",
+      "scene_reaction": "holy_seal"
     },
     {
       "id": "luz_08_caminho_de_lux",
@@ -127,7 +155,11 @@
       "visual": "clarão",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/luz_08_caminho_de_lux.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_08_caminho_de_lux.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_08_caminho_de_lux.png",
+      "effect_style": "lux_path",
+      "effect_family": "ground_wave",
+      "travel_style": "ground",
+      "scene_reaction": "light_path"
     },
     {
       "id": "luz_09_explosao_heliaca",
@@ -143,7 +175,11 @@
       "visual": "clarão",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/luz_09_explosao_heliaca.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_09_explosao_heliaca.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_09_explosao_heliaca.png",
+      "effect_style": "heliac_blast",
+      "effect_family": "burst",
+      "travel_style": "arc",
+      "scene_reaction": "sun_flare"
     },
     {
       "id": "luz_10_julgamento_prismatico",
@@ -159,7 +195,11 @@
       "visual": "clarão",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/luz_10_julgamento_prismatico.png",
-      "sprite_sheet": "res://assets/moves_fx/luz_10_julgamento_prismatico.png"
+      "sprite_sheet": "res://assets/moves_fx/luz_10_julgamento_prismatico.png",
+      "effect_style": "prismatic_judgment",
+      "effect_family": "prism_storm",
+      "travel_style": "overhead",
+      "scene_reaction": "prism_shards"
     },
     {
       "id": "escuridao_01_garra_sombria",
@@ -175,7 +215,11 @@
       "visual": "vórtice",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/escuridao_01_garra_sombria.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_01_garra_sombria.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_01_garra_sombria.png",
+      "effect_style": "shadow_claw",
+      "effect_family": "claw",
+      "travel_style": "sweeping",
+      "scene_reaction": "shadow_trace"
     },
     {
       "id": "escuridao_02_nevoa_voraz",
@@ -191,7 +235,11 @@
       "visual": "vórtice",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/escuridao_02_nevoa_voraz.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_02_nevoa_voraz.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_02_nevoa_voraz.png",
+      "effect_style": "voracious_fog",
+      "effect_family": "fog",
+      "travel_style": "drift",
+      "scene_reaction": "dark_fog"
     },
     {
       "id": "escuridao_03_orbe_do_veu",
@@ -207,7 +255,11 @@
       "visual": "vórtice",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/escuridao_03_orbe_do_veu.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_03_orbe_do_veu.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_03_orbe_do_veu.png",
+      "effect_style": "veil_orb",
+      "effect_family": "orb",
+      "travel_style": "arc",
+      "scene_reaction": "void_pulse"
     },
     {
       "id": "escuridao_04_passo_umbral",
@@ -223,7 +275,11 @@
       "visual": "vórtice",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/escuridao_04_passo_umbral.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_04_passo_umbral.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_04_passo_umbral.png",
+      "effect_style": "umbral_step",
+      "effect_family": "dash",
+      "travel_style": "blink",
+      "scene_reaction": "shadow_trace"
     },
     {
       "id": "escuridao_05_eclipse_breve",
@@ -239,7 +295,11 @@
       "visual": "vórtice",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/escuridao_05_eclipse_breve.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_05_eclipse_breve.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_05_eclipse_breve.png",
+      "effect_style": "brief_eclipse",
+      "effect_family": "eclipse",
+      "travel_style": "direct",
+      "scene_reaction": "eclipse"
     },
     {
       "id": "escuridao_06_correntes_abissais",
@@ -255,7 +315,11 @@
       "visual": "vórtice",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/escuridao_06_correntes_abissais.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_06_correntes_abissais.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_06_correntes_abissais.png",
+      "effect_style": "abyssal_chains",
+      "effect_family": "chains",
+      "travel_style": "seeking",
+      "scene_reaction": "abyss_grip"
     },
     {
       "id": "escuridao_07_marca_do_medo",
@@ -271,7 +335,11 @@
       "visual": "vórtice",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/escuridao_07_marca_do_medo.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_07_marca_do_medo.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_07_marca_do_medo.png",
+      "effect_style": "fear_mark",
+      "effect_family": "sigil",
+      "travel_style": "direct",
+      "scene_reaction": "fear_mark"
     },
     {
       "id": "escuridao_08_vacuo_silencioso",
@@ -287,7 +355,11 @@
       "visual": "vórtice",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/escuridao_08_vacuo_silencioso.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_08_vacuo_silencioso.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_08_vacuo_silencioso.png",
+      "effect_style": "silent_vacuum",
+      "effect_family": "vortex",
+      "travel_style": "drift",
+      "scene_reaction": "vacuum"
     },
     {
       "id": "escuridao_09_boca_do_abismo",
@@ -303,7 +375,11 @@
       "visual": "vórtice",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/escuridao_09_boca_do_abismo.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_09_boca_do_abismo.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_09_boca_do_abismo.png",
+      "effect_style": "abyss_maw",
+      "effect_family": "maw",
+      "travel_style": "ground",
+      "scene_reaction": "abyss_grip"
     },
     {
       "id": "escuridao_10_noite_terminal",
@@ -319,7 +395,11 @@
       "visual": "vórtice",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/escuridao_10_noite_terminal.png",
-      "sprite_sheet": "res://assets/moves_fx/escuridao_10_noite_terminal.png"
+      "sprite_sheet": "res://assets/moves_fx/escuridao_10_noite_terminal.png",
+      "effect_style": "terminal_night",
+      "effect_family": "nightfall",
+      "travel_style": "overhead",
+      "scene_reaction": "eclipse"
     },
     {
       "id": "fogo_01_brasa_veloz",
@@ -335,7 +415,11 @@
       "visual": "chama",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/fogo_01_brasa_veloz.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_01_brasa_veloz.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_01_brasa_veloz.png",
+      "effect_style": "swift_ember",
+      "effect_family": "orb",
+      "travel_style": "direct",
+      "scene_reaction": "embers"
     },
     {
       "id": "fogo_02_chicote_de_fagulha",
@@ -351,7 +435,11 @@
       "visual": "chama",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/fogo_02_chicote_de_fagulha.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_02_chicote_de_fagulha.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_02_chicote_de_fagulha.png",
+      "effect_style": "spark_whip",
+      "effect_family": "whip",
+      "travel_style": "sweeping",
+      "scene_reaction": "embers"
     },
     {
       "id": "fogo_03_mordida_ignea",
@@ -367,7 +455,11 @@
       "visual": "chama",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/fogo_03_mordida_ignea.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_03_mordida_ignea.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_03_mordida_ignea.png",
+      "effect_style": "igneous_bite",
+      "effect_family": "maw",
+      "travel_style": "direct",
+      "scene_reaction": "fire_bite"
     },
     {
       "id": "fogo_04_rastro_de_lava",
@@ -383,7 +475,11 @@
       "visual": "chama",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/fogo_04_rastro_de_lava.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_04_rastro_de_lava.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_04_rastro_de_lava.png",
+      "effect_style": "lava_trail",
+      "effect_family": "ground_wave",
+      "travel_style": "ground",
+      "scene_reaction": "lava_crack"
     },
     {
       "id": "fogo_05_arco_de_cinza",
@@ -399,7 +495,11 @@
       "visual": "chama",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/fogo_05_arco_de_cinza.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_05_arco_de_cinza.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_05_arco_de_cinza.png",
+      "effect_style": "ash_arc",
+      "effect_family": "slash",
+      "travel_style": "arc",
+      "scene_reaction": "ash_cloud"
     },
     {
       "id": "fogo_06_circulo_vulcanico",
@@ -415,7 +515,11 @@
       "visual": "chama",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/fogo_06_circulo_vulcanico.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_06_circulo_vulcanico.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_06_circulo_vulcanico.png",
+      "effect_style": "volcanic_circle",
+      "effect_family": "ring",
+      "travel_style": "ground",
+      "scene_reaction": "lava_crack"
     },
     {
       "id": "fogo_07_folego_rubro",
@@ -431,7 +535,11 @@
       "visual": "chama",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/fogo_07_folego_rubro.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_07_folego_rubro.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_07_folego_rubro.png",
+      "effect_style": "ruby_fire_breath",
+      "effect_family": "breath",
+      "travel_style": "cone",
+      "scene_reaction": "heatwave"
     },
     {
       "id": "fogo_08_erupcao_guiada",
@@ -447,7 +555,11 @@
       "visual": "chama",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/fogo_08_erupcao_guiada.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_08_erupcao_guiada.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_08_erupcao_guiada.png",
+      "effect_style": "guided_eruption",
+      "effect_family": "eruption",
+      "travel_style": "seeking_ground",
+      "scene_reaction": "lava_crack"
     },
     {
       "id": "fogo_09_queda_meteorica",
@@ -463,7 +575,11 @@
       "visual": "chama",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/fogo_09_queda_meteorica.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_09_queda_meteorica.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_09_queda_meteorica.png",
+      "effect_style": "meteor_fall",
+      "effect_family": "meteor",
+      "travel_style": "overhead",
+      "scene_reaction": "crater"
     },
     {
       "id": "fogo_10_coroa_da_caldeira",
@@ -479,7 +595,11 @@
       "visual": "chama",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/fogo_10_coroa_da_caldeira.png",
-      "sprite_sheet": "res://assets/moves_fx/fogo_10_coroa_da_caldeira.png"
+      "sprite_sheet": "res://assets/moves_fx/fogo_10_coroa_da_caldeira.png",
+      "effect_style": "caldera_crown",
+      "effect_family": "caldera",
+      "travel_style": "ground",
+      "scene_reaction": "crater"
     },
     {
       "id": "choque_01_pulso_estatico",
@@ -495,7 +615,11 @@
       "visual": "raio",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/choque_01_pulso_estatico.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_01_pulso_estatico.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_01_pulso_estatico.png",
+      "effect_style": "static_pulse",
+      "effect_family": "ring",
+      "travel_style": "wave",
+      "scene_reaction": "static"
     },
     {
       "id": "choque_02_salto_voltaico",
@@ -511,7 +635,11 @@
       "visual": "raio",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/choque_02_salto_voltaico.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_02_salto_voltaico.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_02_salto_voltaico.png",
+      "effect_style": "voltaic_leap",
+      "effect_family": "lightning",
+      "travel_style": "zigzag",
+      "scene_reaction": "static"
     },
     {
       "id": "choque_03_arco_azul",
@@ -527,7 +655,11 @@
       "visual": "raio",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/choque_03_arco_azul.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_03_arco_azul.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_03_arco_azul.png",
+      "effect_style": "blue_arc",
+      "effect_family": "lightning",
+      "travel_style": "zigzag",
+      "scene_reaction": "electric_arc"
     },
     {
       "id": "choque_04_agulha_de_plasma",
@@ -543,7 +675,11 @@
       "visual": "raio",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/choque_04_agulha_de_plasma.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_04_agulha_de_plasma.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_04_agulha_de_plasma.png",
+      "effect_style": "plasma_needle",
+      "effect_family": "spear",
+      "travel_style": "direct",
+      "scene_reaction": "plasma_scorch"
     },
     {
       "id": "choque_05_campo_de_inducao",
@@ -559,7 +695,11 @@
       "visual": "raio",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/choque_05_campo_de_inducao.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_05_campo_de_inducao.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_05_campo_de_inducao.png",
+      "effect_style": "induction_field",
+      "effect_family": "field",
+      "travel_style": "wave",
+      "scene_reaction": "magnetic_field"
     },
     {
       "id": "choque_06_rede_trovejante",
@@ -575,7 +715,11 @@
       "visual": "raio",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/choque_06_rede_trovejante.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_06_rede_trovejante.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_06_rede_trovejante.png",
+      "effect_style": "thunder_net",
+      "effect_family": "net",
+      "travel_style": "seeking",
+      "scene_reaction": "electric_arc"
     },
     {
       "id": "choque_07_bobina_reversa",
@@ -591,7 +735,11 @@
       "visual": "raio",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/choque_07_bobina_reversa.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_07_bobina_reversa.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_07_bobina_reversa.png",
+      "effect_style": "reverse_coil",
+      "effect_family": "coil",
+      "travel_style": "spiral",
+      "scene_reaction": "magnetic_field"
     },
     {
       "id": "choque_08_surto_magnetico",
@@ -607,7 +755,11 @@
       "visual": "raio",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/choque_08_surto_magnetico.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_08_surto_magnetico.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_08_surto_magnetico.png",
+      "effect_style": "magnetic_surge",
+      "effect_family": "wave",
+      "travel_style": "direct",
+      "scene_reaction": "magnetic_field"
     },
     {
       "id": "choque_09_impacto_tesla",
@@ -623,7 +775,11 @@
       "visual": "raio",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/choque_09_impacto_tesla.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_09_impacto_tesla.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_09_impacto_tesla.png",
+      "effect_style": "tesla_impact",
+      "effect_family": "burst",
+      "travel_style": "zigzag",
+      "scene_reaction": "plasma_scorch"
     },
     {
       "id": "choque_10_tempestade_de_arco",
@@ -639,7 +795,11 @@
       "visual": "raio",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/choque_10_tempestade_de_arco.png",
-      "sprite_sheet": "res://assets/moves_fx/choque_10_tempestade_de_arco.png"
+      "sprite_sheet": "res://assets/moves_fx/choque_10_tempestade_de_arco.png",
+      "effect_style": "arc_storm",
+      "effect_family": "storm",
+      "travel_style": "overhead",
+      "scene_reaction": "electric_arc"
     },
     {
       "id": "terra_01_estilhaco_raso",
@@ -655,7 +815,11 @@
       "visual": "fragmento",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/terra_01_estilhaco_raso.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_01_estilhaco_raso.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_01_estilhaco_raso.png",
+      "effect_style": "shallow_shard",
+      "effect_family": "shard",
+      "travel_style": "ground",
+      "scene_reaction": "stone_splinters"
     },
     {
       "id": "terra_02_garra_de_arenito",
@@ -671,7 +835,11 @@
       "visual": "fragmento",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/terra_02_garra_de_arenito.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_02_garra_de_arenito.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_02_garra_de_arenito.png",
+      "effect_style": "sandstone_claw",
+      "effect_family": "claw",
+      "travel_style": "sweeping",
+      "scene_reaction": "sand_trail"
     },
     {
       "id": "terra_03_pilar_subito",
@@ -687,7 +855,11 @@
       "visual": "fragmento",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/terra_03_pilar_subito.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_03_pilar_subito.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_03_pilar_subito.png",
+      "effect_style": "sudden_pillar",
+      "effect_family": "pillar",
+      "travel_style": "seeking_ground",
+      "scene_reaction": "rock_pillar"
     },
     {
       "id": "terra_04_onda_sismica",
@@ -703,7 +875,11 @@
       "visual": "fragmento",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/terra_04_onda_sismica.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_04_onda_sismica.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_04_onda_sismica.png",
+      "effect_style": "seismic_wave",
+      "effect_family": "ground_wave",
+      "travel_style": "ground",
+      "scene_reaction": "earthquake"
     },
     {
       "id": "terra_05_casulo_mineral",
@@ -719,7 +895,11 @@
       "visual": "fragmento",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/terra_05_casulo_mineral.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_05_casulo_mineral.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_05_casulo_mineral.png",
+      "effect_style": "mineral_cocoon",
+      "effect_family": "shell",
+      "travel_style": "direct",
+      "scene_reaction": "crystal_shell"
     },
     {
       "id": "terra_06_orbita_rochosa",
@@ -735,7 +915,11 @@
       "visual": "fragmento",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/terra_06_orbita_rochosa.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_06_orbita_rochosa.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_06_orbita_rochosa.png",
+      "effect_style": "rock_orbit",
+      "effect_family": "orbit",
+      "travel_style": "spiral",
+      "scene_reaction": "stone_splinters"
     },
     {
       "id": "terra_07_prisao_de_geodo",
@@ -751,7 +935,11 @@
       "visual": "fragmento",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/terra_07_prisao_de_geodo.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_07_prisao_de_geodo.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_07_prisao_de_geodo.png",
+      "effect_style": "geode_prison",
+      "effect_family": "prison",
+      "travel_style": "seeking_ground",
+      "scene_reaction": "crystal_shell"
     },
     {
       "id": "terra_08_fenda_ancestral",
@@ -767,7 +955,11 @@
       "visual": "fragmento",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/terra_08_fenda_ancestral.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_08_fenda_ancestral.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_08_fenda_ancestral.png",
+      "effect_style": "ancestral_fissure",
+      "effect_family": "fissure",
+      "travel_style": "ground",
+      "scene_reaction": "earthquake"
     },
     {
       "id": "terra_09_colisao_monolitica",
@@ -783,7 +975,11 @@
       "visual": "fragmento",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/terra_09_colisao_monolitica.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_09_colisao_monolitica.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_09_colisao_monolitica.png",
+      "effect_style": "monolithic_collision",
+      "effect_family": "monolith",
+      "travel_style": "arc",
+      "scene_reaction": "crater"
     },
     {
       "id": "terra_10_despertar_fossil",
@@ -799,7 +995,11 @@
       "visual": "fragmento",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/terra_10_despertar_fossil.png",
-      "sprite_sheet": "res://assets/moves_fx/terra_10_despertar_fossil.png"
+      "sprite_sheet": "res://assets/moves_fx/terra_10_despertar_fossil.png",
+      "effect_style": "fossil_awakening",
+      "effect_family": "fossil",
+      "travel_style": "ground",
+      "scene_reaction": "fossil_rise"
     },
     {
       "id": "agua_01_gota_bala",
@@ -815,7 +1015,11 @@
       "visual": "onda",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/agua_01_gota_bala.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_01_gota_bala.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_01_gota_bala.png",
+      "effect_style": "water_bullet",
+      "effect_family": "orb",
+      "travel_style": "direct",
+      "scene_reaction": "water_splash"
     },
     {
       "id": "agua_02_chicote_de_mare",
@@ -831,7 +1035,11 @@
       "visual": "onda",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/agua_02_chicote_de_mare.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_02_chicote_de_mare.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_02_chicote_de_mare.png",
+      "effect_style": "tide_whip",
+      "effect_family": "whip",
+      "travel_style": "sweeping",
+      "scene_reaction": "tide"
     },
     {
       "id": "agua_03_bolha_de_pressao",
@@ -847,7 +1055,11 @@
       "visual": "onda",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/agua_03_bolha_de_pressao.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_03_bolha_de_pressao.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_03_bolha_de_pressao.png",
+      "effect_style": "pressure_bubble",
+      "effect_family": "bubble",
+      "travel_style": "arc",
+      "scene_reaction": "water_splash"
     },
     {
       "id": "agua_04_corte_corrente",
@@ -863,7 +1075,11 @@
       "visual": "onda",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/agua_04_corte_corrente.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_04_corte_corrente.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_04_corte_corrente.png",
+      "effect_style": "current_cut",
+      "effect_family": "slash",
+      "travel_style": "sweeping",
+      "scene_reaction": "tide"
     },
     {
       "id": "agua_05_espuma_vital",
@@ -879,7 +1095,11 @@
       "visual": "onda",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/agua_05_espuma_vital.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_05_espuma_vital.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_05_espuma_vital.png",
+      "effect_style": "living_foam",
+      "effect_family": "foam",
+      "travel_style": "drift",
+      "scene_reaction": "foam"
     },
     {
       "id": "agua_06_rajada_de_coral",
@@ -895,7 +1115,11 @@
       "visual": "onda",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/agua_06_rajada_de_coral.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_06_rajada_de_coral.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_06_rajada_de_coral.png",
+      "effect_style": "coral_barrage",
+      "effect_family": "shard",
+      "travel_style": "direct",
+      "scene_reaction": "coral_shards"
     },
     {
       "id": "agua_07_espiral_oceanica",
@@ -911,7 +1135,11 @@
       "visual": "onda",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/agua_07_espiral_oceanica.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_07_espiral_oceanica.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_07_espiral_oceanica.png",
+      "effect_style": "ocean_spiral",
+      "effect_family": "spiral",
+      "travel_style": "spiral",
+      "scene_reaction": "whirlpool"
     },
     {
       "id": "agua_08_prisao_de_mare",
@@ -927,7 +1155,11 @@
       "visual": "onda",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/agua_08_prisao_de_mare.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_08_prisao_de_mare.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_08_prisao_de_mare.png",
+      "effect_style": "tide_prison",
+      "effect_family": "prison",
+      "travel_style": "seeking",
+      "scene_reaction": "tide"
     },
     {
       "id": "agua_09_torpedo_abissal",
@@ -943,7 +1175,11 @@
       "visual": "onda",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/agua_09_torpedo_abissal.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_09_torpedo_abissal.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_09_torpedo_abissal.png",
+      "effect_style": "abyssal_torpedo",
+      "effect_family": "torpedo",
+      "travel_style": "direct",
+      "scene_reaction": "water_splash"
     },
     {
       "id": "agua_10_trono_das_aguas",
@@ -959,7 +1195,11 @@
       "visual": "onda",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/agua_10_trono_das_aguas.png",
-      "sprite_sheet": "res://assets/moves_fx/agua_10_trono_das_aguas.png"
+      "sprite_sheet": "res://assets/moves_fx/agua_10_trono_das_aguas.png",
+      "effect_style": "water_throne",
+      "effect_family": "water_throne",
+      "travel_style": "ground",
+      "scene_reaction": "tidal_column"
     },
     {
       "id": "natureza_01_espinho_agil",
@@ -975,7 +1215,11 @@
       "visual": "folha",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/natureza_01_espinho_agil.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_01_espinho_agil.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_01_espinho_agil.png",
+      "effect_style": "agile_thorn",
+      "effect_family": "spear",
+      "travel_style": "direct",
+      "scene_reaction": "leaf_burst"
     },
     {
       "id": "natureza_02_polen_vivo",
@@ -991,7 +1235,11 @@
       "visual": "folha",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/natureza_02_polen_vivo.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_02_polen_vivo.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_02_polen_vivo.png",
+      "effect_style": "living_pollen",
+      "effect_family": "pollen",
+      "travel_style": "drift",
+      "scene_reaction": "pollen_cloud"
     },
     {
       "id": "natureza_03_cipo_chicote",
@@ -1007,7 +1255,11 @@
       "visual": "folha",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/natureza_03_cipo_chicote.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_03_cipo_chicote.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_03_cipo_chicote.png",
+      "effect_style": "vine_whip",
+      "effect_family": "whip",
+      "travel_style": "sweeping",
+      "scene_reaction": "vine_trace"
     },
     {
       "id": "natureza_04_foice_de_folha",
@@ -1023,7 +1275,11 @@
       "visual": "folha",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/natureza_04_foice_de_folha.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_04_foice_de_folha.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_04_foice_de_folha.png",
+      "effect_style": "leaf_scythe",
+      "effect_family": "slash",
+      "travel_style": "arc",
+      "scene_reaction": "leaf_burst"
     },
     {
       "id": "natureza_05_esporos_pulsantes",
@@ -1039,7 +1295,11 @@
       "visual": "folha",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/natureza_05_esporos_pulsantes.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_05_esporos_pulsantes.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_05_esporos_pulsantes.png",
+      "effect_style": "pulsing_spores",
+      "effect_family": "spores",
+      "travel_style": "drift",
+      "scene_reaction": "spore_cloud"
     },
     {
       "id": "natureza_06_casca_guardia",
@@ -1055,7 +1315,11 @@
       "visual": "folha",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/natureza_06_casca_guardia.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_06_casca_guardia.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_06_casca_guardia.png",
+      "effect_style": "guardian_bark",
+      "effect_family": "shell",
+      "travel_style": "direct",
+      "scene_reaction": "bark_armor"
     },
     {
       "id": "natureza_07_enxame_verde",
@@ -1071,7 +1335,11 @@
       "visual": "folha",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/natureza_07_enxame_verde.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_07_enxame_verde.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_07_enxame_verde.png",
+      "effect_style": "green_swarm",
+      "effect_family": "swarm",
+      "travel_style": "seeking",
+      "scene_reaction": "leaf_burst"
     },
     {
       "id": "natureza_08_raiz_cacadora",
@@ -1087,7 +1355,11 @@
       "visual": "folha",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/natureza_08_raiz_cacadora.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_08_raiz_cacadora.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_08_raiz_cacadora.png",
+      "effect_style": "hunting_root",
+      "effect_family": "root",
+      "travel_style": "seeking_ground",
+      "scene_reaction": "vine_trace"
     },
     {
       "id": "natureza_09_floresta_ascendente",
@@ -1103,7 +1375,11 @@
       "visual": "folha",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/natureza_09_floresta_ascendente.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_09_floresta_ascendente.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_09_floresta_ascendente.png",
+      "effect_style": "ascending_forest",
+      "effect_family": "forest",
+      "travel_style": "ground",
+      "scene_reaction": "forest_rise"
     },
     {
       "id": "natureza_10_colapso_micelio",
@@ -1119,7 +1395,11 @@
       "visual": "folha",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/natureza_10_colapso_micelio.png",
-      "sprite_sheet": "res://assets/moves_fx/natureza_10_colapso_micelio.png"
+      "sprite_sheet": "res://assets/moves_fx/natureza_10_colapso_micelio.png",
+      "effect_style": "mycelium_collapse",
+      "effect_family": "mycelium",
+      "travel_style": "ground",
+      "scene_reaction": "spore_cloud"
     },
     {
       "id": "vento_01_sopro_rapido",
@@ -1135,7 +1415,11 @@
       "visual": "espiral",
       "objective": "Resposta imediata para manter pressão.",
       "icon": "res://assets/move_icons/vento_01_sopro_rapido.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_01_sopro_rapido.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_01_sopro_rapido.png",
+      "effect_style": "quick_gust",
+      "effect_family": "gust",
+      "travel_style": "direct",
+      "scene_reaction": "wind_burst"
     },
     {
       "id": "vento_02_pena_lamina",
@@ -1151,7 +1435,11 @@
       "visual": "espiral",
       "objective": "Golpe curto com recuperação veloz.",
       "icon": "res://assets/move_icons/vento_02_pena_lamina.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_02_pena_lamina.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_02_pena_lamina.png",
+      "effect_style": "feather_blade",
+      "effect_family": "slash",
+      "travel_style": "arc",
+      "scene_reaction": "feather_trail"
     },
     {
       "id": "vento_03_salto_de_brisa",
@@ -1167,7 +1455,11 @@
       "visual": "espiral",
       "objective": "Ataque seguro para abrir combinações.",
       "icon": "res://assets/move_icons/vento_03_salto_de_brisa.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_03_salto_de_brisa.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_03_salto_de_brisa.png",
+      "effect_style": "breeze_leap",
+      "effect_family": "dash",
+      "travel_style": "arc",
+      "scene_reaction": "wind_burst"
     },
     {
       "id": "vento_04_arco_ciclonico",
@@ -1183,7 +1475,11 @@
       "visual": "espiral",
       "objective": "Movimento preciso de risco controlado.",
       "icon": "res://assets/move_icons/vento_04_arco_ciclonico.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_04_arco_ciclonico.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_04_arco_ciclonico.png",
+      "effect_style": "cyclonic_arc",
+      "effect_family": "spiral",
+      "travel_style": "sweeping",
+      "scene_reaction": "cyclone"
     },
     {
       "id": "vento_05_passo_nuvem",
@@ -1199,7 +1495,11 @@
       "visual": "espiral",
       "objective": "Pressão equilibrada de alcance médio.",
       "icon": "res://assets/move_icons/vento_05_passo_nuvem.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_05_passo_nuvem.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_05_passo_nuvem.png",
+      "effect_style": "cloud_step",
+      "effect_family": "fog",
+      "travel_style": "blink",
+      "scene_reaction": "cloud_wake"
     },
     {
       "id": "vento_06_turbina_ascendente",
@@ -1215,7 +1515,11 @@
       "visual": "espiral",
       "objective": "Técnica estável para punir uma abertura.",
       "icon": "res://assets/move_icons/vento_06_turbina_ascendente.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_06_turbina_ascendente.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_06_turbina_ascendente.png",
+      "effect_style": "ascending_turbine",
+      "effect_family": "tornado",
+      "travel_style": "spiral",
+      "scene_reaction": "cyclone"
     },
     {
       "id": "vento_07_muralha_de_ar",
@@ -1231,7 +1535,11 @@
       "visual": "espiral",
       "objective": "Ocupa espaço e força reação do rival.",
       "icon": "res://assets/move_icons/vento_07_muralha_de_ar.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_07_muralha_de_ar.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_07_muralha_de_ar.png",
+      "effect_style": "air_wall",
+      "effect_family": "wall",
+      "travel_style": "wave",
+      "scene_reaction": "wind_burst"
     },
     {
       "id": "vento_08_rasante_supersonico",
@@ -1247,7 +1555,11 @@
       "visual": "espiral",
       "objective": "Golpe de controle com recarga moderada.",
       "icon": "res://assets/move_icons/vento_08_rasante_supersonico.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_08_rasante_supersonico.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_08_rasante_supersonico.png",
+      "effect_style": "supersonic_dive",
+      "effect_family": "dash",
+      "travel_style": "dive",
+      "scene_reaction": "sonic_boom"
     },
     {
       "id": "vento_09_olho_do_furacao",
@@ -1263,7 +1575,11 @@
       "visual": "espiral",
       "objective": "Impacto forte, legível e com recuperação longa.",
       "icon": "res://assets/move_icons/vento_09_olho_do_furacao.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_09_olho_do_furacao.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_09_olho_do_furacao.png",
+      "effect_style": "hurricane_eye",
+      "effect_family": "vortex",
+      "travel_style": "spiral",
+      "scene_reaction": "cyclone"
     },
     {
       "id": "vento_10_quatro_ventos",
@@ -1279,7 +1595,11 @@
       "visual": "espiral",
       "objective": "Maior impacto do elemento, sem decidir a luta sozinho.",
       "icon": "res://assets/move_icons/vento_10_quatro_ventos.png",
-      "sprite_sheet": "res://assets/moves_fx/vento_10_quatro_ventos.png"
+      "sprite_sheet": "res://assets/moves_fx/vento_10_quatro_ventos.png",
+      "effect_style": "four_winds",
+      "effect_family": "storm",
+      "travel_style": "overhead",
+      "scene_reaction": "four_winds"
     }
   ]
 }

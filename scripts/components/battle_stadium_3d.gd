@@ -49,6 +49,8 @@ var _pulso_impacto := 1.0
 var _cor_p1 := Color("6ef8ff")
 var _cor_p2 := Color("ff55c6")
 var _variante := VARIANTE_COLISEU
+var _fundo_personalizado := ""
+var _fundo: Sprite3D
 
 
 func _ready() -> void:
@@ -72,7 +74,8 @@ func configurar(
 	cor_p1: Color,
 	cor_p2: Color,
 	tipo_p1: String = "",
-	tipo_p2: String = ""
+	tipo_p2: String = "",
+	fundo_personalizado: String = ""
 ) -> void:
 	_cor_p1 = cor_p1
 	_cor_p2 = cor_p2
@@ -80,6 +83,7 @@ func configurar(
 		tipo_p1 if FUNDOS.has(tipo_p1) and tipo_p2.is_empty()
 		else variante_para_tipos(tipo_p1, tipo_p2)
 	)
+	_fundo_personalizado = fundo_personalizado
 	_montar_fundo_cinematografico()
 	_montar_piso()
 	_montar_arquibancadas()
@@ -90,34 +94,40 @@ func configurar(
 
 
 func _montar_fundo_cinematografico() -> void:
-	var caminho: String = str(FUNDOS[_variante])
+	var caminho := _fundo_personalizado if not _fundo_personalizado.is_empty() else str(FUNDOS[_variante])
 	if not ResourceLoader.exists(caminho):
 		return
-	var fundo := Sprite3D.new()
-	fundo.texture = load(caminho) as Texture2D
-	fundo.centered = true
-	fundo.shaded = false
-	fundo.transparent = false
-	fundo.no_depth_test = false
-	fundo.render_priority = -8
-	fundo.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_fundo = Sprite3D.new()
+	_fundo.texture = load(caminho) as Texture2D
+	_fundo.centered = true
+	_fundo.shaded = false
+	_fundo.transparent = false
+	_fundo.no_depth_test = false
+	_fundo.render_priority = -8
+	_fundo.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	# A arena ocupa uma faixa horizontal; recortamos o miolo do concept vertical.
-	fundo.region_enabled = true
+	_fundo.region_enabled = true
 	var recorte_y := 160.0 if _variante != VARIANTE_COLISEU else 205.0
-	fundo.region_rect = Rect2(0.0, recorte_y, 941.0, 790.0)
-	fundo.pixel_size = 0.026
-	fundo.position = Vector3(0.0, 5.45, -17.0)
-	fundo.modulate = (
+	_fundo.region_rect = Rect2(0.0, recorte_y, 941.0, 790.0)
+	_fundo.pixel_size = 0.026
+	_fundo.position = Vector3(0.0, 5.45, -17.0)
+	_fundo.modulate = (
 		Color(0.90, 0.94, 1.0)
 		if _variante in [VARIANTE_CELESTE, VARIANTE_ETER]
 		else Color(0.84, 0.86, 0.94)
 	)
-	add_child(fundo)
+	add_child(_fundo)
 
 
 func _process(delta: float) -> void:
 	_tempo += delta
 	_pulso_impacto = move_toward(_pulso_impacto, 1.0, delta * 5.0)
+	if _fundo != null:
+		# O horizonte não desliza; apenas a luz atmosférica respira suavemente.
+		var atmosfera := 0.955 + sin(_tempo * 0.34) * 0.025
+		_fundo.modulate.r = atmosfera
+		_fundo.modulate.g = atmosfera
+		_fundo.modulate.b = minf(1.0, atmosfera + 0.025)
 	# Movimento ambiental limitado a emissao. Nada altera posicao/horizonte.
 	for indice in range(_leds.size()):
 		var material: StandardMaterial3D = _leds[indice]
@@ -347,6 +357,80 @@ func impacto(cor: Color, forca: float = 1.0) -> void:
 	var tween := create_tween()
 	tween.tween_interval(0.16)
 	tween.tween_callback(_restaurar_cores_de_luz)
+
+
+func reagir_golpe(
+	golpe: Dictionary, cor: Color, forca: float, ponto_global: Vector3
+) -> void:
+	impacto(cor, forca)
+	var reacao := str(golpe.get("scene_reaction", "energy"))
+	var familia := str(golpe.get("effect_family", "orb"))
+	var raiz := Node3D.new()
+	raiz.position = to_local(ponto_global)
+	raiz.position.y = 0.035
+	add_child(raiz)
+	var material := _material_reacao(cor, 3.8 if forca > 0.8 else 2.6)
+	var tamanho := 1.35 if forca > 0.8 else 1.0
+
+	if familia in ["fissure", "ground_wave", "pillar", "eruption", "caldera", "root"] or reacao in ["crater", "earthquake", "lava_crack", "forest_rise"]:
+		for indice in range(6):
+			var raio := 0.20 + float(indice) * 0.13
+			var angulo := float(indice) * 2.21
+			var fissura_mesh := BoxMesh.new()
+			fissura_mesh.size = Vector3(0.035, 0.018, raio * tamanho)
+			var fissura := MeshInstance3D.new()
+			fissura.mesh = fissura_mesh
+			fissura.position = Vector3(cos(angulo) * raio * 0.45, 0.0, sin(angulo) * raio * 0.45)
+			fissura.rotation.y = angulo
+			fissura.material_override = material
+			raiz.add_child(fissura)
+	elif reacao in ["cyclone", "wind_burst", "sonic_boom"] or familia in ["gust", "tornado", "spiral"]:
+		for indice in range(3):
+			var anel := _anel_reacao((0.30 + indice * 0.16) * tamanho, material)
+			anel.position.y = 0.18 + indice * 0.20
+			anel.rotation_degrees.x = 90.0
+			raiz.add_child(anel)
+	elif reacao in ["tide", "splash", "foam"] or familia in ["wave", "bubble", "whip"]:
+		for indice in range(3):
+			var onda := _anel_reacao((0.34 + indice * 0.18) * tamanho, material)
+			onda.scale.z = 0.58
+			raiz.add_child(onda)
+	else:
+		var pulso := _anel_reacao(0.48 * tamanho, material)
+		raiz.add_child(pulso)
+
+	raiz.scale = Vector3.ONE * 0.18
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(raiz, "scale", Vector3.ONE, 0.24).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(raiz, "rotation:y", PI * 1.3, 0.48)
+	tween.chain().tween_property(raiz, "scale", Vector3.ZERO, 0.32)
+	tween.chain().tween_callback(raiz.queue_free)
+
+
+func _anel_reacao(raio: float, material: Material) -> MeshInstance3D:
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = maxf(0.02, raio - 0.035)
+	mesh.outer_radius = raio
+	mesh.rings = 32
+	mesh.ring_segments = 8
+	var instancia := MeshInstance3D.new()
+	instancia.mesh = mesh
+	instancia.material_override = material
+	instancia.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return instancia
+
+
+func _material_reacao(cor: Color, energia: float) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	material.albedo_color = Color(cor.r, cor.g, cor.b, 0.76)
+	material.emission_enabled = true
+	material.emission = cor
+	material.emission_energy_multiplier = energia
+	return material
 
 
 func _restaurar_cores_de_luz() -> void:

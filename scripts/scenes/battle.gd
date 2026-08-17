@@ -1,6 +1,6 @@
 extends Control
 
-# Batalha retrato: regras originais, AnimatedSprite3D, estadio e HUD em faixas.
+# Batalha retrato: arte mestre em malha contínua, estadio e HUD em faixas.
 
 const MOVE_COUNT := 5
 const GUARD_ACTION := 5
@@ -42,7 +42,7 @@ var _camera: Camera3D
 var _camera_home_position := Vector3.ZERO
 var _camera_home_rotation := Vector3.ZERO
 var _camera_home_fov := 50.0
-var _rigs: Array[CinematicBeastSprite3D] = [null, null]
+var _rigs: Array[StableBeastRig3D] = [null, null]
 var _fx: Array[Sprite3D] = [null, null]
 var _escudos: Array[BattleShieldDome3D] = [null, null]
 var _estadio: BattleStadium3D
@@ -85,8 +85,11 @@ func _ready() -> void:
 
 	_montar_arena_3d()
 	_montar_hud()
-	_trocar_rig(0)
-	_trocar_rig(1)
+	var rig_aliado_ok := _trocar_rig(0)
+	var rig_rival_ok := _trocar_rig(1)
+	if not rig_aliado_ok or not rig_rival_ok:
+		push_error("Batalha: não foi possível construir os rigs visuais.")
+		return
 
 	_turn = 0 if _lutador(0)["data"]["speed"] >= _lutador(1)["data"]["speed"] else 1
 	AudioSynth.start_music("battle")
@@ -99,7 +102,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_tempo += delta
-	# O horizonte permanece estavel. A camera so se move durante golpes.
+	# O horizonte e o FOV permanecem estáveis durante toda a luta.
 
 
 # ===========================================================================
@@ -134,7 +137,9 @@ func _montar_arena_3d() -> void:
 
 	_estadio = BattleStadium3D.new()
 	_viewport.add_child(_estadio)
-	_estadio.configurar(COR_P1, COR_P2)
+	GameState.resolve_arena_for_battle()
+	var arena := ArenaDB.get_arena(GameState.arena_id)
+	_estadio.configurar(COR_P1, COR_P2, "", "", str(arena.get("path", "")))
 
 	_camera = Camera3D.new()
 	_camera.keep_aspect = Camera3D.KEEP_HEIGHT
@@ -158,7 +163,7 @@ func _montar_arena_3d() -> void:
 
 
 ## Constroi (ou reconstroi) o rig da Beast ativa do jogador informado.
-func _trocar_rig(jogador: int) -> void:
+func _trocar_rig(jogador: int) -> bool:
 	if _rigs[jogador] != null and is_instance_valid(_rigs[jogador]):
 		_rigs[jogador].queue_free()
 	if _fx[jogador] != null and is_instance_valid(_fx[jogador]):
@@ -170,9 +175,10 @@ func _trocar_rig(jogador: int) -> void:
 	var id_beast: String = str(dados.get("id", ""))
 	var de_costas: bool = jogador == 0
 	var cor: Color = CreatureDB.color_for_type(str(dados.get("type", "Luz")))
-	var familia: String = CinematicBeastSprite3D.familia_de(dados)
+	var familia: String = StableBeastRig3D.familia_de(dados)
+	var locomocao: String = StableBeastRig3D.locomocao_de(dados)
 
-	var rig := CinematicBeastSprite3D.new()
+	var rig := StableBeastRig3D.new()
 	_viewport.add_child(rig)
 	rig.position = Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, 0.30) \
 		if de_costas else Vector3(_x_da_faixa(jogador, _faixas[jogador]), 0.0, -4.35)
@@ -180,15 +186,17 @@ func _trocar_rig(jogador: int) -> void:
 		id_beast,
 		2.12 if de_costas else 2.62,
 		familia,
+		locomocao,
 		de_costas,
 		cor
 	)
 	if not configurado:
 		rig.queue_free()
-		push_error("Batalha: atlas cinematografico ausente para " + id_beast)
-		return
-	rig.entrar()
+		_rigs[jogador] = null
+		push_error("Batalha: arte mestre ausente para " + id_beast)
+		return false
 	_rigs[jogador] = rig
+	rig.entrar()
 
 	var escudo := BattleShieldDome3D.new()
 	escudo.position = rig.position + Vector3(0.0, 0.96 if de_costas else 1.17, 0.0)
@@ -209,6 +217,7 @@ func _trocar_rig(jogador: int) -> void:
 	sprite.visible = false
 	_viewport.add_child(sprite)
 	_fx[jogador] = sprite
+	return true
 
 
 func _x_da_faixa(jogador: int, faixa: int) -> float:
@@ -281,45 +290,21 @@ func _tocar_fx_do_golpe(
 	var quadros := maxi(1, roundi(tam.x / maxf(1.0, tam.y)))
 	var cor_fx: Color = CreatureDB.color_for_type(str(golpe.get("element", "Luz")))
 
-	# O primeiro quadro viaja do atacante ate o alvo; o golpe nao surge pronto.
-	var projetil := Sprite3D.new()
-	projetil.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	projetil.shaded = false
-	projetil.transparent = true
-	projetil.no_depth_test = true
-	projetil.render_priority = 9
-	projetil.texture = textura
-	projetil.hframes = quadros
-	projetil.frame = 0
-	projetil.modulate = cor_fx
-	projetil.pixel_size = 0.0044 if atacante_jogador == 0 else 0.0055
-	projetil.position = _rigs[atacante_jogador].position + Vector3(0.0, 1.35, 0.18)
-	projetil.scale = Vector3(0.55, 0.55, 0.55)
-	_viewport.add_child(projetil)
-	var destino: Vector3 = _rigs[alvo_jogador].position + Vector3(0.0, 1.20, 0.22)
+	if _rigs[atacante_jogador] == null or _rigs[alvo_jogador] == null:
+		return
+	# A geometria e a tira animada nascem na Beast e percorrem o espaço 3D.
+	var projetil := PhysicalProjectile.new()
 	var pesado: bool = str(golpe.get("role", "")) == "pesado"
-	var duracao_viagem := 0.42 if pesado else 0.28
-	var inicio: Vector3 = projetil.position
-	var curva_lateral := -0.34 if atacante_jogador == 0 else 0.34
-	var viagem := create_tween()
-	viagem.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	viagem.tween_method(
-		_posicionar_projetil_curvo.bind(
-			projetil, inicio, destino, 0.62 if pesado else 0.38, curva_lateral
-		),
-		0.0,
-		1.0,
-		duracao_viagem
+	projetil.disparar(
+		_viewport,
+		_rigs[atacante_jogador].ponto_emissao(),
+		_rigs[alvo_jogador].ponto_impacto(),
+		textura,
+		cor_fx,
+		pesado,
+		golpe
 	)
-	viagem.parallel().tween_property(projetil, "scale", Vector3.ONE, duracao_viagem)
-	viagem.parallel().tween_method(
-		_definir_quadro_fx.bind(projetil, quadros),
-		0.0,
-		float(maxi(1, roundi(float(quadros) / 2.0))),
-		duracao_viagem
-	)
-	await viagem.finished
-	projetil.queue_free()
+	await projetil.impacto_alcancado
 
 	sprite.texture = textura
 	sprite.hframes = quadros
@@ -336,25 +321,6 @@ func _tocar_fx_do_golpe(
 		0.050 * float(quadros)
 	)
 	t.tween_callback(_esconder_fx.bind(sprite))
-
-
-func _posicionar_projetil_curvo(
-	progresso: float,
-	projetil: Sprite3D,
-	inicio: Vector3,
-	destino: Vector3,
-	altura: float,
-	desvio: float
-) -> void:
-	if not is_instance_valid(projetil):
-		return
-	var posicao := inicio.lerp(destino, progresso)
-	var arco := sin(progresso * PI)
-	posicao.y += arco * altura
-	posicao.x += arco * desvio
-	projetil.position = posicao
-	projetil.rotation.z = progresso * TAU * 0.72
-
 
 func _definir_quadro_fx(valor: float, sprite: Sprite3D, quadros: int) -> void:
 	if is_instance_valid(sprite):
@@ -380,19 +346,6 @@ func _sacudir_camera(forca: float) -> void:
 			0.045
 		)
 	t.tween_property(_camera, "rotation", _camera_home_rotation, 0.10)
-
-
-func _empurrar_camera() -> void:
-	if _camera == null:
-		return
-	var t := create_tween()
-	t.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	t.set_parallel(true)
-	t.tween_property(_camera, "fov", 38.0, 0.32)
-	t.tween_property(_camera, "position", _camera_home_position + Vector3(0.22, 0.16, -0.72), 0.32)
-	t.chain().set_parallel(true)
-	t.tween_property(_camera, "fov", _camera_home_fov, 0.42)
-	t.tween_property(_camera, "position", _camera_home_position, 0.42)
 
 
 ## Converte a posicao 3D da Beast em coordenada de tela dentro da faixa.
@@ -734,9 +687,12 @@ func _atacar(indice_golpe: int) -> void:
 
 	var rig_atacante = _rigs[_turn]
 	var rig_alvo = _rigs[alvo_jogador]
+	if rig_atacante == null or rig_alvo == null:
+		push_error("Batalha: tentativa de ataque sem rig válido.")
+		return
+	rig_atacante.preparar_golpe(golpe)
 
 	if pesado:
-		_empurrar_camera()
 		rig_atacante.carregar(0.80)
 		await rig_atacante.animacao_terminou
 
@@ -747,7 +703,9 @@ func _atacar(indice_golpe: int) -> void:
 	await _tocar_fx_do_golpe(alvo_jogador, golpe, _turn)
 	var cor_impacto := CreatureDB.color_for_type(str(golpe["element"]))
 	rig_alvo.levar_dano(cor_impacto)
-	_estadio.impacto(cor_impacto, 1.0 if pesado else 0.55)
+	_estadio.reagir_golpe(
+		golpe, cor_impacto, 1.0 if pesado else 0.55, rig_alvo.ponto_impacto()
+	)
 	_sacudir_camera(0.42 if pesado else 0.20)
 
 	defensor["hp"] = maxi(0, int(defensor["hp"]) - dano)

@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 ## Battle V2: integra CinematicBeastSprite3DV5V5 V5, PhysicalProjectile,
 ## BattleUIV2 e BattleStadium3DV2.
@@ -387,5 +387,3 @@ func _criar_textura_projetil(cor: Color) -> Texture2D:
 
 	var tex := ImageTexture.create_from_image(img)
 	return tex
-
-
