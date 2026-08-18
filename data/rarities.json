@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "_leia_me": [
+    "FONTE UNICA DA RARIDADE DE COLECAO.",
+    "",
+    "Raridade e atributo de COLECAO (quao dificil a carta e de obter), NAO",
+    "de forca. Os totais de status das 30 Beasts sao propositalmente planos",
+    "(313 a 341) e o equilibrio competitivo depende disso: se raridade",
+    "virasse poder, 'tools/simulate_balance.py' passaria a reprovar e a",
+    "Lendaria ganharia sozinha. Uma Comum vence uma Lendaria sem problema.",
+    "",
+    "'order' cresce com a escassez e define a ordenacao das telas.",
+    "'weight' e a chance relativa de uma carta daquela faixa aparecer.",
+    "",
+    "Toda Beast em 'data/creatures.json' carrega o campo 'rarity' com um",
+    "dos 'id' daqui. 'tools/validate_project.py' recusa qualquer outro",
+    "valor e cobra a distribuicao declarada em 'expected_count'."
+  ],
+  "rarities": [
+    {
+      "id": "Comum",
+      "order": 0,
+      "label": "COMUM",
+      "color": "9fb2cc",
+      "weight": 40,
+      "expected_count": 12
+    },
+    {
+      "id": "Raro",
+      "order": 1,
+      "label": "RARO",
+      "color": "5ad2ff",
+      "weight": 30,
+      "expected_count": 9
+    },
+    {
+      "id": "Épico",
+      "order": 2,
+      "label": "ÉPICO",
+      "color": "c07bff",
+      "weight": 20,
+      "expected_count": 6
+    },
+    {
+      "id": "Lendário",
+      "order": 3,
+      "label": "LENDÁRIO",
+      "color": "ffc542",
+      "weight": 10,
+      "expected_count": 3
+    }
+  ]
+}

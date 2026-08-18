@@ -96,8 +96,10 @@ func _build_screen() -> void:
 	_start_button.size = Vector2(620, 108)
 	_start_button.add_theme_font_size_override("font_size", 28)
 	_start_button.pressed.connect(_try_start)
-	_start_button.grab_focus()
 	add_child(_start_button)
+	## O foco so existe dentro da arvore: pedir antes do add_child derrubava
+	## "Condition !is_inside_tree() is true" e deixava a tela sem foco algum.
+	_start_button.grab_focus()
 	var pulse := create_tween().set_loops()
 	pulse.tween_property(_start_button, "modulate", Color(1, 1, 1, 0.60), 0.55)
 	pulse.tween_property(_start_button, "modulate", Color.WHITE, 0.55)

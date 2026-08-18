@@ -14,8 +14,11 @@ Tratar o projeto como arcade colecionável original, vertical e offline. Não re
 3. Ler `references/assets-and-cards.md` antes de tocar em imagens, spritesheets, ícones, cartas ou scanner.
 4. Manter cada sistema atômico: dados em JSON, regra em autoload/componente, tela apenas consumindo a API.
 5. Rodar `python tools/validate_project.py`, `python tools/simulate_balance.py`,
-   `godot --headless --path . --script tools/validate_visual_runtime.gd` e o
+   `godot --headless --path . --script tools/validate_visual_runtime.gd`,
+   `godot --headless --path . res://tools/smoke_test.tscn` e o
    analisador GDScript disponível antes de entregar.
+6. Usar a versão de Godot declarada em `config/features` do `project.godot`
+   (hoje 4.6). Rodar em versão diferente inventa erro que não existe.
 
 ## Invariantes
 
@@ -35,6 +38,19 @@ Tratar o projeto como arcade colecionável original, vertical e offline. Não re
 - Fazer a CPU consumir as mesmas regras e cooldowns do jogador.
 - Preservar teclado, dois joysticks, mouse/toque, modo livre/fichas e futura leitura de cartas.
 - Manter o jogo totalmente local durante a execução.
+- Tratar raridade como COLEÇÃO, nunca como força: os totais de status das 30
+  Beasts são planos de propósito e `tools/validate_project.py` reprova se a
+  média por faixa variar mais de 8 pontos. Uma Comum precisa poder vencer uma
+  Lendária.
+- Manter a distribuição 12 Comuns / 9 Raras / 6 Épicas / 3 Lendárias e ao
+  menos uma Épica ou Lendária em cada elemento — senão escolher elemento vira
+  escolher raridade.
+- Manter a caderneta (`beast_records.gd`) fora do combate: ela só ANOTA. Nem
+  vitória, nem sequência, nem raridade podem entrar em dano, vida ou recarga.
+- Devolver `Array[String]`/`Array[Dictionary]` já tipados nas APIs de
+  autoload. Devolver `Array` solta para quem declara `Array[String]` é o que
+  produzia "Trying to return an array of type Array where expected return
+  type is Array[String]" — o erro aparece na TELA, mas nasce no autoload.
 
 ## Fontes de verdade
 
@@ -46,7 +62,13 @@ Tratar o projeto como arcade colecionável original, vertical e offline. Não re
 - Poses de combate da Beast: `assets/sprites_combat/<id>.poses.json`, lido só
   por `scripts/components/beast_pose_atlas.gd`.
 - Peso, HP, recarga e previsão de dano: `scripts/autoload/move_db.gd`.
+- Raridade de coleção: `data/rarities.json` (fonte ÚNICA de faixa, rótulo,
+  cor, peso de sorteio e distribuição esperada), lida por `creature_db.gd`.
+- Vitórias e histórico por Beast: `scripts/autoload/beast_records.gd`,
+  persistido em `user://lazer_beasts_records.json`.
 - Registro futuro de cartas: `scripts/autoload/card_registry.gd`.
 - Validação de recursos/contratos: `tools/validate_project.py`.
+- Smoke test de runtime (sete cenas, catálogos, raridade, caderneta e fim de
+  batalha real numa passada só): `tools/smoke_test.tscn`.
 
 Não duplicar essas regras em scripts de cena. Exibir valores obtidos dessas APIs.

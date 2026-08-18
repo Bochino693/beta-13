@@ -21,6 +21,7 @@ var _preview_avatar: CreatureAvatar
 var _preview_name: Label
 var _preview_title: Label
 var _preview_type: Label
+var _preview_rarity: Label
 var _preview_details: Label
 var _preview_moves: Label
 var _team_slots: HBoxContainer
@@ -151,6 +152,10 @@ func _build_screen() -> void:
 	_preview_type.position = Vector2(22, 12)
 	_preview_type.size = Vector2(125, 30)
 	preview_panel.add_child(_preview_type)
+	_preview_rarity = UIFactory.badge("", Color.WHITE)
+	_preview_rarity.position = Vector2(152, 12)
+	_preview_rarity.size = Vector2(88, 30)
+	preview_panel.add_child(_preview_rarity)
 	_preview_name = UIFactory.label("", 27, Color.WHITE)
 	_preview_name.position = Vector2(245, 15)
 	_preview_name.size = Vector2(405, 40)
@@ -537,13 +542,32 @@ func _update_preview() -> void:
 	_preview_title.text = "%s • %.1f kg • %s" % [creature["title"], creature["weight_kg"], creature["weight_class"]]
 	_preview_type.text = creature["type"].to_upper()
 	_preview_type.add_theme_stylebox_override("normal", UIFactory.style_box(color, color.lightened(0.3), 12, 1))
+	var rarity := CreatureDB.rarity_of(creature)
+	var rarity_color := CreatureDB.rarity_color(rarity)
+	_preview_rarity.text = CreatureDB.rarity_label(rarity)
+	_preview_rarity.add_theme_stylebox_override(
+		"normal", UIFactory.style_box(rarity_color, rarity_color.lightened(0.3), 12, 1)
+	)
 	var strong := ", ".join(MoveDB.strongest_against(str(creature["type"])))
 	var weak := ", ".join(MoveDB.vulnerable_to(str(creature["type"])))
-	_preview_details.text = "HP %d  •  ATQ %d  DEF %d  RES %d  VEL %d\nFORTE: %s  •  RISCO: %s" % [MoveDB.max_hp(creature), creature["attack"], creature["defense"], creature["resistance"], creature["speed"], strong, weak]
+	_preview_details.text = "HP %d  •  ATQ %d  DEF %d  RES %d  VEL %d\nFORTE: %s  •  RISCO: %s\n%s" % [MoveDB.max_hp(creature), creature["attack"], creature["defense"], creature["resistance"], creature["speed"], strong, weak, _linha_caderneta(str(creature["id"]))]
 	var move_lines: Array[String] = []
 	for move in MoveDB.moves_for_creature(creature):
 		move_lines.append("%s [%s/P%02d/R%.1f]" % [move["name"], MoveDB.power_grade(move), move["power"], MoveDB.effective_cooldown(move, creature)])
 	_preview_moves.text = "5 GOLPES • 1 PESADO\n" + "  •  ".join(move_lines)
+
+
+## Historico da Beast em uma linha. A raridade nao muda nada em combate, e
+## o historico tambem nao: as duas informacoes sao de colecao.
+func _linha_caderneta(creature_id: String) -> String:
+	if not BeastRecords.has_history(creature_id):
+		return "ARENA: SEM HISTÓRICO"
+	var registro := BeastRecords.record_for(creature_id)
+	return "ARENA: %d VIT • %d BAT • %d%% APROV" % [
+		registro["wins"],
+		registro["battles"],
+		roundi(BeastRecords.win_rate(creature_id) * 100.0),
+	]
 
 
 func _update_slots() -> void:

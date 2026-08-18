@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
+from statistics import mean
 import re
 from pathlib import Path
 
@@ -19,6 +21,14 @@ ELEMENTS = {
     for entry in json.loads(
         (ROOT / "data" / "elements.json").read_text(encoding="utf-8")
     )["elements"]
+}
+
+
+RARITIES = {
+    entry["id"]: entry
+    for entry in json.loads(
+        (ROOT / "data" / "rarities.json").read_text(encoding="utf-8")
+    )["rarities"]
 }
 
 
@@ -50,6 +60,8 @@ def main() -> None:
         element = creature["type"]
         if element not in ELEMENTS:
             errors.append(f"{creature_id}: elemento inválido {element}.")
+        if creature.get("rarity") not in RARITIES:
+            errors.append(f"{creature_id}: raridade inválida {creature.get('rarity')!r}.")
         if float(creature.get("weight_kg", 0)) <= 0 or not creature.get("weight_class"):
             errors.append(f"{creature_id}: peso/classe ausente.")
         creature_moves = creature.get("moves", [])
@@ -217,7 +229,47 @@ def main() -> None:
                 if f"{view}_{state}" not in pose_names:
                     errors.append(f"{creature['id']}: falta {view}_{state}.")
 
+    contagem = Counter(creature.get("rarity") for creature in creatures)
+    for rarity_id, entry in RARITIES.items():
+        esperado = int(entry.get("expected_count", 0))
+        if contagem.get(rarity_id, 0) != esperado:
+            errors.append(
+                f"Raridade {rarity_id}: {contagem.get(rarity_id, 0)} Beasts; esperado {esperado}."
+            )
+
+    # Toda faixa competitiva precisa existir em algum elemento e nenhum
+    # elemento pode ficar sem uma carta de topo — senao escolher elemento
+    # viraria escolher raridade.
+    topo = {rid for rid, e in RARITIES.items() if int(e.get("order", 0)) >= 2}
+    por_elemento: dict[str, set[str]] = {}
+    for creature in creatures:
+        por_elemento.setdefault(creature["type"], set()).add(creature.get("rarity"))
+    for element, faixas in sorted(por_elemento.items()):
+        if not faixas & topo:
+            errors.append(f"Elemento {element}: nenhuma Beast Épica ou Lendária.")
+
+    # Raridade e colecao, nao poder: os totais de status nao podem subir
+    # junto com a escassez, senao simulate_balance.py deixa de valer.
+    def total(creature: dict) -> int:
+        return sum(int(creature[k]) for k in ("attack", "defense", "resistance", "speed"))
+
+    medias = {
+        rarity_id: mean([total(c) for c in creatures if c.get("rarity") == rarity_id])
+        for rarity_id in RARITIES
+        if any(c.get("rarity") == rarity_id for c in creatures)
+    }
+    if medias and (max(medias.values()) - min(medias.values())) > 8.0:
+        errors.append(
+            "Raridade virou força: média de status por faixa varia "
+            f"{max(medias.values()) - min(medias.values()):.1f} pontos "
+            f"({ {k: round(v, 1) for k, v in medias.items()} })."
+        )
+
     print(f"Beasts: {len(creatures)} | Golpes: {len(moves)} | Elementos: {len({c['type'] for c in creatures})}")
+    print("Raridade: " + " | ".join(
+        f"{rid} {contagem.get(rid, 0)} (média {medias.get(rid, 0):.0f})"
+        for rid in sorted(RARITIES, key=lambda r: RARITIES[r].get("order", 0))
+    ))
     print(" | ".join(f"{key}: {value}" for key, value in counts.items()))
     if errors:
         for error in errors:

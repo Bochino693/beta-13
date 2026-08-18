@@ -794,6 +794,7 @@ func _encerrar(vencedor: int) -> void:
 		"remaining": _quantidade_viva(vencedor),
 		"winner_creature": _lutador(vencedor)["id"]
 	}
+	_anotar_caderneta(vencedor)
 	_mensagem.text = "%s VENCEU A BATALHA!" % _titulo_do_jogador(vencedor)
 	AudioSynth.stop_music()
 	_audio_batalha.parar()
@@ -870,6 +871,28 @@ func _proximo_vivo(jogador: int, depois_de: int) -> int:
 		if not bool(_teams[jogador][indice]["ko"]):
 			return indice
 	return -1
+
+
+## Manda a batalha para a caderneta. Chamada so daqui, uma vez por batalha:
+## anotar a cada nocaute faria uma revanche inflar o historico. A caderneta
+## nao devolve nada ao combate — ver `beast_records.gd`.
+func _anotar_caderneta(vencedor: int) -> void:
+	var perdedor := 1 - vencedor
+	var caidos: Array[String] = []
+	for jogador in 2:
+		for lutador in _teams[jogador]:
+			if bool(lutador.get("ko", false)):
+				caidos.append(str(lutador["id"]))
+	BeastRecords.record_battle(
+		_ids_do_time(vencedor), _ids_do_time(perdedor), caidos
+	)
+
+
+func _ids_do_time(jogador: int) -> Array[String]:
+	var ids: Array[String] = []
+	for lutador in _teams[jogador]:
+		ids.append(str(lutador["id"]))
+	return ids
 
 
 func _quantidade_viva(jogador: int) -> int:

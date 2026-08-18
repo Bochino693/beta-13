@@ -169,12 +169,9 @@ func power_grade(move: Dictionary) -> String:
 ## Quem este elemento vence e quem o vence. As duas leituras saem do
 ## CreatureDB, que por sua vez le `data/elements.json`. Nenhuma tela recalcula
 ## hierarquia por conta propria.
-func strongest_against(element: String) -> Array:
+func strongest_against(element: String) -> Array[String]:
 	return CreatureDB.strong_against(element)
 
 
 func vulnerable_to(element: String) -> Array[String]:
-	var result: Array[String] = []
-	for attacker: String in CreatureDB.weak_against(element):
-		result.append(attacker)
-	return result
+	return CreatureDB.weak_against(element)
